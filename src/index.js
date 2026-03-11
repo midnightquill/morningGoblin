@@ -1,4 +1,6 @@
-﻿import "dotenv/config";
+import "dotenv/config";
+import { open, readFile, unlink } from "node:fs/promises";
+import path from "node:path";
 import { ActivityType, Client, GatewayIntentBits, PermissionsBitField } from "discord.js";
 import { loadMorningConfig, normalizeAcceptedStarts } from "./config.js";
 import { JsonStore } from "./storage.js";
@@ -15,6 +17,12 @@ const MORNING_WINDOW_END_HOUR = readNumber("MORNING_WINDOW_END_HOUR", 12, 0, 23)
 const REMINDER_GRACE_MINUTES = 180;
 const FOLLOWUP_GRACE_MINUTES = 180;
 const RANDOM_REPLY_CHANCE = 0.42;
+const LOCK_PATH = path.resolve(process.cwd(), "data", "bot.lock");
+const DEFAULT_PRESENCE = {
+  type: "watching",
+  name: "illegal pre-gm chatter",
+};
+
 
 const client = new Client({
   intents: [
@@ -36,6 +44,7 @@ const conversationState = {
 let morningConfig;
 let acceptedStarts;
 let acceptedPatterns;
+let lockHandle = null;
 
 function readNumber(name, fallback, min, max) {
   const raw = process.env[name];
@@ -100,6 +109,59 @@ function pickFromPoolBag(poolKey, items) {
 
 function shouldReply() {
   return Math.random() < RANDOM_REPLY_CHANCE;
+}
+
+async function isPidRunning(pid) {
+  if (!Number.isInteger(pid) || pid <= 0) {
+    return false;
+  }
+
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return error?.code === "EPERM";
+  }
+}
+
+async function writeLockFile(handle) {
+  await handle.truncate(0);
+  await handle.writeFile(`${process.pid}\n`);
+}
+
+async function acquireInstanceLock() {
+  try {
+    lockHandle = await open(LOCK_PATH, "wx");
+    await writeLockFile(lockHandle);
+    return;
+  } catch (error) {
+    if (error?.code !== "EEXIST") {
+      throw error;
+    }
+  }
+
+  const existingPidRaw = await readFile(LOCK_PATH, "utf8").catch(() => "");
+  const existingPid = Number.parseInt(existingPidRaw.trim(), 10);
+
+  if (await isPidRunning(existingPid)) {
+    throw new Error(`Morning Goblin is already running (PID ${existingPid}). Close the other bot window before starting a new one.`);
+  }
+
+  await unlink(LOCK_PATH).catch(() => {});
+  lockHandle = await open(LOCK_PATH, "wx");
+  await writeLockFile(lockHandle);
+}
+
+async function releaseInstanceLock() {
+  if (!lockHandle) {
+    return;
+  }
+
+  const handleToClose = lockHandle;
+  lockHandle = null;
+
+  await handleToClose.close().catch(() => {});
+  await unlink(LOCK_PATH).catch(() => {});
 }
 
 function createDailyState(dateKey) {
@@ -208,6 +270,55 @@ function hasManageGuild(member) {
 
 function isBotOwner(userId) {
   return Boolean(BOT_OWNER_ID) && userId === BOT_OWNER_ID;
+}
+
+function parsePresenceType(rawType) {
+  const normalized = rawType?.trim().toLowerCase();
+
+  switch (normalized) {
+    case "playing":
+      return ActivityType.Playing;
+    case "watching":
+      return ActivityType.Watching;
+    case "listening":
+      return ActivityType.Listening;
+    case "competing":
+      return ActivityType.Competing;
+    default:
+      return null;
+  }
+}
+
+function getBotPresence() {
+  const savedPresence = store.state.botPresence;
+
+  if (!savedPresence?.name || !parsePresenceType(savedPresence.type)) {
+    return DEFAULT_PRESENCE;
+  }
+
+  return {
+    type: savedPresence.type,
+    name: savedPresence.name,
+  };
+}
+
+async function applyBotPresence() {
+  if (!client.user) {
+    return;
+  }
+
+  const presence = getBotPresence();
+  const activityType = parsePresenceType(presence.type) ?? ActivityType.Watching;
+
+  client.user.setPresence({
+    activities: [
+      {
+        name: presence.name,
+        type: activityType,
+      },
+    ],
+    status: "online",
+  });
 }
 
 function formatRoster(names) {
@@ -560,7 +671,7 @@ async function handleOwnerSpeech(message, commandName, body) {
 
     if (!text) {
       await message.reply({
-        content: `use it like \`${COMMAND_PREFIX} say hello goblins\`.`,
+        content: "use it like `" + COMMAND_PREFIX + " say hello goblins`.",
         allowedMentions: { repliedUser: false, parse: [] },
       });
       return;
@@ -570,11 +681,58 @@ async function handleOwnerSpeech(message, commandName, body) {
     return;
   }
 
+  if (commandName === "presence") {
+    const input = body.slice(commandName.length).trim();
+
+    if (!input) {
+      await message.reply({
+        content: "use `" + COMMAND_PREFIX + " presence watching for Mong Plorps` or `" + COMMAND_PREFIX + " presence reset`.",
+        allowedMentions: { repliedUser: false, parse: [] },
+      });
+      return;
+    }
+
+    if (["reset", "default"].includes(input.toLowerCase())) {
+      store.state.botPresence = null;
+      await store.save();
+      await applyBotPresence();
+      await message.reply({
+        content: "presence reset to default: " + DEFAULT_PRESENCE.type + " `" + DEFAULT_PRESENCE.name + "`.",
+        allowedMentions: { repliedUser: false, parse: [] },
+      });
+      return;
+    }
+
+    const [rawType, ...nameParts] = input.split(/\s+/);
+    const activityType = parsePresenceType(rawType);
+    const name = nameParts.join(" ").trim();
+
+    if (!activityType || !name) {
+      await message.reply({
+        content: "use one of: playing, watching, listening, competing. example: `" + COMMAND_PREFIX + " presence watching for Mong Plorps`.",
+        allowedMentions: { repliedUser: false, parse: [] },
+      });
+      return;
+    }
+
+    store.state.botPresence = {
+      type: rawType.toLowerCase(),
+      name,
+    };
+    await store.save();
+    await applyBotPresence();
+    await message.reply({
+      content: "presence updated: " + rawType.toLowerCase() + " `" + name + "`.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
   const targetChannel = message.mentions.channels.first();
 
   if (!targetChannel || !targetChannel.isTextBased()) {
     await message.reply({
-      content: `use it like \`${COMMAND_PREFIX} sayto #general hello goblins\`.`,
+      content: "use it like `" + COMMAND_PREFIX + " sayto #general hello goblins`.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
     return;
@@ -583,12 +741,12 @@ async function handleOwnerSpeech(message, commandName, body) {
   const text = body
     .slice(commandName.length)
     .trim()
-    .replace(/^<#[0-9]+>\s*/, "")
+    .replace(/^<#[0-9]+>s*/, "")
     .trim();
 
   if (!text) {
     await message.reply({
-      content: `give me a message too, like \`${COMMAND_PREFIX} sayto #general hello goblins\`.`,
+      content: "give me a message too, like `" + COMMAND_PREFIX + " sayto #general hello goblins`.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
     return;
@@ -615,6 +773,7 @@ async function handleCommand(message) {
           `- \`${COMMAND_PREFIX} reload\` to reload config/morning-config.json`,
           `- \`${COMMAND_PREFIX} say your message here\` to force the bot to speak here (owner only)`,
           `- \`${COMMAND_PREFIX} sayto #channel your message here\` to make the bot speak in another channel (owner only)`,
+          "- `" + COMMAND_PREFIX + " presence watching for Mong Plorps` to change the bot status (owner only)",
           `- mention the bot, reply to it, or say its name to make it chatter back`,
           `- \`${COMMAND_PREFIX} test\` to fire the reminder right now`,
           `- \`${COMMAND_PREFIX} timezone America/New_York\` to set a server timezone`,
@@ -651,6 +810,7 @@ async function handleCommand(message) {
       return;
     }
     case "say":
+    case "presence":
     case "sayto": {
       await handleOwnerSpeech(message, command.toLowerCase(), body);
       return;
@@ -810,15 +970,7 @@ async function schedulerTick() {
 }
 
 client.once("clientReady", async () => {
-  client.user.setPresence({
-    activities: [
-      {
-        name: "illegal pre-gm chatter",
-        type: ActivityType.Watching,
-      },
-    ],
-    status: "online",
-  });
+  await applyBotPresence();
 
   console.log(`Logged in as ${client.user.tag}`);
   console.log(`Loaded ${morningConfig.conversation.mentionReplies.length} mention replies.`);
@@ -870,17 +1022,36 @@ async function start() {
     throw new Error("Missing DISCORD_TOKEN. Copy .env.example to .env and fill it in.");
   }
 
+  await acquireInstanceLock();
   await reloadMorningConfig();
   await store.load();
   await client.login(process.env.DISCORD_TOKEN);
 }
 
-start().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
+const cleanupAndExit = async (code = 0) => {
+  await releaseInstanceLock();
+  process.exit(code);
+};
+
+process.once("SIGINT", () => {
+  cleanupAndExit(0).catch((error) => {
+    console.error("Failed to release Morning Goblin lock during shutdown:", error);
+    process.exit(1);
+  });
 });
 
+process.once("SIGTERM", () => {
+  cleanupAndExit(0).catch((error) => {
+    console.error("Failed to release Morning Goblin lock during shutdown:", error);
+    process.exit(1);
+  });
+});
 
+start().catch(async (error) => {
+  console.error(error);
+  await releaseInstanceLock();
+  process.exitCode = 1;
+});
 
 
 
