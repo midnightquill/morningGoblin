@@ -83,6 +83,12 @@ These require `Manage Server`:
   Shows the configured accepted morning openings.
 - `!gm reload`
   Reloads `config/morning-config.json` without restarting.
+- `!gm quiet @user`
+  Keeps logging that user's check-ins and reacting with emoji, but suppresses the bot's text reply for them.
+- `!gm unquiet @user`
+  Removes that user from the no-reply check-in list.
+- `!gm quietlist`
+  Shows which users currently have check-in text replies suppressed.
 - `!gm test`
   Posts the morning reminder immediately.
 - `!gm timezone America/New_York`
