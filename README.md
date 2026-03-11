@@ -1,4 +1,4 @@
-﻿# Discord Morning Bot
+# Discord Morning Bot
 
 A very unserious Discord bot that enforces the sacred act of saying good morning, keeps a roster of who checked in, nudges people who talk before greeting the dawn, and occasionally answers like a tiny caffeinated office goblin.
 
@@ -7,6 +7,7 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 - Posts a daily morning reminder in one configured channel without using `@everyone`
 - Tracks each person's first accepted good-morning message of the day
 - Accepts both normal openings like `gm`, `good morning gamers`, and inside-joke patterns like `Mong Plorps`
+- Only counts a good-morning message when it is still morning somewhere in the United States
 - Gives silly replies for check-ins, duplicate check-ins, nudges, and follow-up census posts
 - Nudges people once per day if they start chatting before saying good morning
 - Posts a later morning census with current check-in totals
@@ -148,6 +149,10 @@ That means two-word greetings shaped like `M... P...` count too, such as:
 - `Morning People`
 - `Murple Plangles`
 
+A good morning only counts if it is still morning somewhere in the United States. The bot checks several U.S. time zones, including East Coast, Central, Mountain, Arizona, Pacific, Alaska, and Hawaii. In practice, that means the legal morning window stays open until Hawaii finishes morning.
+
+If someone sends a valid-looking morning greeting after that window closes, the bot rejects it, tells them it does not count, tells them to try again tomorrow, and accuses them of possibly being Jak. Those rejection lines come from `invalidCheckInReplies` in the config.
+
 ## Configuring The Goblin Personality
 
 Most of the bot's personality lives in [config/morning-config.json](C:/Dev/Codex/Discord Morning Bot/config/morning-config.json).
@@ -159,6 +164,7 @@ Main message pools:
 - `duplicateReplies`
 - `nudgeReplies`
 - `noCheckInsFollowups`
+- `invalidCheckInReplies`
 
 If a `nudgeReplies` line contains `{channel}`, the bot replaces that with the configured morning-channel mention.
 

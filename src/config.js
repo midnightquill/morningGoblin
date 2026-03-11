@@ -21,6 +21,9 @@ const FALLBACK_CONFIG = {
   ],
   checkInReplies: ["gm logged. clipboard kissed. sun appeased."],
   duplicateReplies: ["double gm detected. enthusiasm noted."],
+  invalidCheckInReplies: [
+    "absolutely not. it is not morning anywhere in the united states right now, so this gm has been rejected on clerical grounds. please try again tomorrow. are you jak or just doing a very committed jak impression?",
+  ],
   nudgeReplies: [
     "tiny paperwork issue: you started talking before saying good morning. please report to {channel} and submit a quick gm.",
   ],
@@ -136,6 +139,10 @@ export async function loadMorningConfig() {
       reminderLines: cleanStringArray(parsed.reminderLines, FALLBACK_CONFIG.reminderLines),
       checkInReplies: cleanStringArray(parsed.checkInReplies, FALLBACK_CONFIG.checkInReplies),
       duplicateReplies: cleanStringArray(parsed.duplicateReplies, FALLBACK_CONFIG.duplicateReplies),
+      invalidCheckInReplies: cleanStringArray(
+        parsed.invalidCheckInReplies,
+        FALLBACK_CONFIG.invalidCheckInReplies,
+      ),
       nudgeReplies: cleanStringArray(parsed.nudgeReplies, FALLBACK_CONFIG.nudgeReplies),
       noCheckInsFollowups: cleanStringArray(
         parsed.noCheckInsFollowups,
@@ -152,6 +159,7 @@ export async function loadMorningConfig() {
       reminderLines: [...FALLBACK_CONFIG.reminderLines],
       checkInReplies: [...FALLBACK_CONFIG.checkInReplies],
       duplicateReplies: [...FALLBACK_CONFIG.duplicateReplies],
+      invalidCheckInReplies: [...FALLBACK_CONFIG.invalidCheckInReplies],
       nudgeReplies: [...FALLBACK_CONFIG.nudgeReplies],
       noCheckInsFollowups: [...FALLBACK_CONFIG.noCheckInsFollowups],
       conversation: cleanConversationConfig(FALLBACK_CONFIG.conversation, FALLBACK_CONFIG.conversation),
