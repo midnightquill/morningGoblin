@@ -1,17 +1,26 @@
 ﻿# Discord Morning Bot
 
-This bot posts a goofy daily good-morning reminder, tracks who has checked in, lightly roasts illegal pre-gm chatter, and now also talks back like a weird little office goblin when people address it.
+A very unserious Discord bot that enforces the sacred act of saying good morning, keeps a roster of who checked in, nudges people who talk before greeting the dawn, and occasionally answers like a tiny caffeinated office goblin.
 
 ## What it does
 
-- Posts a daily reminder in a configured channel without using `@everyone`
-- Counts each person's first good-morning message of the day
-- Accepts multiple morning-opening variations like `gm`, `gm friends`, and `good morning gamers`
-- Accepts regex-style inside-joke greetings like the server's `Mong Plorps` format
-- Gives silly little replies when people check in
-- Nudges people who talk before saying good morning
-- Posts a later morning census so the sleepy goblin stats stay current
-- Replies when people mention it, reply to one of its messages, or say its wake words
+- Posts a daily morning reminder in one configured channel without using `@everyone`
+- Tracks each person's first accepted good-morning message of the day
+- Accepts both normal openings like `gm`, `good morning gamers`, and inside-joke patterns like `Mong Plorps`
+- Gives silly replies for check-ins, duplicate check-ins, nudges, and follow-up census posts
+- Nudges people once per day if they start chatting before saying good morning
+- Posts a later morning census with current check-in totals
+- Talks back when people mention it, reply to it, or use configured wake words like `morning goblin`
+- Lets the bot owner make it speak in any channel without exposing the command publicly
+- Lets the bot owner change the bot's Discord presence from Discord itself
+- Refuses to start a second copy of the bot if one is already running
+
+## Requirements
+
+- Node.js `20.11+`
+- A Discord bot application with these intents enabled:
+  - `MESSAGE CONTENT INTENT`
+  - `SERVER MEMBERS INTENT`
 
 ## Setup
 
@@ -21,13 +30,19 @@ This bot posts a goofy daily good-morning reminder, tracks who has checked in, l
    npm install
    ```
 
-2. Copy `.env.example` to `.env` and fill in your bot token.
+2. Copy `.env.example` to `.env`.
 
-3. Put your own Discord user ID in `BOT_OWNER_ID` if you want the owner-only speech commands.
+3. Fill in at least your bot token:
 
-4. In the Discord developer portal, enable these privileged intents for the bot:
-   - `MESSAGE CONTENT INTENT`
-   - `SERVER MEMBERS INTENT`
+   ```env
+   DISCORD_TOKEN=your-bot-token-here
+   ```
+
+4. If you want owner-only commands, also set:
+
+   ```env
+   BOT_OWNER_ID=your-discord-user-id-here
+   ```
 
 5. Start the bot:
 
@@ -35,48 +50,109 @@ This bot posts a goofy daily good-morning reminder, tracks who has checked in, l
    npm start
    ```
 
+Windows PowerShell note: if `npm` is blocked by execution-policy weirdness, use `npm.cmd install` and `npm.cmd start` instead.
+
+## Environment Variables
+
+From [.env.example](C:/Dev/Codex/Discord Morning Bot/.env.example):
+
+- `DISCORD_TOKEN`: required bot token
+- `BOT_OWNER_ID`: optional Discord user ID for owner-only commands
+- `COMMAND_PREFIX`: defaults to `!gm`
+- `DEFAULT_TIMEZONE`: defaults to `America/Phoenix`
+- `MORNING_REMINDER_HOUR`: defaults to `8`
+- `MORNING_REMINDER_MINUTE`: defaults to `0`
+- `MORNING_FOLLOWUP_HOUR`: defaults to `10`
+- `MORNING_FOLLOWUP_MINUTE`: defaults to `30`
+- `MORNING_WINDOW_END_HOUR`: defaults to `12`
+
 ## Commands
 
-- `!gm here` sets the current channel as the morning check-in channel
-- `!gm off` disables the bot for the current server
-- `!gm status` shows today's check-in count
-- `!gm phrases` shows the accepted morning openings
-- `!gm reload` reloads the config file after you edit it
-- `!gm say hello goblins` makes the bot speak in the current channel silently (owner only)
-- `!gm sayto #general hello goblins` makes the bot speak in another channel silently (owner only)
-- `!gm test` posts the reminder immediately
-- `!gm timezone America/New_York` overrides the default timezone for this server
-- `!gm help` shows the command list
+### Server/admin commands
 
-Admins need `Manage Server` permission for setup commands. The `say` and `sayto` commands ignore that and check `BOT_OWNER_ID` instead.
+These require `Manage Server`:
 
-## Customizing What Counts
+- `!gm here`
+  Sets the current channel as the morning check-in channel.
+- `!gm off`
+  Disables the bot in the current server.
+- `!gm status`
+  Shows today's check-in count and roster.
+- `!gm phrases`
+  Shows the configured accepted morning openings.
+- `!gm reload`
+  Reloads `config/morning-config.json` without restarting.
+- `!gm test`
+  Posts the morning reminder immediately.
+- `!gm timezone America/New_York`
+  Sets the server timezone used for reminders and check-ins.
+- `!gm help`
+  Shows the command list.
 
-Edit [config/morning-config.json](C:/Dev/Codex/Discord Morning Bot/config/morning-config.json).
+### Owner-only commands
 
-The `acceptedStarts` list controls which message openings count as a check-in. The bot only checks whether a message starts with one of these values, so entries like `gm` automatically allow things like `gm friends`, `gm gang`, and `gm gamers`.
+These ignore `Manage Server` and instead check `BOT_OWNER_ID`:
 
-The `acceptedPatterns` list lets you define full regex-style patterns for inside jokes or weird custom greetings. It currently includes the server's `Mong Plorps`-style format, so any two-word message shaped like `M... P...` counts as a morning greeting.
+- `!gm say hello goblins`
+  Makes the bot speak in the current channel without a success reply.
+- `!gm sayto #general hello goblins`
+  Makes the bot speak in another channel without a success reply.
+- `!gm presence watching for Mong Plorps`
+  Changes the bot's Discord presence and saves it for future restarts.
+- `!gm presence reset`
+  Restores the default presence.
 
-Example:
+Supported presence types:
+
+- `playing`
+- `watching`
+- `listening`
+- `competing`
+
+Examples:
+
+```text
+!gm say good morning, my goblin shareholders
+!gm sayto #general the goblin has entered the building
+!gm presence watching for illegal pre-gm chatter
+!gm presence playing clipboard simulator
+!gm presence reset
+```
+
+## What Counts As Good Morning
+
+The accepted greetings live in [config/morning-config.json](C:/Dev/Codex/Discord Morning Bot/config/morning-config.json).
+
+### `acceptedStarts`
+
+The bot checks whether a message starts with one of these phrases. That means a short entry like `gm` automatically allows variants such as:
+
+- `gm friends`
+- `gm gamers`
+- `gm gang`
+- `good morning people`
+
+### `acceptedPatterns`
+
+You can also define full regex patterns for inside jokes. The current config includes:
 
 ```json
-"acceptedStarts": [
-  "gm",
-  "good morning",
-  "morning nerds",
-  "rise and shine"
-],
 "acceptedPatterns": [
   "^m[a-z'-]*\\s+p[a-z'-]*$"
 ]
 ```
 
-After editing the file, either restart the bot or run `!gm reload` in Discord.
+That means two-word greetings shaped like `M... P...` count too, such as:
 
-## Customizing What The Bot Says
+- `Mong Plorps`
+- `Morning People`
+- `Murple Plangles`
 
-The same config file also controls the bot's message pools:
+## Configuring The Goblin Personality
+
+Most of the bot's personality lives in [config/morning-config.json](C:/Dev/Codex/Discord Morning Bot/config/morning-config.json).
+
+Main message pools:
 
 - `reminderLines`
 - `checkInReplies`
@@ -84,78 +160,62 @@ The same config file also controls the bot's message pools:
 - `nudgeReplies`
 - `noCheckInsFollowups`
 
-The bot picks a random line from each list when it needs one.
+If a `nudgeReplies` line contains `{channel}`, the bot replaces that with the configured morning-channel mention.
 
-If a `nudgeReplies` line includes `{channel}`, the bot replaces that with the configured morning channel mention.
+After editing the config, either restart the bot or run:
 
-After editing the file, either restart the bot or run `!gm reload`.
+```text
+!gm reload
+```
 
-## Goblin Conversation Mode
+## Conversation Mode
 
-Conversation settings live under `conversation` in [config/morning-config.json](C:/Dev/Codex/Discord Morning Bot/config/morning-config.json).
+Conversation settings also live under `conversation` in [config/morning-config.json](C:/Dev/Codex/Discord Morning Bot/config/morning-config.json).
 
-The goblin replies when any of these are true:
+The goblin replies when:
 
-- someone mentions the bot
-- someone replies to one of the bot's messages
-- someone says one of the configured `wakeWords`, like `morning goblin`
+- someone directly mentions the bot
+- someone replies to a bot message
+- someone says a configured wake word such as `morning goblin` or `goblin`
 
-The conversation system uses cooldowns so it does not spam constantly:
+Behavior notes:
 
-- `channelCooldownSeconds` limits how often it can reply in the same channel
-- `userCooldownSeconds` limits how often it can reply to the same person
+- Direct mentions always reply.
+- Wake-word chatter and reply-to-bot chatter still use cooldowns.
+- Mention replies and generic replies use shuffled pools so they repeat less often.
 
-You can customize:
+Useful config keys:
 
 - `wakeWords`
 - `mentionReplies`
 - `genericReplies`
 - `keywordRules`
+- `channelCooldownSeconds`
+- `userCooldownSeconds`
 
-Each keyword rule has `triggers` and `replies`. If a message contains one of the triggers, the goblin picks a reply from that rule.
+Each keyword rule contains:
 
-Example:
+- `triggers`
+- `replies`
 
-```json
-{
-  "triggers": ["lunch", "food"],
-  "replies": [
-    "lunch is just breakfast with different marketing.",
-    "food mentioned. goblin interested immediately."
-  ]
-}
-```
+So if a message contains something like `coffee`, `sleepy`, `good bot`, `who are you`, or `what do you do`, the goblin can use a more specific response pool.
 
-## Owner-Only Speak Commands
+## Storage
 
-To use `!gm say` or `!gm sayto`, put your Discord user ID into `.env` like this:
+The bot stores lightweight local state in `data/state.json`, including:
 
-```env
-BOT_OWNER_ID=123456789012345678
-```
+- per-server configuration
+- daily check-in data
+- saved owner-set presence
 
-To find your Discord user ID:
+## Running It Reliably
 
-1. In Discord, open `User Settings`
-2. Go to `Advanced`
-3. Turn on `Developer Mode`
-4. Right-click your username or profile and click `Copy User ID`
+If you run the bot from a terminal window on your own computer, it only works while that process is alive. If your machine sleeps, reboots, or the terminal closes, the bot goes offline.
 
-Then restart the bot.
+The bot now creates a lock file at `data/bot.lock` while running and will refuse to start a second copy. That prevents duplicate reminders and doubled command responses when two processes are launched by accident.
 
-Examples:
+## Security Notes
 
-```text
-!gm say good morning, my beautiful goblin shareholders
-!gm sayto #general good morning, my beautiful goblin shareholders
-```
-
-These commands do not send a success reply. If you run them from a private mod/admin channel, only that hidden channel sees the command message, while the real bot message appears in the target channel.
-
-Mentions are still suppressed, so the bot will not mass-ping `@everyone` even if you type it.
-
-## Notes
-
-- The bot stores lightweight state in `data/state.json`.
-- The default schedule is 8:00 AM for the main reminder and 10:30 AM for the follow-up.
-- If the bot is running in a PowerShell window on your PC, it only works while that process is still running.
+- Keep `.env` out of git.
+- Regenerate the Discord bot token immediately if you ever paste it somewhere unsafe.
+- `BOT_OWNER_ID` is just an identifier, not a secret.
