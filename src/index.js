@@ -40,12 +40,12 @@ const LOCK_PATH = path.resolve(process.cwd(), "data", "bot.lock");
 
 const DEFAULT_PRESENCE = {
   type: "watching",
-  name: "watching illegal pre-gm chatter",
+  name: "watching for illegal pre-gm chatter",
 };
 const AUTO_PRESENCE_MIN_DELAY_MS = 6 * 60 * 60 * 1000;
 const AUTO_PRESENCE_MAX_DELAY_MS = 12 * 60 * 60 * 1000;
 const AUTO_PRESENCE_OPTIONS = [
-  { type: "watching", name: "watching illegal pre-gm chatter" },
+  { type: "watching", name: "watching for illegal pre-gm chatter" },
   { type: "watching", name: "hiding from Grandma" },
   { type: "watching", name: "trying to be like Kap" },
   { type: "watching", name: "searching for crown animals" },
