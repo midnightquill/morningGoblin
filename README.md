@@ -12,6 +12,9 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 - Nudges people once per day if they start chatting before saying good morning
 - Posts a later morning census with current check-in totals
 - Talks back when people mention it, reply to it, or use configured wake words like `morning goblin`
+- Tracks best and worst completed good-morning days per server
+- Celebrates brand-new best-day records by tagging the people who helped set them
+- Can serve a rotating bank of morning facts with `!gm fact`
 - Lets the bot owner make it speak in any channel without exposing the command publicly
 - Lets the bot owner change the bot's Discord presence from Discord itself
 - Refuses to start a second copy of the bot if one is already running
@@ -78,7 +81,9 @@ These require `Manage Server`:
 - `!gm off`
   Disables the bot in the current server.
 - `!gm status`
-  Shows today's check-in count and roster.
+  Shows today's check-in count and roster, plus saved best/worst day records when available.
+- `!gm fact`
+  Posts a random morning fact from the configured fact bank without repeating back to back.
 - `!gm phrases`
   Shows the configured accepted morning openings.
 - `!gm reload`
@@ -171,6 +176,7 @@ Main message pools:
 - `nudgeReplies`
 - `noCheckInsFollowups`
 - `invalidCheckInReplies`
+- `morningFacts`
 
 If a `nudgeReplies` line contains `{channel}`, the bot replaces that with the configured morning-channel mention.
 
@@ -194,6 +200,7 @@ Behavior notes:
 
 - Direct mentions always reply.
 - Wake-word chatter and reply-to-bot chatter still use cooldowns.
+- Plain unrelated messages no longer trigger replies just because they accidentally matched a keyword.
 - Mention replies and generic replies use shuffled pools so they repeat less often.
 
 Useful config keys:

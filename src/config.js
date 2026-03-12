@@ -30,6 +30,9 @@ const FALLBACK_CONFIG = {
   noCheckInsFollowups: [
     "morning census update: absolutely nobody has checked in yet. grim scenes. devastating for the rooster economy.",
   ],
+  morningFacts: [
+    "Morning sunlight helps signal to your brain that it is time to be awake.",
+  ],
   conversation: {
     enabled: true,
     wakeWords: ["morning goblin", "goblin"],
@@ -148,6 +151,7 @@ export async function loadMorningConfig() {
         parsed.noCheckInsFollowups,
         FALLBACK_CONFIG.noCheckInsFollowups,
       ),
+      morningFacts: cleanStringArray(parsed.morningFacts, FALLBACK_CONFIG.morningFacts),
       conversation: cleanConversationConfig(parsed.conversation, FALLBACK_CONFIG.conversation),
     };
   } catch (error) {
@@ -162,6 +166,7 @@ export async function loadMorningConfig() {
       invalidCheckInReplies: [...FALLBACK_CONFIG.invalidCheckInReplies],
       nudgeReplies: [...FALLBACK_CONFIG.nudgeReplies],
       noCheckInsFollowups: [...FALLBACK_CONFIG.noCheckInsFollowups],
+      morningFacts: [...FALLBACK_CONFIG.morningFacts],
       conversation: cleanConversationConfig(FALLBACK_CONFIG.conversation, FALLBACK_CONFIG.conversation),
     };
   }

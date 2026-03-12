@@ -370,6 +370,10 @@ function ensureGuildState(guildId) {
       timezone: DEFAULT_TIMEZONE,
       daily: null,
       suppressedCheckInReplyUserIds: [],
+      records: {
+        best: null,
+        worst: null,
+      },
     };
 
   }
@@ -378,6 +382,18 @@ function ensureGuildState(guildId) {
 
   if (!Array.isArray(guilds[guildId].suppressedCheckInReplyUserIds)) {
     guilds[guildId].suppressedCheckInReplyUserIds = [];
+  }
+
+  if (!guilds[guildId].records || typeof guilds[guildId].records !== "object") {
+    guilds[guildId].records = { best: null, worst: null };
+  }
+
+  if (!("best" in guilds[guildId].records)) {
+    guilds[guildId].records.best = null;
+  }
+
+  if (!("worst" in guilds[guildId].records)) {
+    guilds[guildId].records.worst = null;
   }
 
   return guilds[guildId];
@@ -853,67 +869,32 @@ async function isReplyToBot(message) {
 
 
 async function getConversationReply(message) {
-
   if (!morningConfig.conversation.enabled) {
-
     return null;
-
   }
-
-
 
   const directlyMentioned = message.mentions.users.has(client.user.id);
 
-
-
   if (directlyMentioned) {
-
     const keywordReply = getMatchingKeywordReply(message);
-
     return keywordReply ?? getMentionReply(message);
-
   }
-
-
 
   if (isConversationCoolingDown(message)) {
-
     return null;
-
   }
-
-
-
-  const keywordReply = getMatchingKeywordReply(message);
-
-
-
-  if (keywordReply) {
-
-    return keywordReply;
-
-  }
-
-
 
   if (await isReplyToBot(message)) {
-
-    return getGenericReply(message);
-
+    const keywordReply = getMatchingKeywordReply(message);
+    return keywordReply ?? getGenericReply(message);
   }
-
-
 
   if (isWakeWordMessage(message.content)) {
-
-    return getGenericReply(message);
-
+    const keywordReply = getMatchingKeywordReply(message);
+    return keywordReply ?? getGenericReply(message);
   }
 
-
-
   return null;
-
 }
 
 
@@ -1095,93 +1076,145 @@ async function buildFollowupMessage(guild, dailyState) {
 
 
 async function postFollowup(guild) {
-
   const guildState = ensureGuildState(guild.id);
-
   const timeZone = getGuildTimezone(guildState);
-
   const dailyState = ensureDailyState(guildState, getZonedParts(new Date(), timeZone).dateKey);
-
   const channel = await getMorningChannel(guild);
 
-
-
   if (!channel) {
-
     return false;
-
   }
-
-
 
   await safeSend(channel, await buildFollowupMessage(guild, dailyState));
 
-  return true;
+  const recordUpdate = updateRecords(guildState, dailyState);
 
+  if (recordUpdate.newBest) {
+    const celebration = buildNewBestCelebration(dailyState);
+
+    if (celebration) {
+      await channel.send({
+        content: celebration.content,
+        allowedMentions: { parse: [], users: celebration.userIds },
+      });
+    }
+  }
+
+  return true;
 }
 
 
 
+function getOrderedCheckInEntries(dailyState) {
+  return Object.entries(dailyState.checkIns).sort((left, right) => left[1].timestamp - right[1].timestamp);
+}
+
 function getCheckInNames(dailyState) {
+  return getOrderedCheckInEntries(dailyState).map(([, entry]) => entry.displayName);
+}
 
-  return Object.values(dailyState.checkIns)
+function getCheckInUserIds(dailyState) {
+  return getOrderedCheckInEntries(dailyState).map(([userId]) => userId);
+}
 
-    .sort((left, right) => left.timestamp - right.timestamp)
+function buildRecordsSummary(guildState) {
+  const best = guildState.records?.best;
+  const worst = guildState.records?.worst;
+  const parts = [];
 
-    .map((entry) => entry.displayName);
+  if (best) {
+    parts.push(`best day: ${best.count} on ${best.dateKey}`);
+  }
 
+  if (worst) {
+    parts.push(`worst day: ${worst.count} on ${worst.dateKey}`);
+  }
+
+  return parts.length > 0 ? parts.join(" | ") : null;
+}
+
+function updateRecords(guildState, dailyState) {
+  const count = Object.keys(dailyState.checkIns).length;
+  const userIds = getCheckInUserIds(dailyState);
+  const dateKey = dailyState.dateKey;
+  const records = guildState.records;
+  let newBest = false;
+  let changed = false;
+
+  if (!records.best || count > records.best.count) {
+    records.best = { count, dateKey, userIds };
+    newBest = count > 0;
+    changed = true;
+  }
+
+  if (!records.worst || count < records.worst.count) {
+    records.worst = { count, dateKey };
+    changed = true;
+  }
+
+  return { changed, newBest, userIds, count };
+}
+
+function buildNewBestCelebration(dailyState) {
+  const count = Object.keys(dailyState.checkIns).length;
+  const contributors = getCheckInUserIds(dailyState);
+
+  if (count === 0 || contributors.length === 0) {
+    return null;
+  }
+
+  const templates = [
+    `new all-time gm record: ${count}. applause for the dawn athletes: ${contributors.map((userId) => `<@${userId}>`).join(" ")}` ,
+    `record shattered. ${count} check-ins. the morning goblin salutes ${contributors.map((userId) => `<@${userId}>`).join(" ")}` ,
+    `historic sunrise behavior detected. ${count} people checked in. medals to ${contributors.map((userId) => `<@${userId}>`).join(" ")}` ,
+    `the books have been rewritten: ${count} check-ins. celebratory paperwork for ${contributors.map((userId) => `<@${userId}>`).join(" ")}` ,
+    `brand-new morning record. ${count} legal dawn participants. screaming professionally for ${contributors.map((userId) => `<@${userId}>`).join(" ")}` ,
+  ];
+
+  return {
+    content: pickFromPoolBag("records:newBestCelebrations", templates),
+    userIds: contributors,
+  };
 }
 
 
 
 async function postStatus(message) {
-
   const guildState = ensureGuildState(message.guild.id);
-
   const timeZone = getGuildTimezone(guildState);
-
   const dailyState = ensureDailyState(guildState, getZonedParts(new Date(), timeZone).dateKey);
-
   const names = getCheckInNames(dailyState);
-
-
+  const recordsSummary = buildRecordsSummary(guildState);
 
   if (names.length === 0) {
+    const content = recordsSummary
+      ? `today's good-morning count: 0. a truly suspicious level of silence.\n${recordsSummary}`
+      : "today's good-morning count: 0. a truly suspicious level of silence.";
+
 
     await message.reply({
-
-      content: "today's good-morning count: 0. a truly suspicious level of silence.",
-
+      content,
       allowedMentions: { repliedUser: false },
-
     });
-
     return;
-
   }
 
-
-
   const totalHumans = await getHumanMemberCount(message.guild);
-
   const summary =
-
     totalHumans && totalHumans > 0
-
       ? `today's good-morning count: ${names.length}/${totalHumans}.`
-
       : `today's good-morning count: ${names.length}.`;
 
+  const lines = [`${summary}`, `checked in so far: ${formatRoster(names)}`];
 
+  if (recordsSummary) {
+    lines.push(recordsSummary);
+  }
 
   await message.reply({
-
-    content: `${summary}\nchecked in so far: ${formatRoster(names)}`,
-
+    content: lines.join("\n"),
     allowedMentions: { repliedUser: false, parse: [] },
-
   });
-
 }
 
 
@@ -1547,7 +1580,8 @@ async function handleCommand(message) {
 
           "- `" + COMMAND_PREFIX + " presence watching for Mong Plorps` to change the bot status (owner only)",
 
-          `- mention the bot, reply to it, or say its name to make it chatter back`,
+          "- mention the bot, reply to it, or use a wake word like `morning goblin` to make it chatter back",
+          "- `" + COMMAND_PREFIX + " fact` for a random morning fact",
 
           `- \`${COMMAND_PREFIX} test\` to fire the reminder right now`,
 
@@ -1644,6 +1678,15 @@ async function handleCommand(message) {
       await message.reply({
         content: `<@${targetUserId}> was not on the no-reply check-in list in the first place.`,
         allowedMentions: { repliedUser: false, parse: ["users"] },
+      });
+      return;
+    }
+    case "fact":
+    case "morningfact": {
+      const fact = pickFromPoolBag("facts:morningFacts", morningConfig.morningFacts);
+      await message.reply({
+        content: `morning fact: ${fact}`,
+        allowedMentions: { repliedUser: false, parse: [] },
       });
       return;
     }
