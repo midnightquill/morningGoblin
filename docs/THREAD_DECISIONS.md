@@ -19,6 +19,8 @@ This file captures key product decisions from the development thread that are ea
 - The owner should be able to make the bot say arbitrary things.
 - The owner should be able to do that from a hidden channel while posting publicly elsewhere.
 - Those owner speech commands should not reply with a noisy success confirmation.
+- The bot should auto-rotate through lots of short funny statuses every 6-12 hours.
+- Owner-set presence should still override the rotation until reset.
 
 ## Greeting rules
 

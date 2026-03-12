@@ -162,6 +162,12 @@ Require `BOT_OWNER_ID` match:
 - `!gm presence watching ...`
 - `!gm presence reset`
 
+Presence behavior:
+
+- manual owner-set presence persists in state
+- when reset, the bot falls back to a rotating built-in pool of 60+ short funny statuses
+- the auto-rotation timer picks a new status every 6-12 hours
+
 ## Per-Guild State Schema
 
 Stored in `data/state.json` under `guilds.<guildId>`.
@@ -190,6 +196,11 @@ Current important fields:
 Top-level state also includes:
 
 - `botPresence`
+
+Important presence note:
+
+- `botPresence` is only the saved manual owner override
+- auto-rotating statuses are generated in-memory and become active whenever `botPresence` is `null`
 
 ## Config Schema Highlights
 

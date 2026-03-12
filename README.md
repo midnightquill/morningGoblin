@@ -16,6 +16,7 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 - Celebrates brand-new best-day records by tagging the people who helped set them
 - Can serve a rotating bank of morning facts with `!gm fact`
 - Lets the bot owner make it speak in any channel without exposing the command publicly
+- Auto-rotates through a big pool of funny Discord statuses every 6-12 hours when no manual owner override is set
 - Lets the bot owner change the bot's Discord presence from Discord itself
 - Refuses to start a second copy of the bot if one is already running
 
@@ -110,11 +111,13 @@ These ignore `Manage Server` and instead check `BOT_OWNER_ID`:
 - `!gm sayto #general hello goblins`
   Makes the bot speak in another channel without a success reply.
 - `!gm presence watching for Mong Plorps`
-  Changes the bot's Discord presence and saves it for future restarts.
+  Changes the bot's Discord presence and saves it as a manual override for future restarts.
 - `!gm presence reset`
-  Restores the default presence.
+  Clears the manual override and returns the goblin to automatic status rotation.
 
 Supported presence types:
+
+When no manual presence override is set, the bot rotates through 60+ short funny statuses every 6-12 hours.
 
 - `playing`
 - `watching`

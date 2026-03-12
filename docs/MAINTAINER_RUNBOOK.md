@@ -153,6 +153,11 @@ Controlled by `BOT_OWNER_ID`.
 - `sayto`
 - `presence`
 
+Presence note:
+
+- manual `presence` changes override the automatic status rotation
+- `presence reset` puts the bot back on the built-in 6-12 hour rotation pool
+
 ### Quiet list
 
 Stored per guild in `data/state.json` under `suppressedCheckInReplyUserIds`.

@@ -42,6 +42,71 @@ const DEFAULT_PRESENCE = {
   type: "watching",
   name: "illegal pre-gm chatter",
 };
+const AUTO_PRESENCE_MIN_DELAY_MS = 6 * 60 * 60 * 1000;
+const AUTO_PRESENCE_MAX_DELAY_MS = 12 * 60 * 60 * 1000;
+const AUTO_PRESENCE_OPTIONS = [
+  { type: "watching", name: "illegal pre-gm chatter" },
+  { type: "watching", name: "hiding from Grandma" },
+  { type: "watching", name: "trying to be like Kap" },
+  { type: "watching", name: "searching for crown animals" },
+  { type: "watching", name: "exploring Denmark" },
+  { type: "watching", name: "exploring The Netherlands" },
+  { type: "watching", name: "researching mong plorp origins" },
+  { type: "listening", name: "blahhblahblahbabaapapaDODO" },
+  { type: "watching", name: "making salty Nate memes" },
+  { type: "playing", name: "not playing Slay the Spire 2" },
+  { type: "watching", name: "suspicious sunrise activity" },
+  { type: "watching", name: "the clock with distrust" },
+  { type: "watching", name: "the dawn paperwork pile up" },
+  { type: "watching", name: "for illegal brunch behavior" },
+  { type: "watching", name: "for contraband snoozing" },
+  { type: "watching", name: "the east coast wake up first" },
+  { type: "watching", name: "for fake gms from Jak" },
+  { type: "watching", name: "for Mong Plorps" },
+  { type: "watching", name: "the vibes with concern" },
+  { type: "watching", name: "tiny goblin bureaucracy" },
+  { type: "watching", name: "clipboard-related incidents" },
+  { type: "watching", name: "for coffee-based miracles" },
+  { type: "watching", name: "for forged morning papers" },
+  { type: "watching", name: "for hallway-level nonsense" },
+  { type: "watching", name: "the bagel situation" },
+  { type: "watching", name: "the sunrise compliance board" },
+  { type: "watching", name: "everyone with little goblin eyes" },
+  { type: "watching", name: "for unlicensed yawning" },
+  { type: "watching", name: "for rogue afternoon greetings" },
+  { type: "playing", name: "clipboard simulator" },
+  { type: "playing", name: "dawn patrol" },
+  { type: "playing", name: "coffee% any%" },
+  { type: "playing", name: "sunrise compliance" },
+  { type: "playing", name: "catching fake mornings" },
+  { type: "playing", name: "hide and shriek" },
+  { type: "playing", name: "goblin office tycoon" },
+  { type: "playing", name: "deadline chicken with the sun" },
+  { type: "playing", name: "spreadsheet goblin deluxe" },
+  { type: "playing", name: "blame the timezone" },
+  { type: "playing", name: "staring contest with daylight" },
+  { type: "listening", name: "morning excuses" },
+  { type: "listening", name: "distant coffee brewing" },
+  { type: "listening", name: "tiny administrative screams" },
+  { type: "listening", name: "the first yawn of the day" },
+  { type: "listening", name: "the sound of legal morning" },
+  { type: "listening", name: "for goblin praise" },
+  { type: "listening", name: "for suspicious silence" },
+  { type: "listening", name: "to the breakfast economy" },
+  { type: "listening", name: "to a very loud sunrise" },
+  { type: "listening", name: "for fake productivity" },
+  { type: "listening", name: "for Dutch complaints" },
+  { type: "competing", name: "in sunrise compliance" },
+  { type: "competing", name: "against the concept of sleep" },
+  { type: "competing", name: "with the rooster lobby" },
+  { type: "competing", name: "in office goblin finals" },
+  { type: "competing", name: "for employee of the dawn" },
+  { type: "competing", name: "against illegal noon behavior" },
+  { type: "competing", name: "in paperwork endurance" },
+  { type: "competing", name: "for regional sunrise dominance" },
+  { type: "competing", name: "with the bagel mafia" },
+  { type: "competing", name: "in advanced gm studies" },
+];
 const US_MORNING_START_HOUR = 5;
 const US_MORNING_END_HOUR = 11;
 const UNITED_STATES_TIMEZONES = [
@@ -98,6 +163,8 @@ let acceptedStarts;
 let acceptedPatterns;
 
 let lockHandle = null;
+let currentAutoPresence = null;
+let autoPresenceTimeout = null;
 
 
 
@@ -600,7 +667,7 @@ function parsePresenceType(rawType) {
 
 
 
-function getBotPresence() {
+function getSavedBotPresence() {
 
   const savedPresence = store.state.botPresence;
 
@@ -608,7 +675,7 @@ function getBotPresence() {
 
   if (!savedPresence?.name || !parsePresenceType(savedPresence.type)) {
 
-    return DEFAULT_PRESENCE;
+    return null;
 
   }
 
@@ -621,6 +688,148 @@ function getBotPresence() {
     name: savedPresence.name,
 
   };
+
+}
+
+
+
+function getNextAutoPresence() {
+
+  const nextPresence = pickFromPoolBag("presence:autoRotation", AUTO_PRESENCE_OPTIONS);
+
+
+
+  if (!nextPresence?.name || !parsePresenceType(nextPresence.type)) {
+
+    return DEFAULT_PRESENCE;
+
+  }
+
+
+
+  return {
+
+    type: nextPresence.type,
+
+    name: nextPresence.name,
+
+  };
+
+}
+
+
+
+function getRandomAutoPresenceDelayMs() {
+
+  return AUTO_PRESENCE_MIN_DELAY_MS + Math.floor(Math.random() * (AUTO_PRESENCE_MAX_DELAY_MS - AUTO_PRESENCE_MIN_DELAY_MS + 1));
+
+}
+
+
+
+function describePresence(presence) {
+
+  return presence.type + " `" + presence.name + "`";
+
+}
+
+
+
+function getBotPresence() {
+
+  const savedPresence = getSavedBotPresence();
+
+
+
+  if (savedPresence) {
+
+    return savedPresence;
+
+  }
+
+
+
+  if (!currentAutoPresence) {
+
+    currentAutoPresence = getNextAutoPresence();
+
+  }
+
+
+
+  return currentAutoPresence;
+
+}
+
+
+
+function scheduleAutoPresenceRotation() {
+
+  if (autoPresenceTimeout) {
+
+    clearTimeout(autoPresenceTimeout);
+
+  }
+
+
+
+  const delayMs = getRandomAutoPresenceDelayMs();
+
+
+
+  autoPresenceTimeout = setTimeout(() => {
+
+    rotateAutoPresence().catch((error) => {
+
+      console.error("Auto presence rotation failed:", error);
+
+    });
+
+  }, delayMs);
+
+
+
+  if (typeof autoPresenceTimeout?.unref === "function") {
+
+    autoPresenceTimeout.unref();
+
+  }
+
+}
+
+
+
+function initializeAutoPresenceRotation() {
+
+  if (!currentAutoPresence) {
+
+    currentAutoPresence = getNextAutoPresence();
+
+  }
+
+
+
+  scheduleAutoPresenceRotation();
+
+}
+
+
+
+async function rotateAutoPresence() {
+
+  currentAutoPresence = getNextAutoPresence();
+
+
+
+  if (!getSavedBotPresence()) {
+
+    await applyBotPresence();
+
+  }
+
+
+
+  scheduleAutoPresenceRotation();
 
 }
 
@@ -661,8 +870,6 @@ async function applyBotPresence() {
   });
 
 }
-
-
 
 function parseTargetUserId(message) {
   return message.mentions.users.first()?.id || message.content.match(/\b(\d{17,20})\b/)?.[1] || null;
@@ -1418,13 +1625,17 @@ async function handleOwnerSpeech(message, commandName, body) {
 
       store.state.botPresence = null;
 
+      currentAutoPresence = getNextAutoPresence();
+
       await store.save();
 
       await applyBotPresence();
 
+      scheduleAutoPresenceRotation();
+
       await message.reply({
 
-        content: "presence reset to default: " + DEFAULT_PRESENCE.type + " `" + DEFAULT_PRESENCE.name + "`.",
+        content: "presence reset. the goblin is back on auto-rotation and currently " + describePresence(currentAutoPresence) + ".",
 
         allowedMentions: { repliedUser: false, parse: [] },
 
@@ -2044,6 +2255,8 @@ async function schedulerTick() {
 
 client.once("clientReady", async () => {
 
+  initializeAutoPresenceRotation();
+
   await applyBotPresence();
 
 
@@ -2051,6 +2264,8 @@ client.once("clientReady", async () => {
   console.log(`Logged in as ${client.user.tag}`);
 
   console.log(`Loaded ${morningConfig.conversation.mentionReplies.length} mention replies.`);
+
+  console.log(`Loaded ${AUTO_PRESENCE_OPTIONS.length} rotating statuses.`);
 
   await schedulerTick();
 
