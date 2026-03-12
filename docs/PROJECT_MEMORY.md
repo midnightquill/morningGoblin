@@ -161,12 +161,14 @@ Require `BOT_OWNER_ID` match:
 - `!gm sayto #channel ...`
 - `!gm presence watching ...`
 - `!gm presence reset`
+- `!gm offline`
 
 Presence behavior:
 
 - manual owner-set presence persists in state
 - when reset, the bot falls back to a rotating built-in pool of 60+ short funny statuses
 - the auto-rotation timer picks a new status every 6-12 hours
+- auto statuses are worded to read naturally in the Discord sidebar even when Discord hides the activity type label
 
 ## Per-Guild State Schema
 
@@ -179,6 +181,7 @@ Current important fields:
 - `daily`
 - `suppressedCheckInReplyUserIds`
 - `records`
+- `offlineNotice`
 
 `daily` includes:
 
@@ -192,6 +195,11 @@ Current important fields:
 
 - `best`
 - `worst`
+
+`offlineNotice` includes:
+
+- `pendingReturn`
+- `channelId`
 
 Top-level state also includes:
 

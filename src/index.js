@@ -40,12 +40,12 @@ const LOCK_PATH = path.resolve(process.cwd(), "data", "bot.lock");
 
 const DEFAULT_PRESENCE = {
   type: "watching",
-  name: "illegal pre-gm chatter",
+  name: "watching illegal pre-gm chatter",
 };
 const AUTO_PRESENCE_MIN_DELAY_MS = 6 * 60 * 60 * 1000;
 const AUTO_PRESENCE_MAX_DELAY_MS = 12 * 60 * 60 * 1000;
 const AUTO_PRESENCE_OPTIONS = [
-  { type: "watching", name: "illegal pre-gm chatter" },
+  { type: "watching", name: "watching illegal pre-gm chatter" },
   { type: "watching", name: "hiding from Grandma" },
   { type: "watching", name: "trying to be like Kap" },
   { type: "watching", name: "searching for crown animals" },
@@ -54,58 +54,72 @@ const AUTO_PRESENCE_OPTIONS = [
   { type: "watching", name: "researching mong plorp origins" },
   { type: "listening", name: "blahhblahblahbabaapapaDODO" },
   { type: "watching", name: "making salty Nate memes" },
-  { type: "playing", name: "not playing Slay the Spire 2" },
-  { type: "watching", name: "suspicious sunrise activity" },
-  { type: "watching", name: "the clock with distrust" },
-  { type: "watching", name: "the dawn paperwork pile up" },
-  { type: "watching", name: "for illegal brunch behavior" },
-  { type: "watching", name: "for contraband snoozing" },
-  { type: "watching", name: "the east coast wake up first" },
-  { type: "watching", name: "for fake gms from Jak" },
-  { type: "watching", name: "for Mong Plorps" },
-  { type: "watching", name: "the vibes with concern" },
-  { type: "watching", name: "tiny goblin bureaucracy" },
-  { type: "watching", name: "clipboard-related incidents" },
-  { type: "watching", name: "for coffee-based miracles" },
-  { type: "watching", name: "for forged morning papers" },
-  { type: "watching", name: "for hallway-level nonsense" },
-  { type: "watching", name: "the bagel situation" },
-  { type: "watching", name: "the sunrise compliance board" },
-  { type: "watching", name: "everyone with little goblin eyes" },
-  { type: "watching", name: "for unlicensed yawning" },
-  { type: "watching", name: "for rogue afternoon greetings" },
-  { type: "playing", name: "clipboard simulator" },
-  { type: "playing", name: "dawn patrol" },
-  { type: "playing", name: "coffee% any%" },
-  { type: "playing", name: "sunrise compliance" },
-  { type: "playing", name: "catching fake mornings" },
-  { type: "playing", name: "hide and shriek" },
-  { type: "playing", name: "goblin office tycoon" },
-  { type: "playing", name: "deadline chicken with the sun" },
-  { type: "playing", name: "spreadsheet goblin deluxe" },
-  { type: "playing", name: "blame the timezone" },
-  { type: "playing", name: "staring contest with daylight" },
-  { type: "listening", name: "morning excuses" },
-  { type: "listening", name: "distant coffee brewing" },
-  { type: "listening", name: "tiny administrative screams" },
-  { type: "listening", name: "the first yawn of the day" },
-  { type: "listening", name: "the sound of legal morning" },
-  { type: "listening", name: "for goblin praise" },
-  { type: "listening", name: "for suspicious silence" },
-  { type: "listening", name: "to the breakfast economy" },
-  { type: "listening", name: "to a very loud sunrise" },
-  { type: "listening", name: "for fake productivity" },
-  { type: "listening", name: "for Dutch complaints" },
-  { type: "competing", name: "in sunrise compliance" },
-  { type: "competing", name: "against the concept of sleep" },
-  { type: "competing", name: "with the rooster lobby" },
-  { type: "competing", name: "in office goblin finals" },
-  { type: "competing", name: "for employee of the dawn" },
-  { type: "competing", name: "against illegal noon behavior" },
-  { type: "competing", name: "in paperwork endurance" },
-  { type: "competing", name: "for regional sunrise dominance" },
-  { type: "competing", name: "with the bagel mafia" },
-  { type: "competing", name: "in advanced gm studies" },
+  { type: "watching", name: "not playing Slay the Spire 2" },
+  { type: "watching", name: "watching suspicious sunrise activity" },
+  { type: "watching", name: "watching the clock with distrust" },
+  { type: "watching", name: "watching the dawn paperwork pile up" },
+  { type: "watching", name: "watching for illegal brunch behavior" },
+  { type: "watching", name: "watching for contraband snoozing" },
+  { type: "watching", name: "watching the east coast wake up first" },
+  { type: "watching", name: "watching for fake gms from Jak" },
+  { type: "watching", name: "watching for Mong Plorps" },
+  { type: "watching", name: "watching the vibes with concern" },
+  { type: "watching", name: "watching tiny goblin bureaucracy" },
+  { type: "watching", name: "watching clipboard-related incidents" },
+  { type: "watching", name: "watching for coffee-based miracles" },
+  { type: "watching", name: "watching for forged morning papers" },
+  { type: "watching", name: "watching for hallway-level nonsense" },
+  { type: "watching", name: "watching the bagel situation" },
+  { type: "watching", name: "watching the sunrise compliance board" },
+  { type: "watching", name: "watching everyone with little goblin eyes" },
+  { type: "watching", name: "watching for unlicensed yawning" },
+  { type: "watching", name: "watching for rogue afternoon greetings" },
+  { type: "playing", name: "playing clipboard simulator" },
+  { type: "playing", name: "playing dawn patrol" },
+  { type: "playing", name: "playing coffee% any%" },
+  { type: "playing", name: "playing sunrise compliance" },
+  { type: "playing", name: "playing catch fake mornings" },
+  { type: "playing", name: "playing hide and shriek" },
+  { type: "playing", name: "playing goblin office tycoon" },
+  { type: "playing", name: "playing deadline chicken with the sun" },
+  { type: "playing", name: "playing spreadsheet goblin deluxe" },
+  { type: "playing", name: "playing blame the timezone" },
+  { type: "playing", name: "playing staring contest with daylight" },
+  { type: "listening", name: "listening to morning excuses" },
+  { type: "listening", name: "listening to distant coffee brewing" },
+  { type: "listening", name: "listening to tiny administrative screams" },
+  { type: "listening", name: "listening for the first yawn of the day" },
+  { type: "listening", name: "listening to the sound of legal morning" },
+  { type: "listening", name: "listening for goblin praise" },
+  { type: "listening", name: "listening for suspicious silence" },
+  { type: "listening", name: "listening to the breakfast economy" },
+  { type: "listening", name: "listening to a very loud sunrise" },
+  { type: "listening", name: "listening for fake productivity" },
+  { type: "listening", name: "listening for Dutch complaints" },
+  { type: "competing", name: "competing in sunrise compliance" },
+  { type: "competing", name: "competing against the concept of sleep" },
+  { type: "competing", name: "competing with the rooster lobby" },
+  { type: "competing", name: "competing in office goblin finals" },
+  { type: "competing", name: "competing for employee of the dawn" },
+  { type: "competing", name: "competing against illegal noon behavior" },
+  { type: "competing", name: "competing in paperwork endurance" },
+  { type: "competing", name: "competing for regional sunrise dominance" },
+  { type: "competing", name: "competing with the bagel mafia" },
+  { type: "competing", name: "competing in advanced gm studies" },
+];
+const OFFLINE_AWAY_LINES = [
+  "administrative notice: the Morning Goblin is going offline for a bit. remain calm, remain weird, and try not to commit any sunrise crimes while i am gone.",
+  "the Morning Goblin will be temporarily unavailable due to important goblin logistics. do not panic. do not form a committee. i will be back.",
+  "brief goblin outage: i am clocking out for a while. please continue your nonsense in an orderly fashion until i return.",
+  "the goblin is stepping away to recharge, regroup, and maybe hiss at a power cable. i will return when circumstances become less rude.",
+  "small scheduling update: i am about to vanish for a bit. this is a temporary goblin situation, not a collapse of civilization.",
+];
+const OFFLINE_RETURN_LINES = [
+  "the Morning Goblin has returned. order has been restored, the clipboard is back, and i am once again available for administrative dawn nonsense.",
+  "i have re-emerged from the void. the goblin is back online and already judging the paperwork.",
+  "the outage is over. the goblin has returned, lightly caffeinated and professionally suspicious.",
+  "good news for weird little citizens everywhere: the Morning Goblin is back online and immediately resuming oversight.",
+  "the goblin has returned from its mysterious absence. please clap in a restrained and bureaucratically appropriate manner.",
 ];
 const US_MORNING_START_HOUR = 5;
 const US_MORNING_END_HOUR = 11;
@@ -441,6 +455,10 @@ function ensureGuildState(guildId) {
         best: null,
         worst: null,
       },
+      offlineNotice: {
+        pendingReturn: false,
+        channelId: null,
+      },
     };
 
   }
@@ -461,6 +479,18 @@ function ensureGuildState(guildId) {
 
   if (!("worst" in guilds[guildId].records)) {
     guilds[guildId].records.worst = null;
+  }
+
+  if (!guilds[guildId].offlineNotice || typeof guilds[guildId].offlineNotice !== "object") {
+    guilds[guildId].offlineNotice = { pendingReturn: false, channelId: null };
+  }
+
+  if (!("pendingReturn" in guilds[guildId].offlineNotice)) {
+    guilds[guildId].offlineNotice.pendingReturn = false;
+  }
+
+  if (!("channelId" in guilds[guildId].offlineNotice)) {
+    guilds[guildId].offlineNotice.channelId = null;
   }
 
   return guilds[guildId];
@@ -728,6 +758,12 @@ function getRandomAutoPresenceDelayMs() {
 
 
 function describePresence(presence) {
+
+  const normalizedName = presence.name.toLowerCase();
+
+  if (normalizedName.startsWith(presence.type + " ")) {
+    return "`" + presence.name + "`";
+  }
 
   return presence.type + " `" + presence.name + "`";
 
@@ -1196,6 +1232,62 @@ async function safeSend(channel, content) {
 
 
 
+async function getOfflineNoticeChannel(guild, guildState) {
+
+  const preferredChannelId = guildState.offlineNotice?.channelId;
+
+  if (preferredChannelId) {
+    try {
+      const preferredChannel = await guild.channels.fetch(preferredChannelId);
+
+      if (preferredChannel && preferredChannel.isTextBased()) {
+        return preferredChannel;
+      }
+    } catch {
+      // Fall back to the configured morning channel.
+    }
+  }
+
+  return getMorningChannel(guild);
+
+}
+
+
+
+async function announcePendingReturnMessages() {
+
+  let stateChanged = false;
+
+  for (const guild of client.guilds.cache.values()) {
+    const guildState = ensureGuildState(guild.id);
+
+    if (!guildState.offlineNotice?.pendingReturn) {
+      continue;
+    }
+
+    const targetChannel = await getOfflineNoticeChannel(guild, guildState);
+
+    if (targetChannel) {
+      try {
+        await safeSend(targetChannel, pickFromPoolBag("offline:returnLines", OFFLINE_RETURN_LINES));
+      } catch (error) {
+        console.error("Failed to send return notice:", error);
+      }
+    }
+
+    guildState.offlineNotice.pendingReturn = false;
+    guildState.offlineNotice.channelId = null;
+    stateChanged = true;
+  }
+
+  if (stateChanged) {
+    await store.save();
+  }
+
+}
+
+
+
 async function postReminder(guild) {
 
   const channel = await getMorningChannel(guild);
@@ -1569,6 +1661,31 @@ async function handleOwnerSpeech(message, commandName, body) {
 
 
 
+  if (commandName === "offline") {
+
+    const guildState = ensureGuildState(message.guild.id);
+    const targetChannel = (await getMorningChannel(message.guild)) ?? (message.channel.isTextBased() ? message.channel : null);
+
+    if (!targetChannel) {
+      await message.reply({
+        content: "i do not have a valid channel for the dramatic departure speech yet. set a morning channel first with `" + COMMAND_PREFIX + " here`.",
+        allowedMentions: { repliedUser: false, parse: [] },
+      });
+
+      return;
+    }
+
+    await safeSend(targetChannel, pickFromPoolBag("offline:awayLines", OFFLINE_AWAY_LINES));
+
+    guildState.offlineNotice.pendingReturn = true;
+    guildState.offlineNotice.channelId = targetChannel.id;
+    await store.save();
+    return;
+
+  }
+
+
+
   if (commandName === "say") {
 
     const text = body.slice(commandName.length).trim();
@@ -1685,7 +1802,7 @@ async function handleOwnerSpeech(message, commandName, body) {
 
     await message.reply({
 
-      content: "presence updated: " + rawType.toLowerCase() + " `" + name + "`.",
+      content: "presence updated: " + describePresence({ type: rawType.toLowerCase(), name }) + ".",
 
       allowedMentions: { repliedUser: false, parse: [] },
 
@@ -1788,6 +1905,8 @@ async function handleCommand(message) {
           `- \`${COMMAND_PREFIX} say your message here\` to force the bot to speak here (owner only)`,
 
           `- \`${COMMAND_PREFIX} sayto #channel your message here\` to make the bot speak in another channel (owner only)`,
+
+          `- \`${COMMAND_PREFIX} offline\` to announce a temporary goblin outage and a later return (owner only)`,
 
           "- `" + COMMAND_PREFIX + " presence watching for Mong Plorps` to change the bot status (owner only)",
 
@@ -1937,7 +2056,9 @@ async function handleCommand(message) {
 
     case "presence":
 
-    case "sayto": {
+    case "sayto":
+
+    case "offline": {
 
       await handleOwnerSpeech(message, command.toLowerCase(), body);
 
@@ -2266,6 +2387,8 @@ client.once("clientReady", async () => {
   console.log(`Loaded ${morningConfig.conversation.mentionReplies.length} mention replies.`);
 
   console.log(`Loaded ${AUTO_PRESENCE_OPTIONS.length} rotating statuses.`);
+
+  await announcePendingReturnMessages();
 
   await schedulerTick();
 

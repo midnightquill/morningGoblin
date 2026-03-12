@@ -18,6 +18,7 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 - Lets the bot owner make it speak in any channel without exposing the command publicly
 - Auto-rotates through a big pool of funny Discord statuses every 6-12 hours when no manual owner override is set
 - Lets the bot owner change the bot's Discord presence from Discord itself
+- Lets the bot owner announce a temporary goblin outage and automatically post a comeback message on the next startup
 - Refuses to start a second copy of the bot if one is already running
 
 ## Requirements
@@ -114,6 +115,8 @@ These ignore `Manage Server` and instead check `BOT_OWNER_ID`:
   Changes the bot's Discord presence and saves it as a manual override for future restarts.
 - `!gm presence reset`
   Clears the manual override and returns the goblin to automatic status rotation.
+- `!gm offline`
+  Announces that the goblin is going offline for a bit and queues a one-time comeback announcement for the next startup.
 
 Supported presence types:
 
@@ -132,6 +135,7 @@ Examples:
 !gm presence watching for illegal pre-gm chatter
 !gm presence playing clipboard simulator
 !gm presence reset
+!gm offline
 ```
 
 ## What Counts As Good Morning

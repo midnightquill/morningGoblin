@@ -21,6 +21,7 @@ This file captures key product decisions from the development thread that are ea
 - Those owner speech commands should not reply with a noisy success confirmation.
 - The bot should auto-rotate through lots of short funny statuses every 6-12 hours.
 - Owner-set presence should still override the rotation until reset.
+- A planned temporary outage should be announcable with one owner-only command, and the goblin should only announce its return if that outage command was used first.
 
 ## Greeting rules
 

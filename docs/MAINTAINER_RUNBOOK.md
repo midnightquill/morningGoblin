@@ -152,6 +152,7 @@ Controlled by `BOT_OWNER_ID`.
 - `say`
 - `sayto`
 - `presence`
+- `offline`
 
 Presence note:
 
@@ -167,6 +168,15 @@ Commands:
 - `!gm quiet @user`
 - `!gm unquiet @user`
 - `!gm quietlist`
+
+### Offline notice
+
+Stored per guild in `data/state.json` under `offlineNotice`.
+
+Behavior:
+
+- `!gm offline` posts a temporary outage notice in the configured morning channel when possible
+- on the next startup, the bot posts one comeback message and clears the flag
 
 ### Records
 
