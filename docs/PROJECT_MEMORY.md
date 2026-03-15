@@ -162,6 +162,7 @@ Require `BOT_OWNER_ID` match:
 - `!gm presence watching ...`
 - `!gm presence reset`
 - `!gm offline`
+- `!gm logadd @user #channel <messageId>`
 
 Presence behavior:
 
@@ -169,6 +170,7 @@ Presence behavior:
 - when reset, the bot falls back to a rotating built-in pool of 60+ short funny statuses
 - the auto-rotation timer picks a new status every 6-12 hours
 - auto statuses are worded to read naturally in the Discord sidebar even when Discord hides the activity type label
+- `logadd` lets the owner manually file a same-day check-in from an existing message without triggering public check-in chatter
 
 ## Per-Guild State Schema
 

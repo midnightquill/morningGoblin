@@ -1,4 +1,4 @@
-﻿import "dotenv/config";
+import "dotenv/config";
 
 import { open, readFile, unlink } from "node:fs/promises";
 
@@ -1520,7 +1520,7 @@ async function postStatus(message) {
 
 async function maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, totalCheckIns) {
   try {
-    await message.react("☀️");
+    await message.react("â˜€ï¸");
   } catch {
     // Reactions are optional sugar.
   }
@@ -1609,6 +1609,176 @@ async function maybeNudge(message, guildState, dailyState, nowMinutes) {
 
 
 
+function parseMessageLink(input) {
+  const match = input.match(/^https?:\/\/(?:canary\.)?discord\.com\/channels\/(\d{17,20})\/(\d{17,20})\/(\d{17,20})$/i);
+
+  if (!match) {
+    return null;
+  }
+
+  return {
+    guildId: match[1],
+    channelId: match[2],
+    messageId: match[3],
+  };
+}
+
+async function fetchReferencedMessage(guild, channelId, messageId) {
+  try {
+    const channel = await guild.channels.fetch(channelId);
+
+    if (!channel || !channel.isTextBased() || !("messages" in channel)) {
+      return null;
+    }
+
+    return channel.messages.fetch(messageId);
+  } catch {
+    return null;
+  }
+}
+
+async function handleManualLogAdd(message, body) {
+  const guildState = ensureGuildState(message.guild.id);
+  const timeZone = getGuildTimezone(guildState);
+  const todayKey = getZonedParts(new Date(), timeZone).dateKey;
+  const input = body.slice("logadd".length).trim();
+  const tokens = input.match(/\S+/g) ?? [];
+
+  if (tokens.length === 0) {
+    await message.reply({
+      content: "use `" + COMMAND_PREFIX + " logadd @user #channel 123456789012345678` or paste a full Discord message link.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  let index = 0;
+  let targetUserId = null;
+  let targetChannelId = null;
+
+  const userMentionMatch = tokens[index]?.match(/^<@!?(\d{17,20})>$/);
+
+  if (userMentionMatch) {
+    targetUserId = userMentionMatch[1];
+    index += 1;
+  } else if (/^\d{17,20}$/.test(tokens[index] ?? "")) {
+    targetUserId = tokens[index];
+    index += 1;
+  }
+
+  const channelMentionMatch = tokens[index]?.match(/^<#(\d{17,20})>$/);
+
+  if (channelMentionMatch) {
+    targetChannelId = channelMentionMatch[1];
+    index += 1;
+  }
+
+  const referenceToken = tokens[index] ?? "";
+
+  if (!referenceToken) {
+    await message.reply({
+      content: "i still need the message id or message link so i know which goblin document to file.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  if (tokens.length > index + 1) {
+    await message.reply({
+      content: "too many tokens. keep it to a user, an optional channel, and one message id or message link.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  let messageId = null;
+  const linkedMessage = parseMessageLink(referenceToken);
+
+  if (linkedMessage) {
+    if (linkedMessage.guildId !== message.guild.id) {
+      await message.reply({
+        content: "that message link points to a different server. cross-border goblin paperwork denied.",
+        allowedMentions: { repliedUser: false, parse: [] },
+      });
+      return;
+    }
+
+    targetChannelId = linkedMessage.channelId;
+    messageId = linkedMessage.messageId;
+  } else if (/^\d{17,20}$/.test(referenceToken)) {
+    messageId = referenceToken;
+    targetChannelId ??= message.channelId;
+  } else {
+    await message.reply({
+      content: "that does not look like a Discord message id or link. the goblin cannot notarize vibes alone.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  const sourceMessage = await fetchReferencedMessage(message.guild, targetChannelId, messageId);
+
+  if (!sourceMessage) {
+    await message.reply({
+      content: "could not fetch that message. either the id is wrong or the goblin does not have channel access.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  if (sourceMessage.author.bot) {
+    await message.reply({
+      content: "i am not manually logging another bot. the paperwork stops here.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  const sourceDateKey = getZonedParts(new Date(sourceMessage.createdTimestamp), timeZone).dateKey;
+
+  if (sourceDateKey !== todayKey) {
+    await message.reply({
+      content: "that message is not from today in this server's timezone, so i am not filing it under today's sunrise crimes.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  const inferredUserId = sourceMessage.author.id;
+
+  if (targetUserId && targetUserId !== inferredUserId) {
+    await message.reply({
+      content: "the user you gave me does not match the author of that message. suspicious paperwork. fix one of them and try again.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  targetUserId ??= inferredUserId;
+
+  const dailyState = ensureDailyState(guildState, todayKey);
+  const alreadyCheckedIn = Boolean(dailyState.checkIns[targetUserId]);
+  const sourceMember = sourceMessage.member ?? (await message.guild.members.fetch(targetUserId).catch(() => null));
+
+  dailyState.checkIns[targetUserId] = {
+    displayName: sourceMember?.displayName || sourceMessage.author.username,
+    timestamp: sourceMessage.createdTimestamp,
+    channelId: sourceMessage.channelId,
+    message: sourceMessage.content || "[manual log from attachment-only message]",
+  };
+
+  delete dailyState.nudgedUsers[targetUserId];
+  await store.save();
+
+  const totalCheckIns = Object.keys(dailyState.checkIns).length;
+  const action = alreadyCheckedIn ? "updated" : "added";
+
+  await message.reply({
+    content: "manual gm log " + action + " for <@" + targetUserId + "> from " + sourceMessage.url + ". " + totalCheckIns + " logged today.",
+    allowedMentions: { repliedUser: false, parse: ["users"] },
+  });
+}
+
 async function handleCheckIn(message) {
   const guildState = ensureGuildState(message.guild.id);
   const timeZone = getGuildTimezone(guildState);
@@ -1660,6 +1830,13 @@ async function handleOwnerSpeech(message, commandName, body) {
   }
 
 
+
+  if (commandName === "logadd") {
+
+    await handleManualLogAdd(message, body);
+    return;
+
+  }
 
   if (commandName === "offline") {
 
@@ -1908,6 +2085,8 @@ async function handleCommand(message) {
 
           `- \`${COMMAND_PREFIX} offline\` to announce a temporary goblin outage and a later return (owner only)`,
 
+          `- \`${COMMAND_PREFIX} logadd @user #channel 123456789012345678\` to manually file a gm from an existing message (owner only)`,
+
           "- `" + COMMAND_PREFIX + " presence watching for Mong Plorps` to change the bot status (owner only)",
 
           "- mention the bot, reply to it, or use a wake word like `morning goblin` to make it chatter back",
@@ -2057,6 +2236,8 @@ async function handleCommand(message) {
     case "presence":
 
     case "sayto":
+
+    case "logadd":
 
     case "offline": {
 

@@ -22,6 +22,7 @@ This file captures key product decisions from the development thread that are ea
 - The bot should auto-rotate through lots of short funny statuses every 6-12 hours.
 - Owner-set presence should still override the rotation until reset.
 - A planned temporary outage should be announcable with one owner-only command, and the goblin should only announce its return if that outage command was used first.
+- The owner should be able to manually backfill a same-day check-in from an existing Discord message when needed.
 
 ## Greeting rules
 

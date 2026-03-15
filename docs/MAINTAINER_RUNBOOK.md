@@ -153,6 +153,7 @@ Controlled by `BOT_OWNER_ID`.
 - `sayto`
 - `presence`
 - `offline`
+- `logadd`
 
 Presence note:
 
@@ -177,6 +178,10 @@ Behavior:
 
 - `!gm offline` posts a temporary outage notice in the configured morning channel when possible
 - on the next startup, the bot posts one comeback message and clears the flag
+
+### Manual log add
+
+Owner-only `!gm logadd` can backfill a same-day check-in from an existing message id or message link. It validates that the message is from this guild, is from today in the guild timezone, and matches the named user if one was provided.
 
 ### Records
 

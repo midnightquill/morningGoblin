@@ -9,7 +9,7 @@
     "top of the morning"
   ],
   "acceptedPatterns": [
-    "^m[a-z'-]*\\s+p[a-z'-]*$"
+    "^m[a-z'-]*\\s+p[a-z'-]*[!?.,;:]*$"
   ],
   "reminderLines": [
     "good morning, assorted goblins. this is your daily reminder to place one (1) `good morning` into the chat so i can mark you down as legally alive.",

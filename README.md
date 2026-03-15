@@ -117,6 +117,8 @@ These ignore `Manage Server` and instead check `BOT_OWNER_ID`:
   Clears the manual override and returns the goblin to automatic status rotation.
 - `!gm offline`
   Announces that the goblin is going offline for a bit and queues a one-time comeback announcement for the next startup.
+- `!gm logadd @user #channel 123456789012345678`
+  Manually files a same-day good-morning check-in from an existing message or Discord message link.
 
 Supported presence types:
 
@@ -136,6 +138,7 @@ Examples:
 !gm presence playing clipboard simulator
 !gm presence reset
 !gm offline
+!gm logadd @Somebody #general 123456789012345678
 ```
 
 ## What Counts As Good Morning
@@ -157,7 +160,7 @@ You can also define full regex patterns for inside jokes. The current config inc
 
 ```json
 "acceptedPatterns": [
-  "^m[a-z'-]*\\s+p[a-z'-]*$"
+  "^m[a-z'-]*\\s+p[a-z'-]*[!?.,;:]*$"
 ]
 ```
 
@@ -166,6 +169,8 @@ That means two-word greetings shaped like `M... P...` count too, such as:
 - `Mong Plorps`
 - `Morning People`
 - `Murple Plangles`
+- `Mission Progress?`
+- `moldy pizza!`
 
 A good morning only counts if it is still morning somewhere in the United States. The bot checks several U.S. time zones, including East Coast, Central, Mountain, Arizona, Pacific, Alaska, and Hawaii. In practice, that means the legal morning window stays open until Hawaii finishes morning.
 
