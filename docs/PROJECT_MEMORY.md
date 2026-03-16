@@ -1,4 +1,4 @@
-﻿# Project Memory
+# Project Memory
 
 Last updated: 2026-03-12
 
@@ -51,8 +51,8 @@ If a message looks like a good-morning but it is no longer morning anywhere in t
 On a valid check-in:
 
 - the user is logged for the day
-- the bot attempts to react with `☀️`
-- the bot may send a text reply from `checkInReplies` or `duplicateReplies`
+- the bot attempts to react with the sun emoji
+- the bot sends a text reply from `checkInReplies` or `duplicateReplies` unless the user is on the quiet list
 
 Quiet-list exception:
 
@@ -163,6 +163,7 @@ Require `BOT_OWNER_ID` match:
 - `!gm presence reset`
 - `!gm offline`
 - `!gm logadd @user #channel <messageId>`
+- `!gm logreply #channel <messageId>`
 
 Presence behavior:
 
@@ -171,6 +172,7 @@ Presence behavior:
 - the auto-rotation timer picks a new status every 6-12 hours
 - auto statuses are worded to read naturally in the Discord sidebar even when Discord hides the activity type label
 - `logadd` lets the owner manually file a same-day check-in from an existing message without triggering public check-in chatter
+- `logreply` uses an existing same-day message to both file the check-in and retroactively do the goblin reaction/reply on that message
 
 ## Per-Guild State Schema
 

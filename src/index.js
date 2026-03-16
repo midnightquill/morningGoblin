@@ -34,8 +34,6 @@ const REMINDER_GRACE_MINUTES = 180;
 
 const FOLLOWUP_GRACE_MINUTES = 180;
 
-const RANDOM_REPLY_CHANCE = 0.42;
-
 const LOCK_PATH = path.resolve(process.cwd(), "data", "bot.lock");
 
 const DEFAULT_PRESENCE = {
@@ -302,13 +300,6 @@ function pickFromPoolBag(poolKey, items) {
 
 }
 
-
-
-function shouldReply() {
-
-  return Math.random() < RANDOM_REPLY_CHANCE;
-
-}
 
 
 
@@ -592,7 +583,7 @@ function ensureDailyState(guildState, dateKey) {
 
 function isBoundaryCharacter(char) {
 
-  return !char || /[\s.,!?;:'"`()\[\]{}<>\-_/\\]/.test(char);
+  return !char || !/[\p{L}\p{N}]/u.test(char);
 
 }
 
@@ -1518,18 +1509,16 @@ async function postStatus(message) {
 
 
 
-async function maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, totalCheckIns) {
+async function maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, totalCheckIns, options = {}) {
+  const { forceReply = false, ignoreQuietList = false } = options;
+
   try {
-    await message.react("â˜€ï¸");
+    await message.react("\u2600\uFE0F");
   } catch {
     // Reactions are optional sugar.
   }
 
-  if (guildState.suppressedCheckInReplyUserIds.includes(message.author.id)) {
-    return;
-  }
-
-  if (!shouldReply()) {
+  if (!ignoreQuietList && guildState.suppressedCheckInReplyUserIds.includes(message.author.id)) {
     return;
   }
 
@@ -1647,6 +1636,7 @@ async function handleManualLogAdd(message, body) {
   if (tokens.length === 0) {
     await message.reply({
       content: "use `" + COMMAND_PREFIX + " logadd @user #channel 123456789012345678` or paste a full Discord message link.",
+
       allowedMentions: { repliedUser: false, parse: [] },
     });
     return;
@@ -1779,6 +1769,136 @@ async function handleManualLogAdd(message, body) {
   });
 }
 
+async function handleManualLogReply(message, body) {
+  const guildState = ensureGuildState(message.guild.id);
+  const timeZone = getGuildTimezone(guildState);
+  const todayKey = getZonedParts(new Date(), timeZone).dateKey;
+  const input = body.slice("logreply".length).trim();
+  const tokens = input.match(/\S+/g) ?? [];
+
+  if (tokens.length === 0) {
+    await message.reply({
+      content: "use `" + COMMAND_PREFIX + " logreply #channel 123456789012345678` or paste a full Discord message link.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  let index = 0;
+  let targetChannelId = null;
+  const channelMentionMatch = tokens[index]?.match(/^<#(\d{17,20})>$/);
+
+  if (channelMentionMatch) {
+    targetChannelId = channelMentionMatch[1];
+    index += 1;
+  }
+
+  const referenceToken = tokens[index] ?? "";
+
+  if (!referenceToken) {
+    await message.reply({
+      content: "i still need the message id or message link so i know where to do the dramatic retroactive paperwork.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  if (tokens.length > index + 1) {
+    await message.reply({
+      content: "too many tokens. keep it to an optional channel plus one message id or message link.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  let messageId = null;
+  const linkedMessage = parseMessageLink(referenceToken);
+
+  if (linkedMessage) {
+    if (linkedMessage.guildId !== message.guild.id) {
+      await message.reply({
+        content: "that message link points to a different server. i am not doing international goblin paperwork today.",
+        allowedMentions: { repliedUser: false, parse: [] },
+      });
+      return;
+    }
+
+    targetChannelId = linkedMessage.channelId;
+    messageId = linkedMessage.messageId;
+  } else if (/^\d{17,20}$/.test(referenceToken)) {
+    messageId = referenceToken;
+    targetChannelId ??= message.channelId;
+  } else {
+    await message.reply({
+      content: "that does not look like a Discord message id or link. the goblin cannot react to a concept.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  const sourceMessage = await fetchReferencedMessage(message.guild, targetChannelId, messageId);
+
+  if (!sourceMessage) {
+    await message.reply({
+      content: "could not fetch that message. either the id is wrong or i do not have channel access.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  if (sourceMessage.author.bot) {
+    await message.reply({
+      content: "i am not doing a fake retro-gm for another bot. that is spiritually embarrassing.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  const sourceDateKey = getZonedParts(new Date(sourceMessage.createdTimestamp), timeZone).dateKey;
+
+  if (sourceDateKey !== todayKey) {
+    await message.reply({
+      content: "that message is not from today in this server's timezone, so i am not filing it into today's dawn ledger.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  const targetUserId = sourceMessage.author.id;
+  const dailyState = ensureDailyState(guildState, todayKey);
+  const alreadyCheckedIn = Boolean(dailyState.checkIns[targetUserId]);
+  const sourceMember = sourceMessage.member ?? (await message.guild.members.fetch(targetUserId).catch(() => null));
+
+  dailyState.checkIns[targetUserId] = {
+    displayName: sourceMember?.displayName || sourceMessage.author.username,
+    timestamp: sourceMessage.createdTimestamp,
+    channelId: sourceMessage.channelId,
+    message: sourceMessage.content || "[manual retro-reply log from attachment-only message]",
+  };
+
+  delete dailyState.nudgedUsers[targetUserId];
+  await store.save();
+
+  const totalCheckIns = Object.keys(dailyState.checkIns).length;
+
+  try {
+    await maybeCelebrateCheckIn(sourceMessage, guildState, alreadyCheckedIn, totalCheckIns, {
+      forceReply: true,
+      ignoreQuietList: true,
+    });
+  } catch {
+    await message.reply({
+      content: "i logged the gm for <@" + targetUserId + ">, but the reaction/reply part failed. probably channel permissions being dramatic.",
+      allowedMentions: { repliedUser: false, parse: ["users"] },
+    });
+    return;
+  }
+
+  await message.reply({
+    content: "retro gm reaction fired for <@" + targetUserId + "> on " + sourceMessage.url + ".",
+    allowedMentions: { repliedUser: false, parse: ["users"] },
+  });
+}
 async function handleCheckIn(message) {
   const guildState = ensureGuildState(message.guild.id);
   const timeZone = getGuildTimezone(guildState);
@@ -1834,6 +1954,13 @@ async function handleOwnerSpeech(message, commandName, body) {
   if (commandName === "logadd") {
 
     await handleManualLogAdd(message, body);
+    return;
+
+  }
+
+  if (commandName === "logreply") {
+
+    await handleManualLogReply(message, body);
     return;
 
   }
@@ -2087,6 +2214,8 @@ async function handleCommand(message) {
 
           `- \`${COMMAND_PREFIX} logadd @user #channel 123456789012345678\` to manually file a gm from an existing message (owner only)`,
 
+          `- \`${COMMAND_PREFIX} logreply #channel 123456789012345678\` to retro-react and reply on an existing gm message (owner only)`,
+
           "- `" + COMMAND_PREFIX + " presence watching for Mong Plorps` to change the bot status (owner only)",
 
           "- mention the bot, reply to it, or use a wake word like `morning goblin` to make it chatter back",
@@ -2238,6 +2367,8 @@ async function handleCommand(message) {
     case "sayto":
 
     case "logadd":
+
+    case "logreply":
 
     case "offline": {
 

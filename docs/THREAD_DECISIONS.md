@@ -23,6 +23,7 @@ This file captures key product decisions from the development thread that are ea
 - Owner-set presence should still override the rotation until reset.
 - A planned temporary outage should be announcable with one owner-only command, and the goblin should only announce its return if that outage command was used first.
 - The owner should be able to manually backfill a same-day check-in from an existing Discord message when needed.
+- The owner should also have a separate command that retroactively reacts and replies on a good-morning message after logging it.
 
 ## Greeting rules
 

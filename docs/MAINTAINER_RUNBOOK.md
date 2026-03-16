@@ -154,6 +154,7 @@ Controlled by `BOT_OWNER_ID`.
 - `presence`
 - `offline`
 - `logadd`
+- `logreply`
 
 Presence note:
 
@@ -182,6 +183,8 @@ Behavior:
 ### Manual log add
 
 Owner-only `!gm logadd` can backfill a same-day check-in from an existing message id or message link. It validates that the message is from this guild, is from today in the guild timezone, and matches the named user if one was provided.
+
+Owner-only `!gm logreply` uses that same-day message reference flow too, but also force-reacts and force-replies on the target message so it looks like the goblin processed it live later.
 
 ### Records
 

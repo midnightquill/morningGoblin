@@ -119,6 +119,8 @@ These ignore `Manage Server` and instead check `BOT_OWNER_ID`:
   Announces that the goblin is going offline for a bit and queues a one-time comeback announcement for the next startup.
 - `!gm logadd @user #channel 123456789012345678`
   Manually files a same-day good-morning check-in from an existing message or Discord message link.
+- `!gm logreply #channel 123456789012345678`
+  Logs a same-day check-in from an existing message and then force-reacts and force-replies on that message like the goblin just processed it live.
 
 Supported presence types:
 
@@ -139,6 +141,7 @@ Examples:
 !gm presence reset
 !gm offline
 !gm logadd @Somebody #general 123456789012345678
+!gm logreply #general 123456789012345678
 ```
 
 ## What Counts As Good Morning
