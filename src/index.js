@@ -565,9 +565,37 @@ function getZonedParts(date, timeZone) {
 
 
 
+function finalizeCompletedDailyState(guildState, dailyState) {
+
+  if (!dailyState || !dailyState.dateKey) {
+
+    return { changed: false, newBest: false, userIds: [], count: 0 };
+
+  }
+
+
+
+  return updateRecords(guildState, dailyState);
+
+}
+
+
+
 function ensureDailyState(guildState, dateKey) {
 
-  if (!guildState.daily || guildState.daily.dateKey !== dateKey) {
+  if (!guildState.daily) {
+
+    guildState.daily = createDailyState(dateKey);
+
+    return guildState.daily;
+
+  }
+
+
+
+  if (guildState.daily.dateKey !== dateKey) {
+
+    finalizeCompletedDailyState(guildState, guildState.daily);
 
     guildState.daily = createDailyState(dateKey);
 
@@ -578,8 +606,6 @@ function ensureDailyState(guildState, dateKey) {
   return guildState.daily;
 
 }
-
-
 
 function isBoundaryCharacter(char) {
 
@@ -2656,7 +2682,6 @@ async function schedulerTick() {
 
     if (
 
-      dailyState.reminderSent &&
 
       !dailyState.followupSent &&
 

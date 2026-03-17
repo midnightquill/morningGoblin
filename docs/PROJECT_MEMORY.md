@@ -115,8 +115,8 @@ The records live in guild state under `records`.
 
 Important detail:
 
-- records are updated when the scheduled follow-up runs, not instantly on each check-in
-- a new best day triggers a celebration post that tags the contributors who set the record
+- records are finalized on day rollover and also refreshed during the scheduled follow-up
+- a new best day triggers a celebration post during the scheduled follow-up that tags the contributors who set the record
 
 `!gm status` should include current-day roster plus saved best/worst record summary.
 
@@ -300,3 +300,4 @@ High-value cleanup ideas:
 - formalize state migration helpers in `src/storage.js`
 - consider moving records/facts/command docs into smaller structured modules or docs
 - add a hosted deployment guide for Raspberry Pi / systemd if that becomes the chosen permanent host
+
