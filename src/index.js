@@ -1549,8 +1549,8 @@ async function maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, tota
   }
 
   const reply = alreadyCheckedIn
-    ? pickRandom(morningConfig.duplicateReplies)
-    : `${pickRandom(morningConfig.checkInReplies)} (${totalCheckIns} logged today.)`;
+    ? pickFromPoolBag("checkin:duplicateReplies", morningConfig.duplicateReplies)
+    : `${pickFromPoolBag("checkin:checkInReplies", morningConfig.checkInReplies)} (${totalCheckIns} logged today.)`;
 
   await message.reply({
     content: reply,
@@ -2883,6 +2883,7 @@ start().catch(async (error) => {
   process.exitCode = 1;
 
 });
+
 
 
 

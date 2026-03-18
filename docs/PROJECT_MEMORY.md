@@ -52,7 +52,7 @@ On a valid check-in:
 
 - the user is logged for the day
 - the bot attempts to react with the sun emoji
-- the bot sends a text reply from `checkInReplies` or `duplicateReplies` unless the user is on the quiet list
+- the bot sends a text reply from `checkInReplies` or `duplicateReplies` unless the user is on the quiet list; those pools use shuffle-bag rotation to reduce repeats
 
 Quiet-list exception:
 
@@ -300,4 +300,5 @@ High-value cleanup ideas:
 - formalize state migration helpers in `src/storage.js`
 - consider moving records/facts/command docs into smaller structured modules or docs
 - add a hosted deployment guide for Raspberry Pi / systemd if that becomes the chosen permanent host
+
 
