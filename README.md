@@ -149,6 +149,8 @@ These ignore `Manage Server` and instead check `BOT_OWNER_ID`:
   Clears the manual override and returns the goblin to automatic status rotation.
 - `!gm offline`
   Announces that the goblin is going offline for a bit and queues a one-time comeback announcement for the next startup.
+- `!gm resetpoints`
+  Resets this server's weekly/monthly/yearly/lifetime GM scoreboards and champion history back to a fresh season.
 - `!gm logadd @user #channel 123456789012345678`
   Manually files a same-day good-morning check-in from an existing message or Discord message link.
 - `!gm logreply #channel 123456789012345678`
@@ -172,6 +174,7 @@ Examples:
 !gm presence playing clipboard simulator
 !gm presence reset
 !gm offline
+!gm resetpoints
 !gm logadd @Somebody #general 123456789012345678
 !gm logreply #general 123456789012345678
 !gm streamed today
@@ -289,6 +292,3 @@ The bot now creates a lock file at `data/bot.lock` while running and will refuse
 - Keep `.env` out of git.
 - Regenerate the Discord bot token immediately if you ever paste it somewhere unsafe.
 - `BOT_OWNER_ID` is just an identifier, not a secret.
-
-
-

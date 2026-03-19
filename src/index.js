@@ -2698,6 +2698,22 @@ async function handleOwnerSpeech(message, commandName, body) {
 
   }
 
+  if (commandName === "resetpoints") {
+
+    const guildState = ensureGuildState(message.guild.id);
+    const todayKey = getZonedParts(new Date(), getGuildTimezone(guildState)).dateKey;
+
+    guildState.points = createPointsState(todayKey);
+    await store.save();
+
+    await message.reply({
+      content: "everyone's gm points have been obliterated for this server. fresh season. clean clipboard. no survivors.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+
+  }
+
   if (commandName === "offline") {
 
     const guildState = ensureGuildState(message.guild.id);
@@ -2946,6 +2962,7 @@ async function handleCommand(message) {
           `- \`${COMMAND_PREFIX} sayto #channel your message here\` to make the bot speak in another channel (owner only)`,
 
           `- \`${COMMAND_PREFIX} offline\` to announce a temporary goblin outage and a later return (owner only)`,
+          `- \`${COMMAND_PREFIX} resetpoints\` to wipe this server's gm scoreboards and champions (owner only)`,
 
           `- \`${COMMAND_PREFIX} logadd @user #channel 123456789012345678\` to manually file a gm from an existing message (owner only)`,
 
@@ -3123,6 +3140,8 @@ async function handleCommand(message) {
     case "logreply":
 
     case "streamed":
+
+    case "resetpoints":
 
     case "offline": {
 
@@ -3621,24 +3640,3 @@ start().catch(async (error) => {
   process.exitCode = 1;
 
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

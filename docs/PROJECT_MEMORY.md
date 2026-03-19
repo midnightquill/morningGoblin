@@ -135,6 +135,7 @@ Behavior:
 
 - points are only awarded on the first successful check-in of the day
 - manual `logadd` and `logreply` award a point if they create a new same-day check-in
+- owner-only `!gm resetpoints` wipes that guild's scoreboards, champion history, and pending champion announcements back to a fresh season starting today
 - weekly/monthly/yearly champions are finalized when the calendar period rolls over in the guild timezone
 - champion announcements are queued and posted in the configured morning channel after reminder time
 - ties become co-champions
@@ -195,6 +196,7 @@ Require `BOT_OWNER_ID` match:
 - `!gm presence watching ...`
 - `!gm presence reset`
 - `!gm offline`
+- `!gm resetpoints`
 - `!gm logadd @user #channel <messageId>`
 - `!gm logreply #channel <messageId>`
 
@@ -346,5 +348,3 @@ High-value cleanup ideas:
 - formalize state migration helpers in `src/storage.js`
 - consider moving records/facts/command docs into smaller structured modules or docs
 - add a hosted deployment guide for Raspberry Pi / systemd if that becomes the chosen permanent host
-
-
