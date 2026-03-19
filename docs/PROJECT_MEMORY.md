@@ -142,6 +142,16 @@ Behavior:
 `!gm points` shows the live scoreboards plus the most recent saved champions.
 
 
+### Stream tracker
+
+The bot keeps a simple top-level `streamTracker.lastStreamDateKey`.
+
+Behavior:
+
+- default date is `2025-04-26`
+- `!gm stream` reports how many days it has been since that date using the default timezone
+- owner-only `!gm streamed YYYY-MM-DD` or `today` updates the saved date
+
 ### Morning facts
 
 The bot has a rotating bank of morning facts in `morningFacts`.
@@ -243,6 +253,7 @@ Current important fields:
 Top-level state also includes:
 
 - `botPresence`
+- `streamTracker`
 
 Important presence note:
 

@@ -46,6 +46,8 @@ const PERIOD_HISTORY_LIMITS = {
   year: 10,
 };
 
+const DEFAULT_LAST_STREAM_DATE_KEY = "2025-04-26";
+
 const DEFAULT_PRESENCE = {
   type: "watching",
   name: "watching for illegal pre-gm chatter",
@@ -885,6 +887,86 @@ function awardPoint(guildState, userId, dateKey, amount = POINTS_PER_CHECK_IN) {
 function formatPointsWord(points) {
 
   return `${points} point${points === 1 ? "" : "s"}`;
+
+}
+
+
+
+function ensureStreamTracker() {
+
+  if (!store.state.streamTracker || typeof store.state.streamTracker !== "object") {
+    store.state.streamTracker = { lastStreamDateKey: DEFAULT_LAST_STREAM_DATE_KEY };
+  }
+
+  if (!parseDateKey(store.state.streamTracker.lastStreamDateKey)) {
+    store.state.streamTracker.lastStreamDateKey = DEFAULT_LAST_STREAM_DATE_KEY;
+  }
+
+  return store.state.streamTracker;
+
+}
+
+
+
+function getDateKeyDifference(fromDateKey, toDateKey) {
+
+  const fromDate = parseDateKey(fromDateKey);
+  const toDate = parseDateKey(toDateKey);
+
+  if (!fromDate || !toDate) {
+    return null;
+  }
+
+  return Math.max(0, Math.round((toDate.getTime() - fromDate.getTime()) / 86400000));
+
+}
+
+
+
+function parseStreamDateInput(input) {
+
+  const trimmed = input.trim().toLowerCase();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  if (trimmed === "today") {
+    return getZonedParts(new Date(), DEFAULT_TIMEZONE).dateKey;
+  }
+
+  if (parseDateKey(trimmed)) {
+    return trimmed;
+  }
+
+  const slashMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+
+  if (!slashMatch) {
+    return null;
+  }
+
+  const month = Number.parseInt(slashMatch[1], 10);
+  const day = Number.parseInt(slashMatch[2], 10);
+  const year = Number.parseInt(slashMatch[3], 10);
+
+  const normalized = `${year.toString().padStart(4, "0")}-${month.toString().padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+
+  return parseDateKey(normalized) ? normalized : null;
+
+}
+
+
+
+function buildStreamGapMessage(daysSinceLastStream, lastStreamDateKey) {
+
+  const templates = [
+    `it has been ${daysSinceLastStream} days since the last stream on ${lastStreamDateKey}. the drought paperwork is thriving.`,
+    `${daysSinceLastStream} days since stream activity. last confirmed incident: ${lastStreamDateKey}.`,
+    `current stream drought: ${daysSinceLastStream} days. the last known stream was ${lastStreamDateKey}.`,
+    `the goblin records show ${daysSinceLastStream} days since the last stream (${lastStreamDateKey}). grim but well-documented.`,
+  ];
+
+  return pickFromPoolBag("stream:status", templates);
 
 }
 
@@ -2051,6 +2133,21 @@ async function postPoints(message) {
 
 
 
+async function postStreamStatus(message) {
+
+  const tracker = ensureStreamTracker();
+  const todayKey = getZonedParts(new Date(), DEFAULT_TIMEZONE).dateKey;
+  const daysSinceLastStream = getDateKeyDifference(tracker.lastStreamDateKey, todayKey);
+
+  await message.reply({
+    content: buildStreamGapMessage(daysSinceLastStream ?? 0, tracker.lastStreamDateKey),
+    allowedMentions: { repliedUser: false, parse: [] },
+  });
+
+}
+
+
+
 async function postStatus(message) {
   const guildState = ensureGuildState(message.guild.id);
   const timeZone = getGuildTimezone(guildState);
@@ -2557,6 +2654,50 @@ async function handleOwnerSpeech(message, commandName, body) {
 
   }
 
+  if (commandName === "streamed") {
+
+    const input = body.slice(commandName.length).trim();
+
+    if (!input) {
+      await message.reply({
+        content: "use it like `" + COMMAND_PREFIX + " streamed 2026-03-19` or `" + COMMAND_PREFIX + " streamed today`.",
+        allowedMentions: { repliedUser: false, parse: [] },
+      });
+      return;
+    }
+
+    const normalizedDateKey = parseStreamDateInput(input);
+
+    if (!normalizedDateKey) {
+      await message.reply({
+        content: "that date format is cursed. use `YYYY-MM-DD`, `M/D/YYYY`, or `today`.",
+        allowedMentions: { repliedUser: false, parse: [] },
+      });
+      return;
+    }
+
+    const todayKey = getZonedParts(new Date(), DEFAULT_TIMEZONE).dateKey;
+
+    if (getDateKeyDifference(normalizedDateKey, todayKey) === null || normalizedDateKey > todayKey) {
+      await message.reply({
+        content: "i am not logging a future stream. the goblin is strange, not prophetic.",
+        allowedMentions: { repliedUser: false, parse: [] },
+      });
+      return;
+    }
+
+    const tracker = ensureStreamTracker();
+    tracker.lastStreamDateKey = normalizedDateKey;
+    await store.save();
+
+    await message.reply({
+      content: `stream tracker updated. the official last-stream date is now ${normalizedDateKey}. drought clock reset.`,
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+
+  }
+
   if (commandName === "offline") {
 
     const guildState = ensureGuildState(message.guild.id);
@@ -2845,6 +2986,15 @@ async function handleCommand(message) {
 
     }
 
+    case "stream":
+    case "laststream": {
+
+      await postStreamStatus(message);
+
+      return;
+
+    }
+
     case "phrases": {
       await message.reply({
         content: `accepted morning starts: ${morningConfig.acceptedStarts.join(", ")}`,
@@ -2971,6 +3121,8 @@ async function handleCommand(message) {
     case "logadd":
 
     case "logreply":
+
+    case "streamed":
 
     case "offline": {
 
@@ -3469,6 +3621,9 @@ start().catch(async (error) => {
   process.exitCode = 1;
 
 });
+
+
+
 
 
 

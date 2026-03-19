@@ -17,6 +17,7 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 - Awards one point for each person's first successful GM of the day and keeps weekly/monthly/yearly scoreboards
 - Declares weekly, monthly, and yearly good-morning champions automatically in the morning channel
 - Can serve a rotating bank of morning facts with `!gm fact`
+- Can report how many days it has been since the last stream with `!gm stream`
 - Lets the bot owner make it speak in any channel without exposing the command publicly
 - Auto-rotates through a big pool of funny Discord statuses every 6-12 hours when no manual owner override is set
 - Lets the bot owner change the bot's Discord presence from Discord itself
@@ -74,6 +75,16 @@ From [.env.example](C:/Dev/Codex/Discord Morning Bot/.env.example):
 - `MORNING_FOLLOWUP_MINUTE`: defaults to `30`
 - `MORNING_WINDOW_END_HOUR`: defaults to `12`
 
+## Stream tracker
+
+The bot also keeps a simple last-stream date and can tell the server how many days it has been since the most recent stream.
+
+Defaults:
+
+- last-stream date starts at `2025-04-26`
+- `!gm stream` reports the current drought length
+- owner-only `!gm streamed YYYY-MM-DD` or `!gm streamed today` updates the stored date
+
 ## Points and champions
 
 Per guild, the bot now awards `1` point for each person's first successful good morning of the day.
@@ -103,6 +114,8 @@ These require `Manage Server`:
   Shows today's check-in count and roster, plus saved best/worst day records when available.
 - `!gm points`
   Shows the current weekly/monthly/yearly GM scoreboards, lifetime leaders, and the most recent champions.
+- `!gm stream`
+  Shows how many days it has been since the last stream date on file.
 - `!gm fact`
   Posts a random morning fact from the configured fact bank without repeating back to back.
 - `!gm phrases`
@@ -161,6 +174,8 @@ Examples:
 !gm offline
 !gm logadd @Somebody #general 123456789012345678
 !gm logreply #general 123456789012345678
+!gm streamed today
+!gm stream
 !gm points
 !gm points
 ```
