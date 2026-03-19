@@ -1,4 +1,4 @@
-﻿# Thread Decisions
+# Thread Decisions
 
 Last updated: 2026-03-12
 
@@ -24,6 +24,7 @@ This file captures key product decisions from the development thread that are ea
 - A planned temporary outage should be announcable with one owner-only command, and the goblin should only announce its return if that outage command was used first.
 - The owner should be able to manually backfill a same-day check-in from an existing Discord message when needed.
 - The owner should also have a separate command that retroactively reacts and replies on a good-morning message after logging it.
+- First successful GMs should award points, with weekly/monthly/yearly champions declared automatically instead of manual scorekeeping.
 
 ## Greeting rules
 

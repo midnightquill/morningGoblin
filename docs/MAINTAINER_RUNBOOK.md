@@ -1,4 +1,4 @@
-﻿# Maintainer Runbook
+# Maintainer Runbook
 
 Last updated: 2026-03-12
 
@@ -186,7 +186,7 @@ Owner-only `!gm logadd` can backfill a same-day check-in from an existing messag
 
 Owner-only `!gm logreply` uses that same-day message reference flow too, but also force-reacts and force-replies on the target message so it looks like the goblin processed it live later.
 
-### Records
+### Records and points
 
 Stored per guild in `data/state.json` under `records`.
 
@@ -194,6 +194,9 @@ Intended behavior:
 
 - new best days should get a celebration post during follow-up
 - worst day is the lowest completed-day count seen so far
+- each user's first successful GM of the day awards 1 point
+- week/month/year champions are finalized on rollover and announced later in the morning channel
+- `!gm points` should show the live scoreboards plus recent champions
 
 ## Security Checklist
 

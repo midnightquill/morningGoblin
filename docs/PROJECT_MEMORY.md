@@ -100,7 +100,7 @@ Anti-repeat behavior:
 - direct mentions bypass cooldowns so they feel responsive
 - wake-word / reply-based chatter still respects cooldowns
 
-## Records and Facts
+## Records, Points, and Facts
 
 These were added after the earlier README versions.
 
@@ -119,6 +119,28 @@ Important detail:
 - a new best day triggers a celebration post during the scheduled follow-up that tags the contributors who set the record
 
 `!gm status` should include current-day roster plus saved best/worst record summary.
+
+### Points and champions
+
+Per guild, the bot now awards `1` point for each person's first successful GM of the day.
+
+Tracked scoreboards:
+
+- current week
+- current month
+- current year
+- lifetime total
+
+Behavior:
+
+- points are only awarded on the first successful check-in of the day
+- manual `logadd` and `logreply` award a point if they create a new same-day check-in
+- weekly/monthly/yearly champions are finalized when the calendar period rolls over in the guild timezone
+- champion announcements are queued and posted in the configured morning channel after reminder time
+- ties become co-champions
+
+`!gm points` shows the live scoreboards plus the most recent saved champions.
+
 
 ### Morning facts
 
@@ -143,6 +165,7 @@ Require `Manage Server`:
 - `!gm here`
 - `!gm off`
 - `!gm status`
+- `!gm points`
 - `!gm fact`
 - `!gm phrases`
 - `!gm reload`
@@ -185,6 +208,7 @@ Current important fields:
 - `daily`
 - `suppressedCheckInReplyUserIds`
 - `records`
+- `points`
 - `offlineNotice`
 
 `daily` includes:
@@ -200,6 +224,17 @@ Current important fields:
 - `best`
 - `worst`
 
+
+`points` includes:
+
+- `lifetime`
+- `periods.week`
+- `periods.month`
+- `periods.year`
+- `history.week`
+- `history.month`
+- `history.year`
+- `pendingAnnouncements`
 `offlineNotice` includes:
 
 - `pendingReturn`

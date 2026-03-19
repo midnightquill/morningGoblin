@@ -14,6 +14,8 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 - Talks back when people mention it, reply to it, or use configured wake words like `morning goblin`
 - Tracks best and worst completed good-morning days per server
 - Celebrates brand-new best-day records by tagging the people who helped set them
+- Awards one point for each person's first successful GM of the day and keeps weekly/monthly/yearly scoreboards
+- Declares weekly, monthly, and yearly good-morning champions automatically in the morning channel
 - Can serve a rotating bank of morning facts with `!gm fact`
 - Lets the bot owner make it speak in any channel without exposing the command publicly
 - Auto-rotates through a big pool of funny Discord statuses every 6-12 hours when no manual owner override is set
@@ -72,6 +74,21 @@ From [.env.example](C:/Dev/Codex/Discord Morning Bot/.env.example):
 - `MORNING_FOLLOWUP_MINUTE`: defaults to `30`
 - `MORNING_WINDOW_END_HOUR`: defaults to `12`
 
+## Points and champions
+
+Per guild, the bot now awards `1` point for each person's first successful good morning of the day.
+
+It keeps four scoreboards:
+
+- current week
+- current month
+- current year
+- lifetime total
+
+When a week, month, or year rolls over, the bot automatically declares the champion in the configured morning channel. Ties become co-champions instead of arbitrary tiebreakers.
+
+Use `!gm points` to see the live board and the most recent champions.
+
 ## Commands
 
 ### Server/admin commands
@@ -84,6 +101,8 @@ These require `Manage Server`:
   Disables the bot in the current server.
 - `!gm status`
   Shows today's check-in count and roster, plus saved best/worst day records when available.
+- `!gm points`
+  Shows the current weekly/monthly/yearly GM scoreboards, lifetime leaders, and the most recent champions.
 - `!gm fact`
   Posts a random morning fact from the configured fact bank without repeating back to back.
 - `!gm phrases`
@@ -142,6 +161,8 @@ Examples:
 !gm offline
 !gm logadd @Somebody #general 123456789012345678
 !gm logreply #general 123456789012345678
+!gm points
+!gm points
 ```
 
 ## What Counts As Good Morning
@@ -253,3 +274,6 @@ The bot now creates a lock file at `data/bot.lock` while running and will refuse
 - Keep `.env` out of git.
 - Regenerate the Discord bot token immediately if you ever paste it somewhere unsafe.
 - `BOT_OWNER_ID` is just an identifier, not a secret.
+
+
+

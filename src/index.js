@@ -36,6 +36,16 @@ const FOLLOWUP_GRACE_MINUTES = 180;
 
 const LOCK_PATH = path.resolve(process.cwd(), "data", "bot.lock");
 
+const POINTS_PER_CHECK_IN = 1;
+
+const PERIOD_TYPES = ["week", "month", "year"];
+
+const PERIOD_HISTORY_LIMITS = {
+  week: 16,
+  month: 18,
+  year: 10,
+};
+
 const DEFAULT_PRESENCE = {
   type: "watching",
   name: "watching for illegal pre-gm chatter",
@@ -446,6 +456,7 @@ function ensureGuildState(guildId) {
         best: null,
         worst: null,
       },
+      points: null,
       offlineNotice: {
         pendingReturn: false,
         channelId: null,
@@ -470,6 +481,10 @@ function ensureGuildState(guildId) {
 
   if (!("worst" in guilds[guildId].records)) {
     guilds[guildId].records.worst = null;
+  }
+
+  if (!guilds[guildId].points || typeof guilds[guildId].points !== "object") {
+    guilds[guildId].points = null;
   }
 
   if (!guilds[guildId].offlineNotice || typeof guilds[guildId].offlineNotice !== "object") {
@@ -565,7 +580,317 @@ function getZonedParts(date, timeZone) {
 
 
 
-function finalizeCompletedDailyState(guildState, dailyState) {
+function parseDateKey(dateKey) {
+
+  const match = dateKey.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+
+
+
+  if (!match) {
+
+    return null;
+
+  }
+
+
+
+  return new Date(Date.UTC(
+    Number.parseInt(match[1], 10),
+    Number.parseInt(match[2], 10) - 1,
+    Number.parseInt(match[3], 10),
+  ));
+
+}
+
+
+
+function formatUtcDateKey(date) {
+
+  return date.toISOString().slice(0, 10);
+
+}
+
+
+
+function getWeekKey(dateKey) {
+
+  const date = parseDateKey(dateKey);
+
+
+
+  if (!date) {
+
+    return dateKey;
+
+  }
+
+
+
+  const day = date.getUTCDay();
+  date.setUTCDate(date.getUTCDate() - day);
+  return formatUtcDateKey(date);
+
+}
+
+
+
+function getMonthKey(dateKey) {
+
+  return dateKey.slice(0, 7);
+
+}
+
+
+
+function getYearKey(dateKey) {
+
+  return dateKey.slice(0, 4);
+
+}
+
+
+
+function getPeriodKey(periodType, dateKey) {
+
+  switch (periodType) {
+
+    case "week":
+      return getWeekKey(dateKey);
+
+    case "month":
+      return getMonthKey(dateKey);
+
+    case "year":
+      return getYearKey(dateKey);
+
+    default:
+      return dateKey;
+
+  }
+
+}
+
+
+
+function getPeriodKeys(dateKey) {
+
+  return {
+    week: getWeekKey(dateKey),
+    month: getMonthKey(dateKey),
+    year: getYearKey(dateKey),
+  };
+
+}
+
+
+
+function createEmptyPeriodBucket(key) {
+
+  return {
+    key,
+    scores: {},
+  };
+
+}
+
+
+
+function createPointsState(dateKey) {
+
+  const periodKeys = getPeriodKeys(dateKey);
+
+
+
+  return {
+    lifetime: {},
+    periods: {
+      week: createEmptyPeriodBucket(periodKeys.week),
+      month: createEmptyPeriodBucket(periodKeys.month),
+      year: createEmptyPeriodBucket(periodKeys.year),
+    },
+    history: {
+      week: [],
+      month: [],
+      year: [],
+    },
+    pendingAnnouncements: [],
+  };
+
+}
+
+
+
+function ensurePointsState(guildState, dateKey) {
+
+  const periodKeys = getPeriodKeys(dateKey);
+  let justInitialized = false;
+
+
+
+  if (!guildState.points || typeof guildState.points !== "object") {
+
+    guildState.points = createPointsState(dateKey);
+    justInitialized = true;
+
+  }
+
+
+
+  const pointsState = guildState.points;
+
+
+
+  if (!pointsState.lifetime || typeof pointsState.lifetime !== "object") {
+    pointsState.lifetime = {};
+  }
+
+  if (!pointsState.periods || typeof pointsState.periods !== "object") {
+    pointsState.periods = {};
+  }
+
+  if (!pointsState.history || typeof pointsState.history !== "object") {
+    pointsState.history = {};
+  }
+
+  if (!Array.isArray(pointsState.pendingAnnouncements)) {
+    pointsState.pendingAnnouncements = [];
+  }
+
+  for (const periodType of PERIOD_TYPES) {
+    if (!pointsState.periods[periodType] || typeof pointsState.periods[periodType] !== "object") {
+      pointsState.periods[periodType] = createEmptyPeriodBucket(periodKeys[periodType]);
+    }
+
+    if (!pointsState.periods[periodType].key) {
+      pointsState.periods[periodType].key = periodKeys[periodType];
+    }
+
+    if (!pointsState.periods[periodType].scores || typeof pointsState.periods[periodType].scores !== "object") {
+      pointsState.periods[periodType].scores = {};
+    }
+
+    if (!Array.isArray(pointsState.history[periodType])) {
+      pointsState.history[periodType] = [];
+    }
+  }
+
+  if (justInitialized && guildState.daily?.dateKey === dateKey) {
+    for (const userId of Object.keys(guildState.daily.checkIns ?? {})) {
+      pointsState.lifetime[userId] = (pointsState.lifetime[userId] ?? 0) + POINTS_PER_CHECK_IN;
+
+      for (const periodType of PERIOD_TYPES) {
+        pointsState.periods[periodType].scores[userId] = (pointsState.periods[periodType].scores[userId] ?? 0) + POINTS_PER_CHECK_IN;
+      }
+    }
+  }
+
+  return pointsState;
+
+}
+
+
+
+function getSortedScoreEntries(scores) {
+
+  return Object.entries(scores ?? {}).sort((left, right) => {
+    if (right[1] !== left[1]) {
+      return right[1] - left[1];
+    }
+
+    return left[0].localeCompare(right[0]);
+  });
+
+}
+
+
+
+function finalizePointPeriod(pointsState, periodType, periodState) {
+
+  if (!periodState?.key) {
+    return false;
+  }
+
+  const entries = getSortedScoreEntries(periodState.scores);
+
+  if (entries.length === 0 || entries[0][1] <= 0) {
+    return false;
+  }
+
+  const topScore = entries[0][1];
+  const winnerUserIds = entries.filter(([, score]) => score === topScore).map(([userId]) => userId);
+
+  const entry = {
+    periodType,
+    periodKey: periodState.key,
+    winnerUserIds,
+    points: topScore,
+  };
+
+  pointsState.history[periodType].unshift(entry);
+
+  const historyLimit = PERIOD_HISTORY_LIMITS[periodType] ?? 12;
+
+  if (pointsState.history[periodType].length > historyLimit) {
+    pointsState.history[periodType].length = historyLimit;
+  }
+
+  pointsState.pendingAnnouncements.push(entry);
+  return true;
+
+}
+
+
+
+function advancePointPeriods(guildState, nextDateKey) {
+
+  const pointsState = ensurePointsState(guildState, nextDateKey);
+  const nextKeys = getPeriodKeys(nextDateKey);
+  let changed = false;
+
+  for (const periodType of PERIOD_TYPES) {
+    const periodState = pointsState.periods[periodType];
+
+    if (periodState.key !== nextKeys[periodType]) {
+      finalizePointPeriod(pointsState, periodType, periodState);
+      pointsState.periods[periodType] = createEmptyPeriodBucket(nextKeys[periodType]);
+      changed = true;
+    }
+  }
+
+  return changed;
+
+}
+
+
+
+function awardPoint(guildState, userId, dateKey, amount = POINTS_PER_CHECK_IN) {
+
+  const pointsState = ensurePointsState(guildState, dateKey);
+  const currentKeys = getPeriodKeys(dateKey);
+
+  pointsState.lifetime[userId] = (pointsState.lifetime[userId] ?? 0) + amount;
+
+  for (const periodType of PERIOD_TYPES) {
+    if (pointsState.periods[periodType].key !== currentKeys[periodType]) {
+      pointsState.periods[periodType] = createEmptyPeriodBucket(currentKeys[periodType]);
+    }
+
+    pointsState.periods[periodType].scores[userId] = (pointsState.periods[periodType].scores[userId] ?? 0) + amount;
+  }
+
+}
+
+
+
+function formatPointsWord(points) {
+
+  return `${points} point${points === 1 ? "" : "s"}`;
+
+}
+
+
+
+function finalizeCompletedDailyState(guildState, dailyState, nextDateKey) {
 
   if (!dailyState || !dailyState.dateKey) {
 
@@ -575,13 +900,21 @@ function finalizeCompletedDailyState(guildState, dailyState) {
 
 
 
-  return updateRecords(guildState, dailyState);
+  const recordUpdate = updateRecords(guildState, dailyState);
+  const pointsChanged = advancePointPeriods(guildState, nextDateKey);
+
+  return {
+    ...recordUpdate,
+    changed: recordUpdate.changed || pointsChanged,
+  };
 
 }
 
 
 
 function ensureDailyState(guildState, dateKey) {
+
+  ensurePointsState(guildState, dateKey);
 
   if (!guildState.daily) {
 
@@ -595,7 +928,7 @@ function ensureDailyState(guildState, dateKey) {
 
   if (guildState.daily.dateKey !== dateKey) {
 
-    finalizeCompletedDailyState(guildState, guildState.daily);
+    finalizeCompletedDailyState(guildState, guildState.daily, dateKey);
 
     guildState.daily = createDailyState(dateKey);
 
@@ -1495,6 +1828,229 @@ function buildNewBestCelebration(dailyState) {
 
 
 
+function formatPeriodLabel(periodType, periodKey) {
+
+  switch (periodType) {
+
+    case "week":
+      return `week of ${periodKey}`;
+
+    case "month": {
+      const date = parseDateKey(`${periodKey}-01`);
+      return date
+        ? new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: "UTC" }).format(date)
+        : periodKey;
+    }
+
+    case "year":
+      return periodKey;
+
+    default:
+      return periodKey;
+
+  }
+
+}
+
+
+
+function buildChampionAnnouncement(entry) {
+
+  if (!entry || !Array.isArray(entry.winnerUserIds) || entry.winnerUserIds.length === 0) {
+    return null;
+  }
+
+  const winners = entry.winnerUserIds.map((userId) => `<@${userId}>`).join(" ");
+  const pointsText = formatPointsWord(entry.points);
+  const label = formatPeriodLabel(entry.periodType, entry.periodKey);
+  const championWord = entry.winnerUserIds.length === 1 ? "champion" : "co-champions";
+
+  let templates = [];
+
+  switch (entry.periodType) {
+    case "week":
+      templates = [
+        `weekly good morning ${championWord} for the ${label}: ${winners} with ${pointsText}. the goblin salutes your sustained sunrise paperwork.`,
+        `the ${label} weekly dawn title goes to ${winners} with ${pointsText}. an incredible seven-day display of administrative discipline.`,
+        `weekly gm throne claimed for the ${label}: ${winners}, posting ${pointsText} and terrifying the blankets.`,
+      ];
+      break;
+
+    case "month":
+      templates = [
+        `monthly good morning ${championWord} for ${label}: ${winners} with ${pointsText}. the goblin is filing this under elite long-term sunrise behavior.`,
+        `${label} belongs to ${winners}, our monthly dawn ${championWord}, with ${pointsText}. absurdly consistent morning paperwork.`,
+        `monthly sunrise crown awarded for ${label}: ${winners} on ${pointsText}. the forms themselves are applauding.`,
+      ];
+      break;
+
+    case "year":
+      templates = [
+        `yearly good morning ${championWord} for ${label}: ${winners} with ${pointsText}. this is hall-of-fame rooster activity.`,
+        `the ${label} annual dawn title goes to ${winners} with ${pointsText}. the goblin lowers its tiny ceremonial banner in respect.`,
+        `supreme morning ${championWord} for ${label}: ${winners}, posting ${pointsText} and becoming a legend in the sunrise records.`,
+      ];
+      break;
+
+    default:
+      templates = [
+        `good morning ${championWord}: ${winners} with ${pointsText}.`,
+      ];
+      break;
+  }
+
+  return {
+    content: pickFromPoolBag(`champions:${entry.periodType}`, templates),
+    userIds: entry.winnerUserIds,
+  };
+
+}
+
+
+
+async function maybePostPendingChampionAnnouncements(guild, guildState) {
+
+  const pending = guildState.points?.pendingAnnouncements;
+
+
+
+  if (!Array.isArray(pending) || pending.length === 0) {
+
+    return false;
+
+  }
+
+
+
+  const channel = await getMorningChannel(guild);
+
+
+
+  if (!channel) {
+
+    return false;
+
+  }
+
+
+
+  for (const entry of pending) {
+    const announcement = buildChampionAnnouncement(entry);
+
+    if (!announcement) {
+      continue;
+    }
+
+    await channel.send({
+      content: announcement.content,
+      allowedMentions: { parse: [], users: announcement.userIds },
+    });
+  }
+
+  guildState.points.pendingAnnouncements = [];
+  await store.save();
+  return true;
+
+}
+
+
+
+async function getUserDisplayLabel(guild, userId) {
+
+  const cachedMember = guild.members.cache.get(userId);
+
+
+
+  if (cachedMember) {
+    return cachedMember.displayName;
+  }
+
+  const fetchedMember = await guild.members.fetch(userId).catch(() => null);
+
+  return fetchedMember?.displayName || `user ${userId.slice(-4)}`;
+
+}
+
+
+
+async function formatScoreboard(guild, scores, limit = 5) {
+
+  const entries = getSortedScoreEntries(scores).slice(0, limit);
+
+
+
+  if (entries.length === 0) {
+
+    return "nobody yet";
+
+  }
+
+
+
+  const formatted = [];
+
+  for (const [userId, score] of entries) {
+    formatted.push(`${await getUserDisplayLabel(guild, userId)} (${score})`);
+  }
+
+  return formatted.join(", ");
+
+}
+
+
+
+async function formatChampionSummary(guild, entry) {
+
+  if (!entry) {
+    return null;
+  }
+
+  const winnerNames = [];
+
+  for (const userId of entry.winnerUserIds) {
+    winnerNames.push(await getUserDisplayLabel(guild, userId));
+  }
+
+  return `${winnerNames.join(", ")} with ${formatPointsWord(entry.points)} (${formatPeriodLabel(entry.periodType, entry.periodKey)})`;
+
+}
+
+
+
+async function postPoints(message) {
+
+  const guildState = ensureGuildState(message.guild.id);
+  const timeZone = getGuildTimezone(guildState);
+  const todayKey = getZonedParts(new Date(), timeZone).dateKey;
+  ensureDailyState(guildState, todayKey);
+
+  const pointsState = ensurePointsState(guildState, todayKey);
+  const lines = [
+    "gm points board:",
+    `this week (${formatPeriodLabel("week", pointsState.periods.week.key)}): ${await formatScoreboard(message.guild, pointsState.periods.week.scores, 3)}`,
+    `this month (${formatPeriodLabel("month", pointsState.periods.month.key)}): ${await formatScoreboard(message.guild, pointsState.periods.month.scores, 3)}`,
+    `this year (${formatPeriodLabel("year", pointsState.periods.year.key)}): ${await formatScoreboard(message.guild, pointsState.periods.year.scores, 3)}`,
+    `lifetime: ${await formatScoreboard(message.guild, pointsState.lifetime, 5)}`,
+  ];
+
+  for (const periodType of PERIOD_TYPES) {
+    const latestChampion = pointsState.history[periodType]?.[0];
+    const summary = await formatChampionSummary(message.guild, latestChampion);
+
+    if (summary) {
+      lines.push(`last ${periodType} champion: ${summary}`);
+    }
+  }
+
+  await message.reply({
+    content: lines.join("\n"),
+    allowedMentions: { repliedUser: false, parse: [] },
+  });
+
+}
+
+
+
 async function postStatus(message) {
   const guildState = ensureGuildState(message.guild.id);
   const timeZone = getGuildTimezone(guildState);
@@ -1531,6 +2087,29 @@ async function postStatus(message) {
     content: lines.join("\n"),
     allowedMentions: { repliedUser: false, parse: [] },
   });
+}
+
+
+
+function recordCheckIn(guildState, dateKey, userId, entry) {
+
+  const dailyState = ensureDailyState(guildState, dateKey);
+  const alreadyCheckedIn = Boolean(dailyState.checkIns[userId]);
+
+  dailyState.checkIns[userId] = entry;
+  delete dailyState.nudgedUsers[userId];
+
+  if (!alreadyCheckedIn) {
+    awardPoint(guildState, userId, dateKey);
+  }
+
+  return {
+    dailyState,
+    alreadyCheckedIn,
+    totalCheckIns: Object.keys(dailyState.checkIns).length,
+    pointsAwarded: alreadyCheckedIn ? 0 : POINTS_PER_CHECK_IN,
+  };
+
 }
 
 
@@ -1772,25 +2351,22 @@ async function handleManualLogAdd(message, body) {
 
   targetUserId ??= inferredUserId;
 
-  const dailyState = ensureDailyState(guildState, todayKey);
-  const alreadyCheckedIn = Boolean(dailyState.checkIns[targetUserId]);
   const sourceMember = sourceMessage.member ?? (await message.guild.members.fetch(targetUserId).catch(() => null));
 
-  dailyState.checkIns[targetUserId] = {
+  const { alreadyCheckedIn, totalCheckIns, pointsAwarded } = recordCheckIn(guildState, todayKey, targetUserId, {
     displayName: sourceMember?.displayName || sourceMessage.author.username,
     timestamp: sourceMessage.createdTimestamp,
     channelId: sourceMessage.channelId,
     message: sourceMessage.content || "[manual log from attachment-only message]",
-  };
+  });
 
-  delete dailyState.nudgedUsers[targetUserId];
   await store.save();
 
-  const totalCheckIns = Object.keys(dailyState.checkIns).length;
   const action = alreadyCheckedIn ? "updated" : "added";
+  const pointNote = pointsAwarded > 0 ? ` +${pointsAwarded} dawn point awarded.` : "";
 
   await message.reply({
-    content: "manual gm log " + action + " for <@" + targetUserId + "> from " + sourceMessage.url + ". " + totalCheckIns + " logged today.",
+    content: "manual gm log " + action + " for <@" + targetUserId + "> from " + sourceMessage.url + ". " + totalCheckIns + " logged today." + pointNote,
     allowedMentions: { repliedUser: false, parse: ["users"] },
   });
 }
@@ -1891,21 +2467,16 @@ async function handleManualLogReply(message, body) {
   }
 
   const targetUserId = sourceMessage.author.id;
-  const dailyState = ensureDailyState(guildState, todayKey);
-  const alreadyCheckedIn = Boolean(dailyState.checkIns[targetUserId]);
   const sourceMember = sourceMessage.member ?? (await message.guild.members.fetch(targetUserId).catch(() => null));
 
-  dailyState.checkIns[targetUserId] = {
+  const { alreadyCheckedIn, totalCheckIns } = recordCheckIn(guildState, todayKey, targetUserId, {
     displayName: sourceMember?.displayName || sourceMessage.author.username,
     timestamp: sourceMessage.createdTimestamp,
     channelId: sourceMessage.channelId,
     message: sourceMessage.content || "[manual retro-reply log from attachment-only message]",
-  };
+  });
 
-  delete dailyState.nudgedUsers[targetUserId];
   await store.save();
-
-  const totalCheckIns = Object.keys(dailyState.checkIns).length;
 
   try {
     await maybeCelebrateCheckIn(sourceMessage, guildState, alreadyCheckedIn, totalCheckIns, {
@@ -1929,20 +2500,15 @@ async function handleCheckIn(message) {
   const guildState = ensureGuildState(message.guild.id);
   const timeZone = getGuildTimezone(guildState);
   const zonedNow = getZonedParts(new Date(), timeZone);
-  const dailyState = ensureDailyState(guildState, zonedNow.dateKey);
-  const alreadyCheckedIn = Boolean(dailyState.checkIns[message.author.id]);
 
-  dailyState.checkIns[message.author.id] = {
+  const { alreadyCheckedIn, totalCheckIns } = recordCheckIn(guildState, zonedNow.dateKey, message.author.id, {
     displayName: message.member?.displayName || message.author.username,
     timestamp: Date.now(),
     channelId: message.channelId,
     message: message.content,
-  };
+  });
 
-  delete dailyState.nudgedUsers[message.author.id];
   await store.save();
-
-  const totalCheckIns = Object.keys(dailyState.checkIns).length;
   await maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, totalCheckIns);
 }
 
@@ -2226,6 +2792,8 @@ async function handleCommand(message) {
 
           `- \`${COMMAND_PREFIX} status\` to see today's gm roster`,
 
+          `- \`${COMMAND_PREFIX} points\` to see the weekly/monthly/yearly scoreboard`,
+
           `- \`${COMMAND_PREFIX} phrases\` to see accepted morning openings`,
           `- \`${COMMAND_PREFIX} quiet @user\` to suppress check-in text replies for a user`,
           `- \`${COMMAND_PREFIX} unquiet @user\` to re-enable check-in text replies for a user`,
@@ -2264,6 +2832,14 @@ async function handleCommand(message) {
     case "status": {
 
       await postStatus(message);
+
+      return;
+
+    }
+
+    case "points": {
+
+      await postPoints(message);
 
       return;
 
@@ -2670,11 +3246,21 @@ async function schedulerTick() {
 
         await store.save();
 
+        await maybePostPendingChampionAnnouncements(guild, guildState);
+
       }
 
 
 
       continue;
+
+    }
+
+
+
+    if (nowMinutes >= reminderMinutes) {
+
+      await maybePostPendingChampionAnnouncements(guild, guildState);
 
     }
 
@@ -2883,6 +3469,10 @@ start().catch(async (error) => {
   process.exitCode = 1;
 
 });
+
+
+
+
 
 
 
