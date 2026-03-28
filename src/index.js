@@ -33,6 +33,11 @@ const MORNING_WINDOW_END_HOUR = readNumber("MORNING_WINDOW_END_HOUR", 12, 0, 23)
 const REMINDER_GRACE_MINUTES = 180;
 
 const FOLLOWUP_GRACE_MINUTES = 180;
+const CATCHUP_DEFAULT_HOURS = 12;
+const CATCHUP_MIN_HOURS = 1;
+const CATCHUP_MAX_HOURS = 24;
+const CATCHUP_FETCH_PAGE_SIZE = 100;
+const CATCHUP_FETCH_MAX_MESSAGES = 1000;
 
 const LOCK_PATH = path.resolve(process.cwd(), "data", "bot.lock");
 
@@ -2328,6 +2333,188 @@ async function fetchReferencedMessage(guild, channelId, messageId) {
   }
 }
 
+function buildHistoricalCheckInEntry(sourceMessage, sourceMember, fallbackText) {
+  return {
+    displayName: sourceMember?.displayName || sourceMessage.author.username,
+    timestamp: sourceMessage.createdTimestamp,
+    channelId: sourceMessage.channelId,
+    message: sourceMessage.content || fallbackText,
+  };
+}
+
+function parseCatchupHours(input) {
+  const trimmed = input.trim();
+
+  if (!trimmed) {
+    return CATCHUP_DEFAULT_HOURS;
+  }
+
+  if (!/^\d+$/.test(trimmed)) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(trimmed, 10);
+
+  if (Number.isNaN(parsed) || parsed < CATCHUP_MIN_HOURS || parsed > CATCHUP_MAX_HOURS) {
+    return null;
+  }
+
+  return parsed;
+}
+
+async function fetchRecentMessagesSince(channel, cutoffTimestamp) {
+  if (!("messages" in channel)) {
+    return [];
+  }
+
+  const collected = [];
+  let before = null;
+
+  while (collected.length < CATCHUP_FETCH_MAX_MESSAGES) {
+    const page = await channel.messages.fetch({
+      limit: Math.min(CATCHUP_FETCH_PAGE_SIZE, CATCHUP_FETCH_MAX_MESSAGES - collected.length),
+      ...(before ? { before } : {}),
+    });
+
+    if (page.size === 0) {
+      break;
+    }
+
+    const pageMessages = [...page.values()];
+    collected.push(...pageMessages);
+
+    const oldestMessage = pageMessages[pageMessages.length - 1];
+
+    if (!oldestMessage || oldestMessage.createdTimestamp < cutoffTimestamp || page.size < CATCHUP_FETCH_PAGE_SIZE) {
+      break;
+    }
+
+    before = oldestMessage.id;
+  }
+
+  return collected.filter((sourceMessage) => sourceMessage.createdTimestamp >= cutoffTimestamp);
+}
+
+async function handleCatchupScan(message, body) {
+  const guildState = ensureGuildState(message.guild.id);
+  const channel = await getMorningChannel(message.guild);
+
+  if (!channel || !("messages" in channel)) {
+    await message.reply({
+      content: "i do not have a valid morning channel to scan. set one first with `" + COMMAND_PREFIX + " here`.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  const input = body.slice("catchup".length).trim();
+  const hours = parseCatchupHours(input);
+
+  if (hours === null) {
+    await message.reply({
+      content: "use `" + COMMAND_PREFIX + " catchup 6` with a whole number of hours between 1 and 24.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  const timeZone = getGuildTimezone(guildState);
+  const todayKey = getZonedParts(new Date(), timeZone).dateKey;
+  const cutoffTimestamp = Date.now() - (hours * 60 * 60 * 1000);
+  const recentMessages = await fetchRecentMessagesSince(channel, cutoffTimestamp).catch(() => null);
+
+  if (!recentMessages) {
+    await message.reply({
+      content: "i could not read recent history from the morning channel. this usually means my channel permissions are being theatrical.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  const orderedMessages = recentMessages.sort((left, right) => left.createdTimestamp - right.createdTimestamp);
+
+  const stats = {
+    scanned: orderedMessages.length,
+    validMorningMessages: 0,
+    logged: 0,
+    alreadyLogged: 0,
+    oldDay: 0,
+    outsideUsMorning: 0,
+    failures: 0,
+  };
+
+  for (const sourceMessage of orderedMessages) {
+    if (sourceMessage.author.bot || !isGoodMorningMessage(sourceMessage.content)) {
+      continue;
+    }
+
+    stats.validMorningMessages += 1;
+
+    const sourceDate = new Date(sourceMessage.createdTimestamp);
+    const sourceDateKey = getZonedParts(sourceDate, timeZone).dateKey;
+
+    if (sourceDateKey !== todayKey) {
+      stats.oldDay += 1;
+      continue;
+    }
+
+    if (!isMorningSomewhereInUnitedStates(sourceDate)) {
+      stats.outsideUsMorning += 1;
+      continue;
+    }
+
+    const dailyState = ensureDailyState(guildState, todayKey);
+    const targetUserId = sourceMessage.author.id;
+
+    if (dailyState.checkIns[targetUserId]) {
+      stats.alreadyLogged += 1;
+      continue;
+    }
+
+    const sourceMember = sourceMessage.member ?? (await message.guild.members.fetch(targetUserId).catch(() => null));
+    const { alreadyCheckedIn, totalCheckIns } = recordCheckIn(
+      guildState,
+      todayKey,
+      targetUserId,
+      buildHistoricalCheckInEntry(sourceMessage, sourceMember, "[automatic catch-up log from attachment-only message]"),
+    );
+    stats.logged += 1;
+
+    try {
+      await maybeCelebrateCheckIn(sourceMessage, guildState, alreadyCheckedIn, totalCheckIns);
+    } catch {
+      stats.failures += 1;
+    }
+  }
+
+  await store.save();
+
+  const summary = [
+    `catch-up sweep complete for the last ${hours} hour${hours === 1 ? "" : "s"} in <#${channel.id}>.`,
+    `${stats.logged} new gm${stats.logged === 1 ? "" : "s"} logged.`,
+    `${stats.alreadyLogged} skipped because they were already on today's books.`,
+    `${stats.oldDay} skipped because they were not from today in \`${timeZone}\`.`,
+    `${stats.outsideUsMorning} skipped because they were outside legal U.S. morning.`,
+  ];
+
+  if (stats.validMorningMessages === 0) {
+    summary.push("i did not find any valid-looking morning messages in that scan window.");
+  } else {
+    summary.push(`${stats.validMorningMessages} valid-looking gm message${stats.validMorningMessages === 1 ? "" : "s"} inspected out of ${stats.scanned} recent messages.`);
+  }
+
+  if (stats.failures > 0) {
+    summary.push(`${stats.failures} log${stats.failures === 1 ? "" : "s"} were saved but the retro reaction/reply step failed.`);
+  }
+
+  summary.push("note: this only backfills today's check-ins; older days still need a bigger history system than the goblin currently owns.");
+
+  await message.reply({
+    content: summary.join("\n"),
+    allowedMentions: { repliedUser: false, parse: [] },
+  });
+}
+
 async function handleManualLogAdd(message, body) {
   const guildState = ensureGuildState(message.guild.id);
   const timeZone = getGuildTimezone(guildState);
@@ -2450,12 +2637,12 @@ async function handleManualLogAdd(message, body) {
 
   const sourceMember = sourceMessage.member ?? (await message.guild.members.fetch(targetUserId).catch(() => null));
 
-  const { alreadyCheckedIn, totalCheckIns, pointsAwarded } = recordCheckIn(guildState, todayKey, targetUserId, {
-    displayName: sourceMember?.displayName || sourceMessage.author.username,
-    timestamp: sourceMessage.createdTimestamp,
-    channelId: sourceMessage.channelId,
-    message: sourceMessage.content || "[manual log from attachment-only message]",
-  });
+  const { alreadyCheckedIn, totalCheckIns, pointsAwarded } = recordCheckIn(
+    guildState,
+    todayKey,
+    targetUserId,
+    buildHistoricalCheckInEntry(sourceMessage, sourceMember, "[manual log from attachment-only message]"),
+  );
 
   await store.save();
 
@@ -2566,12 +2753,12 @@ async function handleManualLogReply(message, body) {
   const targetUserId = sourceMessage.author.id;
   const sourceMember = sourceMessage.member ?? (await message.guild.members.fetch(targetUserId).catch(() => null));
 
-  const { alreadyCheckedIn, totalCheckIns } = recordCheckIn(guildState, todayKey, targetUserId, {
-    displayName: sourceMember?.displayName || sourceMessage.author.username,
-    timestamp: sourceMessage.createdTimestamp,
-    channelId: sourceMessage.channelId,
-    message: sourceMessage.content || "[manual retro-reply log from attachment-only message]",
-  });
+  const { alreadyCheckedIn, totalCheckIns } = recordCheckIn(
+    guildState,
+    todayKey,
+    targetUserId,
+    buildHistoricalCheckInEntry(sourceMessage, sourceMember, "[manual retro-reply log from attachment-only message]"),
+  );
 
   await store.save();
 
@@ -2652,6 +2839,11 @@ async function handleOwnerSpeech(message, commandName, body) {
     await handleManualLogReply(message, body);
     return;
 
+  }
+
+  if (commandName === "catchup") {
+    await handleCatchupScan(message, body);
+    return;
   }
 
   if (commandName === "streamed") {
@@ -2968,6 +3160,8 @@ async function handleCommand(message) {
 
           `- \`${COMMAND_PREFIX} logreply #channel 123456789012345678\` to retro-react and reply on an existing gm message (owner only)`,
 
+          `- \`${COMMAND_PREFIX} catchup 6\` to scan the morning channel for today's missed gms from the last few hours (owner only)`,
+
           "- `" + COMMAND_PREFIX + " presence watching for Mong Plorps` to change the bot status (owner only)",
 
           "- mention the bot, reply to it, or use a wake word like `morning goblin` to make it chatter back",
@@ -3138,6 +3332,8 @@ async function handleCommand(message) {
     case "logadd":
 
     case "logreply":
+
+    case "catchup":
 
     case "streamed":
 

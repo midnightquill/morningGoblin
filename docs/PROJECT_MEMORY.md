@@ -199,6 +199,7 @@ Require `BOT_OWNER_ID` match:
 - `!gm resetpoints`
 - `!gm logadd @user #channel <messageId>`
 - `!gm logreply #channel <messageId>`
+- `!gm catchup <hours>`
 
 Presence behavior:
 
@@ -208,6 +209,7 @@ Presence behavior:
 - auto statuses are worded to read naturally in the Discord sidebar even when Discord hides the activity type label
 - `logadd` lets the owner manually file a same-day check-in from an existing message without triggering public check-in chatter
 - `logreply` uses an existing same-day message to both file the check-in and retroactively do the goblin reaction/reply on that message
+- `catchup` scans the configured morning channel for recent history, finds today's valid missed GMs, and retro-processes those messages with the normal reply/quiet-list rules
 
 ## Per-Guild State Schema
 
