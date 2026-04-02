@@ -54,7 +54,7 @@ If a message looks like a good-morning but it is no longer morning anywhere in t
 On a valid check-in:
 
 - the user is logged for the day
-- the bot attempts to react with the sun emoji
+- the bot attempts to react with a random morning-themed emoji
 - the bot sends a text reply from `checkInReplies` or `duplicateReplies` unless the user is on the quiet list; those pools use shuffle-bag rotation to reduce repeats
 
 Quiet-list exception:
@@ -85,7 +85,8 @@ Between reminder time and end-of-window:
 
 Current intended behavior:
 
-- direct mentions always reply
+- direct mentions usually reply
+- direct mentions with evening greetings like `good evening` / `good night` get a thumbs-down reaction instead of a text reply
 - replies to one of the bot's messages may reply
 - configured wake words like `morning goblin` / `goblin` may reply
 - plain unrelated conversation should not trigger replies just because it contains a keyword

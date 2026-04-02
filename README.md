@@ -8,6 +8,7 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 - Tracks each person's first accepted good-morning message of the day
 - Accepts both normal openings like `gm`, `good morning gamers`, and inside-joke patterns like `Mong Plorps`
 - Only counts a good-morning message when it is still morning somewhere in the United States
+- Reacts to good-morning posts with random morning-ish emoji like sun, coffee, breakfast, and other tiny dawn nonsense
 - Gives silly replies for check-ins, duplicate check-ins, nudges, and random offender callouts
 - Nudges people once per day if they start chatting before saying good morning
 - Posts a short noon recap of the current day's check-in totals
@@ -273,7 +274,8 @@ The goblin replies when:
 
 Behavior notes:
 
-- Direct mentions always reply.
+- Direct mentions usually reply.
+- If someone directly tags the bot with an evening greeting like `good evening` or `good night`, it gives a thumbs-down reaction instead of a text reply.
 - Wake-word chatter and reply-to-bot chatter still use cooldowns.
 - Plain unrelated messages no longer trigger replies just because they accidentally matched a keyword.
 - Mention replies and generic replies use shuffled pools so they repeat less often.

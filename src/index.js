@@ -192,6 +192,27 @@ const RANDOM_OFFENDER_LINES = [
   "the goblin drumroll has concluded: {user} is today's randomly selected gm offender.",
   "random accountability gremlin says {user} is today's didn't-say-gm champion of shame.",
 ];
+const MORNING_REACTION_EMOJIS = [
+  "\u2600\uFE0F",
+  "\uD83C\uDF1E",
+  "\uD83C\uDF05",
+  "\u2615",
+  "\uD83E\uDD53",
+  "\uD83E\uDD50",
+  "\uD83E\uDD5E",
+  "\uD83C\uDF69",
+  "\uD83E\uDDD0",
+];
+const EVENING_GREETING_PATTERNS = [
+  /\bgood evening\b/i,
+  /\bgood night\b/i,
+  /\bg['\u2019]?night\b/i,
+  /\bgn\b/i,
+  /\bevening\b/i,
+  /\bnight(?:y)?\b/i,
+  /\bsleep well\b/i,
+  /\bsweet dreams\b/i,
+];
 const US_MORNING_START_HOUR = 0;
 const US_MORNING_END_HOUR = 11;
 const UNITED_STATES_TIMEZONES = [
@@ -1512,6 +1533,24 @@ function cleanMessageContent(content) {
 
 }
 
+function isEveningGreetingMessage(content) {
+
+  const normalized = cleanMessageContent(content).toLowerCase();
+
+
+
+  if (!normalized) {
+
+    return false;
+
+  }
+
+
+
+  return EVENING_GREETING_PATTERNS.some((pattern) => pattern.test(normalized));
+
+}
+
 
 
 function isWakeWordMessage(content) {
@@ -1692,6 +1731,16 @@ async function getConversationReply(message) {
 
 
 async function maybeHandleConversation(message) {
+
+  if (message.mentions.users.has(client.user.id) && isEveningGreetingMessage(message.content)) {
+    try {
+      await message.react("\uD83D\uDC4E");
+    } catch {
+      // Reactions are optional sugar.
+    }
+
+    return true;
+  }
 
   const reply = await getConversationReply(message);
 
@@ -2420,7 +2469,7 @@ async function maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, tota
   const { forceReply = false, ignoreQuietList = false } = options;
 
   try {
-    await message.react("\u2600\uFE0F");
+    await message.react(pickFromPoolBag("checkin:reactionEmojis", MORNING_REACTION_EMOJIS));
   } catch {
     // Reactions are optional sugar.
   }
