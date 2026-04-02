@@ -1,14 +1,16 @@
 # Project Memory
 
-Last updated: 2026-03-12
+Last updated: 2026-04-02
 
 ## Purpose
 
 Morning Goblin is a Discord.js bot for a specific friend server. Its main job is to:
 
-- post a daily good-morning reminder in one configured channel
+- optionally post a daily good-morning reminder in one configured channel
 - log who checked in each day
 - nudge people who talk before saying good morning
+- post a short noon recap of current-day check-ins
+- playfully call out one random non-checker-inner each morning
 - act like a funny, casual, slightly dumb bureaucratic goblin
 - provide a small amount of owner/admin control for jokes and maintenance
 
@@ -42,7 +44,8 @@ Current notable acceptance rules:
 
 Important rule:
 
-- "Morning somewhere in the USA" currently means `5:00 AM` through `11:59 AM` local time in at least one of these zones: Eastern, Central, Mountain, Arizona, Pacific, Alaska, Hawaii.
+- "Morning somewhere in the USA" currently means `12:00 AM` through `11:59 AM` local time in at least one of these zones: Eastern, Central, Mountain, Arizona, Pacific, Alaska, Hawaii.
+- live check-ins and catch-up scans both judge that rule against the message timestamp, not the bot's current clock at processing time
 
 If a message looks like a good-morning but it is no longer morning anywhere in the U.S., the bot rejects it with a sarcastic reply from `invalidCheckInReplies` and tells the user to try again tomorrow. Those replies also joke about Jak / pretending to be Jak.
 
@@ -61,11 +64,12 @@ Quiet-list exception:
 
 ### Scheduler
 
-Per guild, using that guild's configured timezone:
+Current scheduled behavior:
 
-- reminder: `8:00 AM`
-- follow-up/census: `10:30 AM`
-- nudge window: through `12:59 PM`
+- reminder logic still exists, but scheduled reminder posting is disabled by default
+- random offender callout: `8:00 AM` in `America/Phoenix`
+- noon recap: `12:00 PM` in `America/Los_Angeles`
+- nudge window: through `12:59 PM` in the guild timezone
 
 The scheduler runs every 30 seconds.
 
@@ -99,6 +103,7 @@ Anti-repeat behavior:
 - mention/generic replies use pool-bag rotation instead of pure random choice
 - direct mentions bypass cooldowns so they feel responsive
 - wake-word / reply-based chatter still respects cooldowns
+- automatic channel posts stop after too many consecutive bot-only messages until a human posts again
 
 ## Records, Points, and Facts
 
@@ -115,8 +120,8 @@ The records live in guild state under `records`.
 
 Important detail:
 
-- records are finalized on day rollover and also refreshed during the scheduled follow-up
-- a new best day triggers a celebration post during the scheduled follow-up that tags the contributors who set the record
+- records are finalized on day rollover and also refreshed during the scheduled noon recap
+- a new best day triggers a celebration post during the scheduled noon recap that tags the contributors who set the record
 
 `!gm status` should include current-day roster plus saved best/worst record summary.
 
@@ -229,7 +234,8 @@ Current important fields:
 
 - `dateKey`
 - `reminderSent`
-- `followupSent`
+- `recapSent`
+- `randomOffenderSent`
 - `checkIns`
 - `nudgedUsers`
 
@@ -275,7 +281,6 @@ In `config/morning-config.json`:
 - `duplicateReplies`
 - `invalidCheckInReplies`
 - `nudgeReplies`
-- `noCheckInsFollowups`
 - `morningFacts`
 - `conversation`
 

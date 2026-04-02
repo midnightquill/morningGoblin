@@ -4,14 +4,16 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 
 ## What it does
 
-- Posts a daily morning reminder in one configured channel without using `@everyone`
+- Can optionally post a daily morning reminder in one configured channel without using `@everyone`
 - Tracks each person's first accepted good-morning message of the day
 - Accepts both normal openings like `gm`, `good morning gamers`, and inside-joke patterns like `Mong Plorps`
 - Only counts a good-morning message when it is still morning somewhere in the United States
-- Gives silly replies for check-ins, duplicate check-ins, nudges, and follow-up census posts
+- Gives silly replies for check-ins, duplicate check-ins, nudges, and random offender callouts
 - Nudges people once per day if they start chatting before saying good morning
-- Posts a later morning census with current check-in totals
+- Posts a short noon recap of the current day's check-in totals
+- Randomly calls out one non-checker-inner each morning with a playful goblin accusation
 - Talks back when people mention it, reply to it, or use configured wake words like `morning goblin`
+- Suppresses further automatic bot posts after too many bot-only messages in a row until a human speaks again
 - Tracks best and worst completed good-morning days per server
 - Celebrates brand-new best-day records by tagging the people who helped set them
 - Awards one point for each person's first successful GM of the day and keeps weekly/monthly/yearly scoreboards
@@ -69,10 +71,18 @@ From [.env.example](C:/Dev/Codex/Discord Morning Bot/.env.example):
 - `BOT_OWNER_ID`: optional Discord user ID for owner-only commands
 - `COMMAND_PREFIX`: defaults to `!gm`
 - `DEFAULT_TIMEZONE`: defaults to `America/Phoenix`
+- `ENABLE_MORNING_REMINDER`: defaults to `false`
 - `MORNING_REMINDER_HOUR`: defaults to `8`
 - `MORNING_REMINDER_MINUTE`: defaults to `0`
-- `MORNING_FOLLOWUP_HOUR`: defaults to `10`
-- `MORNING_FOLLOWUP_MINUTE`: defaults to `30`
+- `ENABLE_NOON_RECAP`: defaults to `true`
+- `NOON_RECAP_HOUR`: defaults to `12`
+- `NOON_RECAP_MINUTE`: defaults to `0`
+- `NOON_RECAP_TIMEZONE`: defaults to `America/Los_Angeles`
+- `ENABLE_RANDOM_OFFENDER`: defaults to `true`
+- `RANDOM_OFFENDER_HOUR`: defaults to `8`
+- `RANDOM_OFFENDER_MINUTE`: defaults to `0`
+- `RANDOM_OFFENDER_TIMEZONE`: defaults to `America/Phoenix`
+- `MAX_CONSECUTIVE_BOT_MESSAGES`: defaults to `3`
 - `MORNING_WINDOW_END_HOUR`: defaults to `12`
 
 ## Stream tracker
@@ -224,7 +234,9 @@ That means two-word greetings shaped like `M... P...` count too, such as:
 - `Mission Progress?`
 - `moldy pizza!`
 
-A good morning only counts if it is still morning somewhere in the United States. The bot checks several U.S. time zones, including East Coast, Central, Mountain, Arizona, Pacific, Alaska, and Hawaii. In practice, that means the legal morning window stays open until Hawaii finishes morning.
+A good morning only counts if it is still morning somewhere in the United States. The bot checks several U.S. time zones, including East Coast, Central, Mountain, Arizona, Pacific, Alaska, and Hawaii. In practice, that means the legal morning window opens as soon as the East Coast hits `12:00 AM` and stays open until Hawaii finishes morning at `11:59 AM`.
+
+The bot judges that rule using the message timestamp itself, so a valid post right on the edge of the window is checked against when it was actually sent.
 
 If someone sends a valid-looking morning greeting after that window closes, the bot rejects it, tells them it does not count, tells them to try again tomorrow, and accuses them of possibly being Jak. Those rejection lines come from `invalidCheckInReplies` in the config.
 
@@ -238,7 +250,6 @@ Main message pools:
 - `checkInReplies`
 - `duplicateReplies`
 - `nudgeReplies`
-- `noCheckInsFollowups`
 - `invalidCheckInReplies`
 - `morningFacts`
 

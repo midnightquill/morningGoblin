@@ -20,15 +20,37 @@ const BOT_OWNER_ID = process.env.BOT_OWNER_ID?.trim() || "";
 
 const DEFAULT_TIMEZONE = resolveDefaultTimeZone(process.env.DEFAULT_TIMEZONE?.trim());
 
+const ENABLE_MORNING_REMINDER = readBoolean("ENABLE_MORNING_REMINDER", false);
+
 const MORNING_REMINDER_HOUR = readNumber("MORNING_REMINDER_HOUR", 8, 0, 23);
 
 const MORNING_REMINDER_MINUTE = readNumber("MORNING_REMINDER_MINUTE", 0, 0, 59);
 
-const MORNING_FOLLOWUP_HOUR = readNumber("MORNING_FOLLOWUP_HOUR", 10, 0, 23);
+const ENABLE_NOON_RECAP = readBoolean("ENABLE_NOON_RECAP", true);
 
-const MORNING_FOLLOWUP_MINUTE = readNumber("MORNING_FOLLOWUP_MINUTE", 30, 0, 59);
+const NOON_RECAP_HOUR = readNumber("NOON_RECAP_HOUR", 12, 0, 23);
+
+const NOON_RECAP_MINUTE = readNumber("NOON_RECAP_MINUTE", 0, 0, 59);
+
+const NOON_RECAP_TIMEZONE = resolveTimeZoneWithFallback(
+  process.env.NOON_RECAP_TIMEZONE?.trim(),
+  "America/Los_Angeles",
+);
+
+const ENABLE_RANDOM_OFFENDER = readBoolean("ENABLE_RANDOM_OFFENDER", true);
+
+const RANDOM_OFFENDER_HOUR = readNumber("RANDOM_OFFENDER_HOUR", 8, 0, 23);
+
+const RANDOM_OFFENDER_MINUTE = readNumber("RANDOM_OFFENDER_MINUTE", 0, 0, 59);
+
+const RANDOM_OFFENDER_TIMEZONE = resolveTimeZoneWithFallback(
+  process.env.RANDOM_OFFENDER_TIMEZONE?.trim(),
+  "America/Phoenix",
+);
 
 const MORNING_WINDOW_END_HOUR = readNumber("MORNING_WINDOW_END_HOUR", 12, 0, 23);
+
+const MAX_CONSECUTIVE_BOT_MESSAGES = readNumber("MAX_CONSECUTIVE_BOT_MESSAGES", 3, 1, 20);
 
 const REMINDER_GRACE_MINUTES = 180;
 
@@ -136,7 +158,41 @@ const OFFLINE_RETURN_LINES = [
   "good news for weird little citizens everywhere: the Morning Goblin is back online and immediately resuming oversight.",
   "the goblin has returned from its mysterious absence. please clap in a restrained and bureaucratically appropriate manner.",
 ];
-const US_MORNING_START_HOUR = 5;
+const NOON_RECAP_LINES = [
+  "noon recap: {count}/{total} checked in.",
+  "noon recap: {count}/{total}. decent paperwork output.",
+  "noon recap: {count}/{total}. the goblin has counted the forms.",
+  "noon recap: {count}/{total}. continue your little lives.",
+  "noon recap: {count}/{total}. numbers reviewed. vibes mixed.",
+];
+const NOON_RECAP_NO_TOTAL_LINES = [
+  "noon recap: {count} checked in.",
+  "noon recap: {count} confirmed gm filings.",
+  "noon recap: {count} legal morning citizens on the board.",
+];
+const NOON_RECAP_ZERO_LINES = [
+  "noon recap: 0. catastrophic.",
+  "noon recap: 0 check-ins. bleak little scenes.",
+  "noon recap: zero. the paperwork weeps softly.",
+];
+const RANDOM_OFFENDER_LINES = [
+  "today's randomly selected didn't-say-gm offender is {user}. how dare you.",
+  "clipboard lottery results: {user} has been chosen as today's alleged gm evader.",
+  "administrative spotlight of shame falls upon {user}, today's randomly selected non-gm citizen.",
+  "breaking goblin news: {user} has been randomly selected for suspicious lack-of-gm behavior.",
+  "the dawn compliance wheel has spoken. today's playful offender is {user}. explain yourself eventually.",
+  "by deeply unserious lottery, {user} is today's featured didn't-say-gm goblin criminal.",
+  "today's random gm delinquent is {user}. this is going on the tiny clipboard.",
+  "goblin raffle update: {user} has won the title of today's no-gm rascal.",
+  "official morning misconduct draw: {user}. wow. wow, chief.",
+  "today's randomly chosen sunrise scofflaw is {user}. embarrassing, but in a fun way.",
+  "the department of dawn nonsense has selected {user} as today's missing-gm character of interest.",
+  "tiny public notice: {user} has been randomly selected for possible anti-gm activity.",
+  "today's little paperwork goblin finger points at {user}. very suspicious non-gm posture.",
+  "the goblin drumroll has concluded: {user} is today's randomly selected gm offender.",
+  "random accountability gremlin says {user} is today's didn't-say-gm champion of shame.",
+];
+const US_MORNING_START_HOUR = 0;
 const US_MORNING_END_HOUR = 11;
 const UNITED_STATES_TIMEZONES = [
   "America/New_York",
@@ -182,6 +238,10 @@ const conversationState = {
   poolBags: new Map(),
 
 };
+const botMessageState = {
+  consecutiveByChannel: new Map(),
+  trackedMessageIds: new Set(),
+};
 
 
 
@@ -217,11 +277,51 @@ function readNumber(name, fallback, min, max) {
 
 }
 
+function readBoolean(name, fallback) {
+
+  const raw = process.env[name]?.trim().toLowerCase();
+
+
+
+  if (!raw) {
+
+    return fallback;
+
+  }
+
+
+
+  if (["1", "true", "yes", "on"].includes(raw)) {
+
+    return true;
+
+  }
+
+
+
+  if (["0", "false", "no", "off"].includes(raw)) {
+
+    return false;
+
+  }
+
+
+
+  return fallback;
+
+}
+
 
 
 function resolveDefaultTimeZone(candidate) {
 
   return isValidTimeZoneName(candidate) ? candidate : FALLBACK_TIMEZONE;
+
+}
+
+function resolveTimeZoneWithFallback(candidate, fallback) {
+
+  return isValidTimeZoneName(candidate) ? candidate : fallback;
 
 }
 
@@ -434,7 +534,9 @@ function createDailyState(dateKey) {
 
     reminderSent: false,
 
-    followupSent: false,
+    recapSent: false,
+
+    randomOffenderSent: false,
 
     checkIns: {},
 
@@ -504,6 +606,16 @@ function ensureGuildState(guildId) {
 
   if (!("channelId" in guilds[guildId].offlineNotice)) {
     guilds[guildId].offlineNotice.channelId = null;
+  }
+
+  if (guilds[guildId].daily && typeof guilds[guildId].daily === "object") {
+    if (!("recapSent" in guilds[guildId].daily)) {
+      guilds[guildId].daily.recapSent = guilds[guildId].daily.followupSent ?? false;
+    }
+
+    if (!("randomOffenderSent" in guilds[guildId].daily)) {
+      guilds[guildId].daily.randomOffenderSent = false;
+    }
   }
 
   return guilds[guildId];
@@ -1653,11 +1765,52 @@ async function getMorningChannel(guild) {
 
 }
 
+function resetConsecutiveBotMessages(channelId) {
+  botMessageState.consecutiveByChannel.set(channelId, 0);
+}
+
+function incrementConsecutiveBotMessages(channelId) {
+  const current = botMessageState.consecutiveByChannel.get(channelId) ?? 0;
+  botMessageState.consecutiveByChannel.set(channelId, current + 1);
+}
+
+function rememberSentBotMessage(sentMessage) {
+  if (!sentMessage) {
+    return sentMessage;
+  }
+
+  botMessageState.trackedMessageIds.add(sentMessage.id);
+  incrementConsecutiveBotMessages(sentMessage.channelId);
+  return sentMessage;
+}
+
+function markObservedBotMessage(message) {
+  if (botMessageState.trackedMessageIds.delete(message.id)) {
+    return;
+  }
+
+  incrementConsecutiveBotMessages(message.channelId);
+}
+
+function hasReachedConsecutiveBotMessageLimit(channelId) {
+  return (botMessageState.consecutiveByChannel.get(channelId) ?? 0) >= MAX_CONSECUTIVE_BOT_MESSAGES;
+}
+
+async function sendBotPayload(channel, payload, options = {}) {
+  const { bypassConsecutiveLimit = false } = options;
+
+  if (!bypassConsecutiveLimit && hasReachedConsecutiveBotMessageLimit(channel.id)) {
+    return null;
+  }
+
+  return rememberSentBotMessage(await channel.send(payload));
+}
+
 
 
 async function safeSend(channel, content) {
 
-  return channel.send({
+  return sendBotPayload(channel, {
 
     content,
 
@@ -1739,9 +1892,7 @@ async function postReminder(guild) {
 
 
 
-  await safeSend(channel, pickRandom(morningConfig.reminderLines));
-
-  return true;
+  return Boolean(await safeSend(channel, pickRandom(morningConfig.reminderLines)));
 
 }
 
@@ -1767,7 +1918,7 @@ async function getHumanMemberCount(guild) {
 
 
 
-async function buildFollowupMessage(guild, dailyState) {
+async function buildNoonRecapMessage(guild, dailyState) {
 
   const checkInCount = Object.keys(dailyState.checkIns).length;
 
@@ -1775,7 +1926,7 @@ async function buildFollowupMessage(guild, dailyState) {
 
   if (checkInCount === 0) {
 
-    return pickRandom(morningConfig.noCheckInsFollowups);
+    return pickFromPoolBag("recap:zero", NOON_RECAP_ZERO_LINES);
 
   }
 
@@ -1787,31 +1938,21 @@ async function buildFollowupMessage(guild, dailyState) {
 
   if (!totalHumans) {
 
-    return `morning census update: ${checkInCount} brave little legends have checked in. the rest are either asleep or lost in a cereal bowl.`;
+    return pickFromPoolBag("recap:noTotal", NOON_RECAP_NO_TOTAL_LINES).replace("{count}", String(checkInCount));
 
   }
 
 
 
-  const missingCount = Math.max(totalHumans - checkInCount, 0);
-
-
-
-  if (missingCount === 0) {
-
-    return `morning census update: ${checkInCount}/${totalHumans} humans checked in. stunning. immaculate. the sun feels seen.`;
-
-  }
-
-
-
-  return `morning census update: ${checkInCount}/${totalHumans} humans have said good morning. ${missingCount} remain unverified and are presumably negotiating with their blankets.`;
+  return pickFromPoolBag("recap:withTotal", NOON_RECAP_LINES)
+    .replace("{count}", String(checkInCount))
+    .replace("{total}", String(totalHumans));
 
 }
 
 
 
-async function postFollowup(guild) {
+async function postNoonRecap(guild) {
   const guildState = ensureGuildState(guild.id);
   const timeZone = getGuildTimezone(guildState);
   const dailyState = ensureDailyState(guildState, getZonedParts(new Date(), timeZone).dateKey);
@@ -1821,7 +1962,12 @@ async function postFollowup(guild) {
     return false;
   }
 
-  await safeSend(channel, await buildFollowupMessage(guild, dailyState));
+  const recapMessage = await buildNoonRecapMessage(guild, dailyState);
+  const recapSent = await safeSend(channel, recapMessage);
+
+  if (!recapSent) {
+    return false;
+  }
 
   const recordUpdate = updateRecords(guildState, dailyState);
 
@@ -1829,7 +1975,7 @@ async function postFollowup(guild) {
     const celebration = buildNewBestCelebration(dailyState);
 
     if (celebration) {
-      await channel.send({
+      await sendBotPayload(channel, {
         content: celebration.content,
         allowedMentions: { parse: [], users: celebration.userIds },
       });
@@ -1837,6 +1983,53 @@ async function postFollowup(guild) {
   }
 
   return true;
+}
+
+async function getUncheckedHumanMembers(guild, dailyState) {
+  try {
+    await guild.members.fetch();
+  } catch {
+    return null;
+  }
+
+  return [...guild.members.cache.values()].filter(
+    (member) => !member.user.bot && !dailyState.checkIns[member.id],
+  );
+}
+
+async function postRandomOffenderCallout(guild) {
+  const guildState = ensureGuildState(guild.id);
+  const timeZone = getGuildTimezone(guildState);
+  const dailyState = ensureDailyState(guildState, getZonedParts(new Date(), timeZone).dateKey);
+  const channel = await getMorningChannel(guild);
+
+  if (!channel) {
+    return { handled: false };
+  }
+
+  const uncheckedMembers = await getUncheckedHumanMembers(guild, dailyState);
+
+  if (!uncheckedMembers) {
+    return { handled: false };
+  }
+
+  if (uncheckedMembers.length === 0) {
+    return { handled: true, sent: false };
+  }
+
+  const selectedMember = pickRandom(uncheckedMembers);
+  const line = pickFromPoolBag("offender:lines", RANDOM_OFFENDER_LINES)
+    .replace("{user}", `<@${selectedMember.id}>`);
+  const sent = await sendBotPayload(channel, {
+    content: line,
+    allowedMentions: { parse: [], users: [selectedMember.id] },
+  });
+
+  if (!sent) {
+    return { handled: false };
+  }
+
+  return { handled: true, sent: true };
 }
 
 
@@ -2028,10 +2221,17 @@ async function maybePostPendingChampionAnnouncements(guild, guildState) {
       continue;
     }
 
-    await channel.send({
+    const sent = await sendBotPayload(channel, {
       content: announcement.content,
       allowedMentions: { parse: [], users: announcement.userIds },
     });
+
+    if (!sent) {
+      const unsentIndex = pending.indexOf(entry);
+      guildState.points.pendingAnnouncements = pending.slice(unsentIndex);
+      await store.save();
+      return false;
+    }
   }
 
   guildState.points.pendingAnnouncements = [];
@@ -3579,21 +3779,31 @@ async function schedulerTick() {
 
     }
 
+    const now = new Date();
 
-
-    const zonedNow = getZonedParts(new Date(), getGuildTimezone(guildState));
+    const zonedNow = getZonedParts(now, getGuildTimezone(guildState));
 
     const dailyState = ensureDailyState(guildState, zonedNow.dateKey);
 
     const nowMinutes = zonedNow.hour * 60 + zonedNow.minute;
 
+    const recapNow = getZonedParts(now, NOON_RECAP_TIMEZONE);
+    const recapMinutesNow = recapNow.hour * 60 + recapNow.minute;
+
+    const offenderNow = getZonedParts(now, RANDOM_OFFENDER_TIMEZONE);
+    const offenderMinutesNow = offenderNow.hour * 60 + offenderNow.minute;
+
     const reminderMinutes = MORNING_REMINDER_HOUR * 60 + MORNING_REMINDER_MINUTE;
 
-    const followupMinutes = MORNING_FOLLOWUP_HOUR * 60 + MORNING_FOLLOWUP_MINUTE;
+    const recapMinutes = NOON_RECAP_HOUR * 60 + NOON_RECAP_MINUTE;
+
+    const offenderMinutes = RANDOM_OFFENDER_HOUR * 60 + RANDOM_OFFENDER_MINUTE;
 
 
 
     if (
+
+      ENABLE_MORNING_REMINDER &&
 
       !dailyState.reminderSent &&
 
@@ -3625,6 +3835,34 @@ async function schedulerTick() {
 
 
 
+    if (
+
+      ENABLE_RANDOM_OFFENDER &&
+
+      !dailyState.randomOffenderSent &&
+
+      offenderMinutesNow >= offenderMinutes &&
+
+      offenderMinutesNow <= offenderMinutes + REMINDER_GRACE_MINUTES
+
+    ) {
+
+      const result = await postRandomOffenderCallout(guild);
+
+
+
+      if (result.handled) {
+
+        dailyState.randomOffenderSent = true;
+
+        await store.save();
+
+      }
+
+    }
+
+
+
     if (nowMinutes >= reminderMinutes) {
 
       await maybePostPendingChampionAnnouncements(guild, guildState);
@@ -3636,21 +3874,23 @@ async function schedulerTick() {
     if (
 
 
-      !dailyState.followupSent &&
+      ENABLE_NOON_RECAP &&
 
-      nowMinutes >= followupMinutes &&
+      !dailyState.recapSent &&
 
-      nowMinutes <= followupMinutes + FOLLOWUP_GRACE_MINUTES
+      recapMinutesNow >= recapMinutes &&
+
+      recapMinutesNow <= recapMinutes + FOLLOWUP_GRACE_MINUTES
 
     ) {
 
-      const sent = await postFollowup(guild);
+      const sent = await postNoonRecap(guild);
 
 
 
       if (sent) {
 
-        dailyState.followupSent = true;
+        dailyState.recapSent = true;
 
         await store.save();
 
@@ -3700,11 +3940,22 @@ client.once("clientReady", async () => {
 
 client.on("messageCreate", async (message) => {
 
-  if (!message.inGuild() || message.author.bot) {
+  if (!message.inGuild()) {
 
     return;
 
   }
+
+  if (message.author.bot) {
+    if (client.user && message.author.id === client.user.id) {
+      markObservedBotMessage(message);
+    }
+
+    return;
+
+  }
+
+  resetConsecutiveBotMessages(message.channelId);
 
 
 
@@ -3733,7 +3984,7 @@ client.on("messageCreate", async (message) => {
 
 
     if (isGoodMorningMessage(message.content)) {
-      if (!isMorningSomewhereInUnitedStates(new Date())) {
+      if (!isMorningSomewhereInUnitedStates(new Date(message.createdTimestamp))) {
         await handleRejectedCheckIn(message);
         return;
       }

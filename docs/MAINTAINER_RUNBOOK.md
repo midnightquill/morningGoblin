@@ -1,6 +1,6 @@
 # Maintainer Runbook
 
-Last updated: 2026-03-12
+Last updated: 2026-04-02
 
 ## First Places To Look
 
@@ -196,7 +196,7 @@ Stored per guild in `data/state.json` under `records`.
 
 Intended behavior:
 
-- new best days should get a celebration post during follow-up
+- new best days should get a celebration post during the noon recap
 - worst day is the lowest completed-day count seen so far
 - each user's first successful GM of the day awards 1 point
 - owner-only `!gm resetpoints` should wipe the current guild's points state back to a fresh season starting today

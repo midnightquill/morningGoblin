@@ -1,6 +1,6 @@
 # Thread Decisions
 
-Last updated: 2026-03-12
+Last updated: 2026-04-02
 
 This file captures key product decisions from the development thread that are easy to lose over time.
 
@@ -24,6 +24,10 @@ This file captures key product decisions from the development thread that are ea
 - A planned temporary outage should be announcable with one owner-only command, and the goblin should only announce its return if that outage command was used first.
 - The owner should be able to manually backfill a same-day check-in from an existing Discord message when needed.
 - The owner should also have a separate command that retroactively reacts and replies on a good-morning message after logging it.
+- The regular scheduled reminder should be easy to disable without deleting the logic entirely.
+- The old 10:30 census should be replaced by a short noon Pacific recap instead of a wordier mid-morning post.
+- The bot should randomly call out one person who has not said good morning yet each morning.
+- The bot should stop automatic posting after a few bot-only messages in a row until a human talks again.
 - First successful GMs should award points, with weekly/monthly/yearly champions declared automatically instead of manual scorekeeping.
 
 ## Greeting rules
