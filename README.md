@@ -18,6 +18,7 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 - Tracks best and worst completed good-morning days per server
 - Celebrates brand-new best-day records by tagging the people who helped set them
 - Awards one point for each person's first successful GM of the day and keeps weekly/monthly/yearly scoreboards
+- Lets users check their own all-time GM stats in the `rank-check🏆` channel
 - Declares weekly, monthly, and yearly good-morning champions automatically in the morning channel
 - Can serve a rotating bank of morning facts with `!gm fact`
 - Can report how many days it has been since the last stream with `!gm stream`
@@ -72,6 +73,8 @@ From [.env.example](C:/Dev/Codex/Discord Morning Bot/.env.example):
 - `BOT_OWNER_ID`: optional Discord user ID for owner-only commands
 - `COMMAND_PREFIX`: defaults to `!gm`
 - `DEFAULT_TIMEZONE`: defaults to `America/Phoenix`
+- `RANK_CHECK_CHANNEL_NAME`: defaults to `rank-check🏆`
+- `RANK_CHECK_CHANNEL_ID`: optional channel ID override for the stats channel
 - `ENABLE_MORNING_REMINDER`: defaults to `false`
 - `MORNING_REMINDER_HOUR`: defaults to `8`
 - `MORNING_REMINDER_MINUTE`: defaults to `0`
@@ -112,6 +115,11 @@ When a week, month, or year rolls over, the bot automatically declares the champ
 Use `!gm points` to see the live board and the most recent champions.
 
 ## Commands
+
+### User commands
+
+- `!gm stats`
+  Shows your all-time GM total, lifetime rank, and current week/month/year points. This command only works in the `rank-check🏆` channel by default.
 
 ### Server/admin commands
 

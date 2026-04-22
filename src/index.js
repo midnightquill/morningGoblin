@@ -20,6 +20,10 @@ const BOT_OWNER_ID = process.env.BOT_OWNER_ID?.trim() || "";
 
 const DEFAULT_TIMEZONE = resolveDefaultTimeZone(process.env.DEFAULT_TIMEZONE?.trim());
 
+const RANK_CHECK_CHANNEL_ID = process.env.RANK_CHECK_CHANNEL_ID?.trim() || "";
+
+const RANK_CHECK_CHANNEL_NAME = process.env.RANK_CHECK_CHANNEL_NAME?.trim() || "rank-check\uD83C\uDFC6";
+
 const ENABLE_MORNING_REMINDER = readBoolean("ENABLE_MORNING_REMINDER", false);
 
 const MORNING_REMINDER_HOUR = readNumber("MORNING_REMINDER_HOUR", 8, 0, 23);
@@ -1796,7 +1800,7 @@ async function getMorningChannel(guild) {
 
 
 
-    if (!channel || !channel.isTextBased()) {
+    if (!channel || !isChannelInGuild(channel, guild) || !channel.isTextBased()) {
 
       return null;
 
@@ -1811,6 +1815,12 @@ async function getMorningChannel(guild) {
     return null;
 
   }
+
+}
+
+function isChannelInGuild(channel, guild) {
+
+  return channel?.guildId === guild.id || channel?.guild?.id === guild.id;
 
 }
 
@@ -1879,7 +1889,7 @@ async function getOfflineNoticeChannel(guild, guildState) {
     try {
       const preferredChannel = await guild.channels.fetch(preferredChannelId);
 
-      if (preferredChannel && preferredChannel.isTextBased()) {
+      if (preferredChannel && isChannelInGuild(preferredChannel, guild) && preferredChannel.isTextBased()) {
         return preferredChannel;
       }
     } catch {
@@ -2333,6 +2343,97 @@ async function formatScoreboard(guild, scores, limit = 5) {
 
 }
 
+function normalizeChannelName(name) {
+  return (name ?? "").normalize("NFKC").replace(/\uFE0F/g, "").toLowerCase();
+}
+
+function isRankCheckChannel(channel) {
+  if (!channel) {
+    return false;
+  }
+
+  if (RANK_CHECK_CHANNEL_ID && channel.id === RANK_CHECK_CHANNEL_ID) {
+    return true;
+  }
+
+  return normalizeChannelName(channel.name) === normalizeChannelName(RANK_CHECK_CHANNEL_NAME);
+}
+
+function findRankCheckChannel(guild) {
+  if (RANK_CHECK_CHANNEL_ID) {
+    return guild.channels.cache.get(RANK_CHECK_CHANNEL_ID) ?? null;
+  }
+
+  return guild.channels.cache.find((channel) => isRankCheckChannel(channel)) ?? null;
+}
+
+function getScoreRank(scores, userId) {
+  const userScore = scores?.[userId] ?? 0;
+
+  if (userScore <= 0) {
+    return null;
+  }
+
+  const entries = getSortedScoreEntries(scores);
+  const higherScores = entries.filter(([, score]) => score > userScore).length;
+  const tiedScores = entries.filter(([, score]) => score === userScore).length;
+
+  return {
+    rank: higherScores + 1,
+    tiedCount: tiedScores,
+    totalRanked: entries.length,
+    score: userScore,
+  };
+}
+
+function formatRankLine(label, rankInfo) {
+  if (!rankInfo) {
+    return `${label}: unranked`;
+  }
+
+  const tieNote = rankInfo.tiedCount > 1 ? `, tied with ${rankInfo.tiedCount - 1}` : "";
+  return `${label}: #${rankInfo.rank}/${rankInfo.totalRanked}${tieNote}`;
+}
+
+async function postUserStats(message) {
+  if (!isRankCheckChannel(message.channel)) {
+    const rankChannel = findRankCheckChannel(message.guild);
+    const target = rankChannel ? `<#${rankChannel.id}>` : `#${RANK_CHECK_CHANNEL_NAME}`;
+
+    await message.reply({
+      content: `stats paperwork lives in ${target}. please take your little leaderboard goblin business over there.`,
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  const guildState = ensureGuildState(message.guild.id);
+  const timeZone = getGuildTimezone(guildState);
+  const todayKey = getZonedParts(new Date(), timeZone).dateKey;
+  ensureDailyState(guildState, todayKey);
+
+  const pointsState = ensurePointsState(guildState, todayKey);
+  const userId = message.author.id;
+  const lifetimePoints = pointsState.lifetime[userId] ?? 0;
+  const lifetimeRank = getScoreRank(pointsState.lifetime, userId);
+  const weekPoints = pointsState.periods.week.scores[userId] ?? 0;
+  const monthPoints = pointsState.periods.month.scores[userId] ?? 0;
+  const yearPoints = pointsState.periods.year.scores[userId] ?? 0;
+  const displayName = message.member?.displayName || message.author.username;
+
+  await message.reply({
+    content: [
+      `gm stats for ${displayName}:`,
+      `all-time: ${formatPointsWord(lifetimePoints)}`,
+      formatRankLine("all-time rank", lifetimeRank),
+      `this week: ${formatPointsWord(weekPoints)}`,
+      `this month: ${formatPointsWord(monthPoints)}`,
+      `this year: ${formatPointsWord(yearPoints)}`,
+    ].join("\n"),
+    allowedMentions: { repliedUser: false, parse: [] },
+  });
+}
+
 
 
 async function formatChampionSummary(guild, entry) {
@@ -2572,7 +2673,7 @@ async function fetchReferencedMessage(guild, channelId, messageId) {
   try {
     const channel = await guild.channels.fetch(channelId);
 
-    if (!channel || !channel.isTextBased() || !("messages" in channel)) {
+    if (!channel || !isChannelInGuild(channel, guild) || !channel.isTextBased() || !("messages" in channel)) {
       return null;
     }
 
@@ -3392,6 +3493,8 @@ async function handleCommand(message) {
 
           `- \`${COMMAND_PREFIX} points\` to see the weekly/monthly/yearly scoreboard`,
 
+          `- \`${COMMAND_PREFIX} stats\` in #${RANK_CHECK_CHANNEL_NAME} to see your all-time gm stats`,
+
           `- \`${COMMAND_PREFIX} phrases\` to see accepted morning openings`,
           `- \`${COMMAND_PREFIX} quiet @user\` to suppress check-in text replies for a user`,
           `- \`${COMMAND_PREFIX} unquiet @user\` to re-enable check-in text replies for a user`,
@@ -3441,6 +3544,14 @@ async function handleCommand(message) {
     case "points": {
 
       await postPoints(message);
+
+      return;
+
+    }
+
+    case "stats": {
+
+      await postUserStats(message);
 
       return;
 

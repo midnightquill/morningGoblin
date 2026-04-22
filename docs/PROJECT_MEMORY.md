@@ -148,6 +148,8 @@ Behavior:
 
 `!gm points` shows the live scoreboards plus the most recent saved champions.
 
+`!gm stats` is a regular user command for the `rank-check🏆` channel. It shows the caller's lifetime GM count, all-time rank, and current week/month/year points.
+
 
 ### Stream tracker
 
@@ -174,6 +176,10 @@ Behavior:
 - current config contains 36 facts
 
 ## Commands
+
+### User commands
+
+- `!gm stats`
 
 ### Admin/server commands
 

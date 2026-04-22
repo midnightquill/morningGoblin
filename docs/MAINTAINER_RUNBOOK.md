@@ -70,6 +70,14 @@ Get-Process node
 
 The bot has a lock-file safeguard, but if behavior ever looks duplicated, check for multiple Node processes anyway.
 
+### Champion announcement appears in the wrong server
+
+Likely cause:
+
+- stale state from a test server or old server configuration
+
+The bot now verifies that fetched channels belong to the guild being processed before posting scheduled messages. If a test server is no longer needed, run `!gm off` in that server too so it stops maintaining its own reminders, recaps, and champion state.
+
 ### `npm` not recognized
 
 Node.js is not installed or PowerShell was not reopened after install.
