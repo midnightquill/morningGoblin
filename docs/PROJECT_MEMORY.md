@@ -221,7 +221,7 @@ Presence behavior:
 - auto statuses are worded to read naturally in the Discord sidebar even when Discord hides the activity type label
 - `logadd` lets the owner manually file a same-day check-in from an existing message without triggering public check-in chatter
 - `logreply` uses an existing same-day message to both file the check-in and retroactively do the goblin reaction/reply on that message
-- `catchup` scans the configured morning channel for recent history, finds today's valid missed GMs, and retro-processes those messages with the normal reply/quiet-list rules
+- `catchup` scans the configured morning channel for up to 168 hours of recent history, finds missed valid GMs, skips messages already logged/processed, and retro-processes those messages with the normal reply/quiet-list rules; it accepts hour input like `72` and day shorthand like `3d`
 
 ## Per-Guild State Schema
 
@@ -232,6 +232,7 @@ Current important fields:
 - `morningChannelId`
 - `timezone`
 - `daily`
+- `catchupLoggedCheckIns`
 - `suppressedCheckInReplyUserIds`
 - `records`
 - `points`

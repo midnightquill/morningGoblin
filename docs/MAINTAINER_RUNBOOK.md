@@ -196,7 +196,7 @@ Owner-only `!gm logadd` can backfill a same-day check-in from an existing messag
 
 Owner-only `!gm logreply` uses that same-day message reference flow too, but also force-reacts and force-replies on the target message so it looks like the goblin processed it live later.
 
-Owner-only `!gm catchup 6` scans the configured morning channel for recent messages from the last `X` hours, finds today's valid missed GMs, and retro-processes them in timestamp order. It only backfills the current day; older days are not reconstructible with the current state model.
+Owner-only `!gm catchup 72` or `!gm catchup 3d` scans the configured morning channel for recent messages from the requested window, up to 168 hours. It finds valid missed GMs, skips messages already logged today, already saved by a previous catch-up run, or already processed by the bot in visible Discord history, then retro-processes them in timestamp order. Older backfills update lifetime totals and any still-active period boards; already-closed weekly boards are not rewritten.
 
 ### Records and points
 

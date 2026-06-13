@@ -174,8 +174,8 @@ These ignore `Manage Server` and instead check `BOT_OWNER_ID`:
   Manually files a same-day good-morning check-in from an existing message or Discord message link.
 - `!gm logreply #channel 123456789012345678`
   Logs a same-day check-in from an existing message and then force-reacts and force-replies on that message like the goblin just processed it live.
-- `!gm catchup 6`
-  Scans the configured morning channel for the last `X` hours, backfills today's missed valid GMs, and retro-processes those messages with the normal reaction/reply behavior.
+- `!gm catchup 72`
+  Scans the configured morning channel for the last `X` hours, backfills missed valid GMs, and retro-processes those messages with the normal reaction/reply behavior.
 
 Supported presence types:
 
@@ -198,7 +198,7 @@ Examples:
 !gm resetpoints
 !gm logadd @Somebody #general 123456789012345678
 !gm logreply #general 123456789012345678
-!gm catchup 6
+!gm catchup 72
 !gm streamed today
 !gm stream
 !gm points
@@ -207,10 +207,11 @@ Examples:
 
 Catch-up note:
 
-- `!gm catchup X` is owner-only and currently accepts whole-hour windows from `1` to `24`
+- `!gm catchup X` is owner-only and currently accepts windows from `1` to `168` hours, including day shorthand like `3d`
 - it only scans the configured morning channel
-- it only backfills messages that are from today in the server timezone
+- it skips messages already logged today, already saved by an earlier catch-up run, or already processed by the bot in visible Discord history
 - it still enforces the "morning somewhere in the U.S." rule using the message timestamp
+- older backfills count toward lifetime totals and any still-active week/month/year boards; already-closed weekly boards are not rewritten
 
 ## What Counts As Good Morning
 

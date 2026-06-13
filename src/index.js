@@ -61,9 +61,9 @@ const REMINDER_GRACE_MINUTES = 180;
 const FOLLOWUP_GRACE_MINUTES = 180;
 const CATCHUP_DEFAULT_HOURS = 12;
 const CATCHUP_MIN_HOURS = 1;
-const CATCHUP_MAX_HOURS = 24;
+const CATCHUP_MAX_HOURS = 168;
 const CATCHUP_FETCH_PAGE_SIZE = 100;
-const CATCHUP_FETCH_MAX_MESSAGES = 1000;
+const CATCHUP_FETCH_MAX_MESSAGES = 5000;
 
 const LOCK_PATH = path.resolve(process.cwd(), "data", "bot.lock");
 
@@ -586,6 +586,7 @@ function ensureGuildState(guildId) {
       timezone: DEFAULT_TIMEZONE,
       daily: null,
       suppressedCheckInReplyUserIds: [],
+      catchupLoggedCheckIns: {},
       records: {
         best: null,
         worst: null,
@@ -603,6 +604,10 @@ function ensureGuildState(guildId) {
 
   if (!Array.isArray(guilds[guildId].suppressedCheckInReplyUserIds)) {
     guilds[guildId].suppressedCheckInReplyUserIds = [];
+  }
+
+  if (!guilds[guildId].catchupLoggedCheckIns || typeof guilds[guildId].catchupLoggedCheckIns !== "object") {
+    guilds[guildId].catchupLoggedCheckIns = {};
   }
 
   if (!guilds[guildId].records || typeof guilds[guildId].records !== "object") {
@@ -1535,6 +1540,46 @@ function cleanMessageContent(content) {
 
   return content.replace(/<@!?\d+>/g, " ").trim();
 
+}
+
+function getCatchupLoggedCheckInsForDate(guildState, dateKey) {
+  if (!guildState.catchupLoggedCheckIns || typeof guildState.catchupLoggedCheckIns !== "object") {
+    guildState.catchupLoggedCheckIns = {};
+  }
+
+  if (!guildState.catchupLoggedCheckIns[dateKey] || typeof guildState.catchupLoggedCheckIns[dateKey] !== "object") {
+    guildState.catchupLoggedCheckIns[dateKey] = {};
+  }
+
+  return guildState.catchupLoggedCheckIns[dateKey];
+}
+
+function wasCatchupLogged(guildState, dateKey, userId) {
+  return Boolean(guildState.catchupLoggedCheckIns?.[dateKey]?.[userId]);
+}
+
+function markCatchupLogged(guildState, dateKey, userId, sourceMessage) {
+  const dateLogs = getCatchupLoggedCheckInsForDate(guildState, dateKey);
+  dateLogs[userId] = {
+    messageId: sourceMessage.id,
+    channelId: sourceMessage.channelId,
+    timestamp: sourceMessage.createdTimestamp,
+  };
+}
+
+function awardHistoricalCatchupPoint(guildState, userId, dateKey, activeDateKey) {
+  const pointsState = ensurePointsState(guildState, activeDateKey);
+  const pointKeys = getPeriodKeys(dateKey);
+
+  pointsState.lifetime[userId] = (pointsState.lifetime[userId] ?? 0) + POINTS_PER_CHECK_IN;
+
+  for (const periodType of PERIOD_TYPES) {
+    const periodState = pointsState.periods[periodType];
+
+    if (periodState.key === pointKeys[periodType]) {
+      periodState.scores[userId] = (periodState.scores[userId] ?? 0) + POINTS_PER_CHECK_IN;
+    }
+  }
 }
 
 function isEveningGreetingMessage(content) {
@@ -2699,17 +2744,21 @@ function parseCatchupHours(input) {
     return CATCHUP_DEFAULT_HOURS;
   }
 
-  if (!/^\d+$/.test(trimmed)) {
+  const match = trimmed.match(/^(\d+)\s*(h|hr|hrs|hour|hours|d|day|days)?$/i);
+
+  if (!match) {
     return null;
   }
 
-  const parsed = Number.parseInt(trimmed, 10);
+  const parsed = Number.parseInt(match[1], 10);
+  const unit = match[2]?.toLowerCase() ?? "h";
+  const hours = unit.startsWith("d") ? parsed * 24 : parsed;
 
-  if (Number.isNaN(parsed) || parsed < CATCHUP_MIN_HOURS || parsed > CATCHUP_MAX_HOURS) {
+  if (Number.isNaN(hours) || hours < CATCHUP_MIN_HOURS || hours > CATCHUP_MAX_HOURS) {
     return null;
   }
 
-  return parsed;
+  return hours;
 }
 
 async function fetchRecentMessagesSince(channel, cutoffTimestamp) {
@@ -2745,6 +2794,59 @@ async function fetchRecentMessagesSince(channel, cutoffTimestamp) {
   return collected.filter((sourceMessage) => sourceMessage.createdTimestamp >= cutoffTimestamp);
 }
 
+function collectBotReplyReferenceIds(messages) {
+  const referencedMessageIds = new Set();
+
+  for (const sourceMessage of messages) {
+    if (sourceMessage.author.id === client.user.id && sourceMessage.reference?.messageId) {
+      referencedMessageIds.add(sourceMessage.reference.messageId);
+    }
+  }
+
+  return referencedMessageIds;
+}
+
+async function hasBotReaction(sourceMessage) {
+  if (!client.user || sourceMessage.reactions.cache.size === 0) {
+    return false;
+  }
+
+  for (const reaction of sourceMessage.reactions.cache.values()) {
+    try {
+      const users = await reaction.users.fetch();
+
+      if (users.has(client.user.id)) {
+        return true;
+      }
+    } catch {
+      // Missing reaction permissions should not block the rest of the catch-up scan.
+    }
+  }
+
+  return false;
+}
+
+async function wasAlreadyProcessedByBot(sourceMessage, botReplyReferenceIds) {
+  return botReplyReferenceIds.has(sourceMessage.id) || (await hasBotReaction(sourceMessage));
+}
+
+async function maybeCelebrateCatchupCheckIn(sourceMessage, guildState, dateKey, totalCheckIns) {
+  try {
+    await sourceMessage.react(pickFromPoolBag("checkin:reactionEmojis", MORNING_REACTION_EMOJIS));
+  } catch {
+    // Reactions are optional sugar.
+  }
+
+  if (guildState.suppressedCheckInReplyUserIds.includes(sourceMessage.author.id)) {
+    return;
+  }
+
+  await sourceMessage.reply({
+    content: `retro gm filed for ${dateKey}. ${totalCheckIns} backfilled in this sweep.`,
+    allowedMentions: { repliedUser: false, parse: [] },
+  });
+}
+
 async function handleCatchupScan(message, body) {
   const guildState = ensureGuildState(message.guild.id);
   const channel = await getMorningChannel(message.guild);
@@ -2762,14 +2864,14 @@ async function handleCatchupScan(message, body) {
 
   if (hours === null) {
     await message.reply({
-      content: "use `" + COMMAND_PREFIX + " catchup 6` with a whole number of hours between 1 and 24.",
+      content: "use `" + COMMAND_PREFIX + " catchup 72` or `" + COMMAND_PREFIX + " catchup 3d`. max window is 168 hours.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
     return;
   }
 
   const timeZone = getGuildTimezone(guildState);
-  const todayKey = getZonedParts(new Date(), timeZone).dateKey;
+  const activeDateKey = getZonedParts(new Date(), timeZone).dateKey;
   const cutoffTimestamp = Date.now() - (hours * 60 * 60 * 1000);
   const recentMessages = await fetchRecentMessagesSince(channel, cutoffTimestamp).catch(() => null);
 
@@ -2782,14 +2884,16 @@ async function handleCatchupScan(message, body) {
   }
 
   const orderedMessages = recentMessages.sort((left, right) => left.createdTimestamp - right.createdTimestamp);
+  const botReplyReferenceIds = collectBotReplyReferenceIds(orderedMessages);
 
   const stats = {
     scanned: orderedMessages.length,
     validMorningMessages: 0,
     logged: 0,
     alreadyLogged: 0,
-    oldDay: 0,
     outsideUsMorning: 0,
+    dates: new Set(),
+    inactivePeriodPoints: 0,
     failures: 0,
   };
 
@@ -2803,38 +2907,55 @@ async function handleCatchupScan(message, body) {
     const sourceDate = new Date(sourceMessage.createdTimestamp);
     const sourceDateKey = getZonedParts(sourceDate, timeZone).dateKey;
 
-    if (sourceDateKey !== todayKey) {
-      stats.oldDay += 1;
-      continue;
-    }
-
     if (!isMorningSomewhereInUnitedStates(sourceDate)) {
       stats.outsideUsMorning += 1;
       continue;
     }
 
-    const dailyState = ensureDailyState(guildState, todayKey);
     const targetUserId = sourceMessage.author.id;
 
-    if (dailyState.checkIns[targetUserId]) {
+    const dailyState = sourceDateKey === activeDateKey ? ensureDailyState(guildState, activeDateKey) : null;
+    const alreadyInDailyState = Boolean(dailyState?.checkIns[targetUserId]);
+    const alreadyInCatchupState = wasCatchupLogged(guildState, sourceDateKey, targetUserId);
+    const alreadyProcessedByBot = await wasAlreadyProcessedByBot(sourceMessage, botReplyReferenceIds);
+
+    if (alreadyInDailyState || alreadyInCatchupState || alreadyProcessedByBot) {
       stats.alreadyLogged += 1;
       continue;
     }
 
     const sourceMember = sourceMessage.member ?? (await message.guild.members.fetch(targetUserId).catch(() => null));
-    const { alreadyCheckedIn, totalCheckIns } = recordCheckIn(
-      guildState,
-      todayKey,
-      targetUserId,
-      buildHistoricalCheckInEntry(sourceMessage, sourceMember, "[automatic catch-up log from attachment-only message]"),
-    );
-    stats.logged += 1;
 
-    try {
-      await maybeCelebrateCheckIn(sourceMessage, guildState, alreadyCheckedIn, totalCheckIns);
-    } catch {
-      stats.failures += 1;
+    if (sourceDateKey === activeDateKey) {
+      const { alreadyCheckedIn, totalCheckIns } = recordCheckIn(
+        guildState,
+        activeDateKey,
+        targetUserId,
+        buildHistoricalCheckInEntry(sourceMessage, sourceMember, "[automatic catch-up log from attachment-only message]"),
+      );
+
+      try {
+        await maybeCelebrateCheckIn(sourceMessage, guildState, alreadyCheckedIn, totalCheckIns);
+      } catch {
+        stats.failures += 1;
+      }
+    } else {
+      awardHistoricalCatchupPoint(guildState, targetUserId, sourceDateKey, activeDateKey);
+      markCatchupLogged(guildState, sourceDateKey, targetUserId, sourceMessage);
+
+      if (getPeriodKeys(sourceDateKey).week !== guildState.points.periods.week.key) {
+        stats.inactivePeriodPoints += 1;
+      }
+
+      try {
+        await maybeCelebrateCatchupCheckIn(sourceMessage, guildState, sourceDateKey, stats.logged + 1);
+      } catch {
+        stats.failures += 1;
+      }
     }
+
+    stats.logged += 1;
+    stats.dates.add(sourceDateKey);
   }
 
   await store.save();
@@ -2842,10 +2963,13 @@ async function handleCatchupScan(message, body) {
   const summary = [
     `catch-up sweep complete for the last ${hours} hour${hours === 1 ? "" : "s"} in <#${channel.id}>.`,
     `${stats.logged} new gm${stats.logged === 1 ? "" : "s"} logged.`,
-    `${stats.alreadyLogged} skipped because they were already on today's books.`,
-    `${stats.oldDay} skipped because they were not from today in \`${timeZone}\`.`,
+    `${stats.alreadyLogged} skipped because they were already logged or already processed by the bot.`,
     `${stats.outsideUsMorning} skipped because they were outside legal U.S. morning.`,
   ];
+
+  if (stats.dates.size > 0) {
+    summary.push(`dates backfilled: ${[...stats.dates].join(", ")}.`);
+  }
 
   if (stats.validMorningMessages === 0) {
     summary.push("i did not find any valid-looking morning messages in that scan window.");
@@ -2857,7 +2981,9 @@ async function handleCatchupScan(message, body) {
     summary.push(`${stats.failures} log${stats.failures === 1 ? "" : "s"} were saved but the retro reaction/reply step failed.`);
   }
 
-  summary.push("note: this only backfills today's check-ins; older days still need a bigger history system than the goblin currently owns.");
+  if (stats.inactivePeriodPoints > 0) {
+    summary.push(`${stats.inactivePeriodPoints} older log${stats.inactivePeriodPoints === 1 ? "" : "s"} were added to lifetime totals but could not safely rewrite an already-closed weekly board.`);
+  }
 
   await message.reply({
     content: summary.join("\n"),
@@ -3512,7 +3638,7 @@ async function handleCommand(message) {
 
           `- \`${COMMAND_PREFIX} logreply #channel 123456789012345678\` to retro-react and reply on an existing gm message (owner only)`,
 
-          `- \`${COMMAND_PREFIX} catchup 6\` to scan the morning channel for today's missed gms from the last few hours (owner only)`,
+          `- \`${COMMAND_PREFIX} catchup 72\` to scan the morning channel for missed gms from the last few days (owner only)`,
 
           "- `" + COMMAND_PREFIX + " presence watching for Mong Plorps` to change the bot status (owner only)",
 
