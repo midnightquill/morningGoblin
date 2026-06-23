@@ -29,6 +29,12 @@ This file captures key product decisions from the development thread that are ea
 - The bot should randomly call out one person who has not said good morning yet each morning.
 - The bot should stop automatic posting after a few bot-only messages in a row until a human talks again.
 - First successful GMs should award points, with weekly/monthly/yearly champions declared automatically instead of manual scorekeeping.
+- The bot should support switchable voice packs so old and new material can rotate without editing JSON live.
+- Retired message pools should stay recoverable and can serve as the `classic` voice pack.
+- Optional daily micro-quests should add small novelty without requiring users to answer them.
+- First check-in replies may occasionally append rare shiny lines.
+- The bot should celebrate 3-day, 7-day, and comeback streaks without adding extra bot messages.
+- Weekly champions should receive a silly saved office title.
 
 ## Greeting rules
 

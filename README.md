@@ -10,8 +10,13 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 - Only counts a good-morning message when it is still morning somewhere in the United States
 - Reacts to good-morning posts with random morning-ish emoji like sun, coffee, breakfast, and other tiny dawn nonsense
 - Gives silly replies for check-ins, duplicate check-ins, nudges, and random offender callouts
+- Supports switchable voice packs with `fresh`, `classic`, and `chaos` seasons
+- Adds optional daily micro-quests to reminders and first check-in replies
+- Occasionally appends rare shiny check-in replies
+- Tracks per-user check-in streaks and celebrates 3-day, 7-day, and comeback moments
 - Nudges people once per day if they start chatting before saying good morning
 - Posts a short noon recap of the current day's check-in totals
+- Adds a silly weekly office-title watch to noon recaps when someone is leading the weekly board
 - Randomly calls out one non-checker-inner each morning with a playful goblin accusation
 - Talks back when people mention it, reply to it, or use configured wake words like `morning goblin`
 - Suppresses further automatic bot posts after too many bot-only messages in a row until a human speaks again
@@ -19,7 +24,7 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 - Celebrates brand-new best-day records by tagging the people who helped set them
 - Awards one point for each person's first successful GM of the day and keeps weekly/monthly/yearly scoreboards
 - Lets users check their own all-time GM stats in the `rank-check🏆` channel
-- Declares weekly, monthly, and yearly good-morning champions automatically in the morning channel
+- Declares weekly, monthly, and yearly good-morning champions automatically in the morning channel, with weekly winners receiving a ridiculous office title
 - Can serve a rotating bank of morning facts with `!gm fact`
 - Can report how many days it has been since the last stream with `!gm stream`
 - Lets the bot owner make it speak in any channel without exposing the command publicly
@@ -112,6 +117,8 @@ It keeps four scoreboards:
 
 When a week, month, or year rolls over, the bot automatically declares the champion in the configured morning channel. Ties become co-champions instead of arbitrary tiebreakers.
 
+Weekly champions also receive a randomly selected office title, which is saved with the champion history and shown by `!gm points`.
+
 Use `!gm points` to see the live board and the most recent champions.
 
 ## Commands
@@ -120,6 +127,10 @@ Use `!gm points` to see the live board and the most recent champions.
 
 - `!gm stats`
   Shows your all-time GM total, lifetime rank, and current week/month/year points. This command only works in the `rank-check🏆` channel by default.
+- `!gm voice`
+  Shows the current voice pack and available packs.
+- `!gm quest`
+  Shows today's optional micro-quest prompt.
 
 ### Server/admin commands
 
@@ -139,6 +150,10 @@ These require `Manage Server`:
   Posts a random morning fact from the configured fact bank without repeating back to back.
 - `!gm phrases`
   Shows the configured accepted morning openings.
+- `!gm voice fresh|classic|chaos`
+  Changes the server's active voice pack.
+- `!gm quest reroll|on|off|reset`
+  Rerolls or toggles the optional daily micro-quest.
 - `!gm reload`
   Reloads `config/morning-config.json` without restarting.
 - `!gm quiet @user`
@@ -203,6 +218,10 @@ Examples:
 !gm stream
 !gm points
 !gm points
+!gm voice chaos
+!gm voice fresh
+!gm quest
+!gm quest reroll
 ```
 
 Catch-up note:
@@ -262,6 +281,19 @@ Main message pools:
 - `nudgeReplies`
 - `invalidCheckInReplies`
 - `morningFacts`
+- `conversation.mentionReplies`
+- `conversation.genericReplies`
+- `conversation.keywordRules`
+- `rareShinyReplyChance`
+- `rareShinyReplies`
+- `microQuests`
+- `streakCelebrations`
+- `officeTitles.weekly`
+- `voicePacks`
+
+Temporarily retired lines can be kept under `retiredMessagePools`. The bot does not load them into the default active pools, but it can expose them as the `classic` voice pack when that archive is present.
+
+Voice packs let a server switch the bot's reply style without editing JSON live. `fresh` uses the top-level active pools, `classic` uses the retired archive, and configured packs like `chaos` can override any subset of the main message pools.
 
 If a `nudgeReplies` line contains `{channel}`, the bot replaces that with the configured morning-channel mention.
 
@@ -311,6 +343,9 @@ The bot stores lightweight local state in `data/state.json`, including:
 
 - per-server configuration
 - daily check-in data
+- selected voice pack
+- micro-quest toggle and today's selected prompt
+- per-user check-in streaks
 - saved owner-set presence
 
 ## Running It Reliably

@@ -1,469 +1,1255 @@
 {
-    "acceptedStarts":  [
-                           "gm",
-                           "good morning",
-                           "g\u0027morning",
-                           "gud morning",
-                           "morning",
-                           "mornin",
-                           "top of the morning"
-                       ],
-    "acceptedPatterns":  [
-                             "^m[a-z\u0027-]*\\s+p[a-z\u0027-]*[!?.,;:]*$"
-                         ],
-    "reminderLines":  [
-                          "good morning, assorted goblins. this is your daily reminder to place one (1) `good morning` into the chat so i can mark you down as legally alive.",
-                          "rise and shine, little weirdos. please submit a morning greeting so the office rooster in my brain can stop filing complaints.",
-                          "the sun is up and unfortunately so are responsibilities. toss a `gm` in here when you are no longer emotionally horizontal.",
-                          "tiny morning checkpoint: say good morning in this channel so we know you were not defeated by blankets overnight.",
-                          "gm audit time. please drop a morning greeting in here so my imaginary clipboard can experience peace."
-                      ],
-    "checkInReplies":  [
-                           "gm logged. the clipboard glows with approval.",
-                           "morning paperwork received and stamped by a tiny green authority.",
-                           "excellent. the dawn ledger hums softly.",
-                           "your gm has been accepted into the official sunrise record.",
-                           "beautiful bureaucratic compliance. thank you.",
-                           "the sun has been informed of your cooperation.",
-                           "clean entry. strong form. respectable dawn behavior.",
-                           "your morning greeting has passed inspection somehow.",
-                           "fantastic. the rooster union will hear of this.",
-                           "gm received. the office mug trembles with gratitude.",
-                           "dawn acknowledged. paperwork stabilized.",
-                           "your greeting has been filed under legally awake.",
-                           "splendid. the goblin desk approves this sunrise offering.",
-                           "good morning accepted. the forms are purring.",
-                           "that was a high-quality gm and i am forced to respect it.",
-                           "the ledger expands. morale improves by one.",
-                           "sunrise compliance achieved with unsettling elegance.",
-                           "your gm has been notarized by a creature with no qualifications.",
-                           "morning entry accepted. the bagel council relaxes.",
-                           "this greeting has excellent administrative posture.",
-                           "your dawn paperwork arrived hot and ready.",
-                           "gm confirmed. the goblin nods once, gravely.",
-                           "another lawful morning citizen enters the books.",
-                           "the rooster economy thanks you for your service.",
-                           "this has been recorded with medium ceremony and great sincerity.",
-                           "the morning office recognizes your contribution.",
-                           "gm accepted. the tiny tie flaps in approval.",
-                           "your greeting has been processed by the department of sunrise nonsense.",
-                           "absolutely premium morning behavior.",
-                           "the dawn clerk salutes your punctual little greeting.",
-                           "this gm has real clipboard-winning energy.",
-                           "accepted. the goblin has initialed the margin dramatically.",
-                           "your sunrise attendance has been entered into evidence.",
-                           "good morning recorded. the stapler survives another day.",
-                           "the sun remains appeased and the paperwork remains hungry.",
-                           "your morning tax has been paid in full.",
-                           "the ledger accepts this tasty little gm.",
-                           "morning vibes verified. proceed with your nonsense.",
-                           "your greeting is now part of the permanent goblin archive.",
-                           "that gm landed with the confidence of a seasoned bureaucrat.",
-                           "documented. witnessed. lightly caffeinated.",
-                           "your dawn participation has been rubber-stamped by fate.",
-                           "gm registered. the office fern is thrilled.",
-                           "the goblin has filed this under admirable sunrise conduct.",
-                           "strong gm. very inspectable.",
-                           "the bureaucratic rooster has signed off on this one.",
-                           "good morning legally recognized. carry on.",
-                           "your attendance at sunrise court has been noted.",
-                           "the morning board has accepted your statement.",
-                           "this greeting has been approved by several imaginary departments."
-                       ],
-    "duplicateReplies":  [
-                             "double gm detected. ambition noted.",
-                             "you already checked in, but i respect the follow-through.",
-                             "the second gm has been received and admired from a safe distance.",
-                             "duplicate dawn paperwork. still charming.",
-                             "you are already on the books, champion.",
-                             "another gm? i enjoy your consistency.",
-                             "the ledger says you are already awake enough.",
-                             "repeat greeting logged emotionally, not administratively.",
-                             "you already said gm, but the enthusiasm is delicious.",
-                             "bonus morning energy received. the forms remain unchanged.",
-                             "this is a duplicate, but a spirited one.",
-                             "the goblin appreciates the encore even if the paperwork does not.",
-                             "you have already fulfilled your morning obligations, overachiever.",
-                             "second gm observed. dramatic flair acknowledged.",
-                             "the dawn office has your first one, but thank you for the sequel."
-                         ],
-    "nudgeReplies":  [
-                         "tiny paperwork issue: you started talking before saying good morning. please report to {channel} and submit a quick gm.",
-                         "illegal pre-gm chatter detected. hop over to {channel} and drop a morning greeting so the morning police can stand down.",
-                         "hold on there, speed racer. first you say good morning in {channel}, then you may continue your silly little sentences.",
-                         "respectfully, the vibes require a gm first. go feed one morning greeting into {channel} and then we can all pretend this never happened."
-                     ],
-    "noCheckInsFollowups":  [
-                                "morning census update: absolutely nobody has checked in yet. grim scenes. devastating for the rooster economy.",
-                                "gm report: zero. not one. the sun is being ignored with incredible confidence."
-                            ],
-    "conversation":  {
-                         "enabled":  true,
-                         "wakeWords":  [
-                                           "morning goblin",
-                                           "goblin"
-                                       ],
-                         "channelCooldownSeconds":  3,
-                         "userCooldownSeconds":  5,
-                         "mentionReplies":  [
-                                                "you rang? the goblin skids into the room on tiny office loafers.",
-                                                "yes hello i have arrived with a clipboard and no meaningful authority.",
-                                                "the Morning Goblin has been summoned and is now staring professionally.",
-                                                "present. caffeinated. spiritually stapled together.",
-                                                "the goblin hears you and emerges from the administrative fog.",
-                                                "i have arrived with all the confidence of a creature holding borrowed paperwork.",
-                                                "you called and unfortunately i answered with enthusiasm.",
-                                                "hello yes this is goblin operations, how may i complicate your day.",
-                                                "i am here now. the tiny tie is on. the mug is warm.",
-                                                "the goblin has entered the chat like a deeply unnecessary middle manager.",
-                                                "yes? i was nearby alphabetizing vibes.",
-                                                "summoned successfully. the dawn clerk reports for duty.",
-                                                "i have been alerted by ancient forces and push notifications.",
-                                                "goblin online. clipboard steady. posture terrible.",
-                                                "hello citizen. you have the floor and i have the mug.",
-                                                "the goblin is awake enough to acknowledge this directly.",
-                                                "yes yes. the little administrative beast has clocked in.",
-                                                "i appear before you as foretold by the helpdesk prophecy.",
-                                                "behold: one goblin, lightly caffeinated and ready to overreact.",
-                                                "i have arrived in a cloud of low-budget professionalism.",
-                                                "you have pinged the goblin and now the goblin is legally present.",
-                                                "small green bureaucrat reporting in.",
-                                                "the goblin has opened one eye and several unnecessary forms.",
-                                                "i am here, armed with coffee breath and procedural uncertainty.",
-                                                "yes? the goblin has shuffled into view.",
-                                                "a summons has been received. the mug trembles.",
-                                                "goblin present. morale questionable. paperwork thriving.",
-                                                "i arrive with no solutions and fantastic posture lies.",
-                                                "hello. i was in the back office arguing with a stapler.",
-                                                "your ping has interrupted a very serious administrative daydream.",
-                                                "the goblin descends from the ceiling of dawn compliance.",
-                                                "i was nearby doing fake official business and heard my name.",
-                                                "one moment please. okay yes. i am now fully being a goblin at you.",
-                                                "i have materialized with coffee stains and intent.",
-                                                "goblin on site. clipboard humming softly.",
-                                                "you summoned me like an intern with mystical privileges.",
-                                                "yes. the licensed sunrise nuisance is here.",
-                                                "the little office beast has arrived to witness this.",
-                                                "i am present and already making this more dramatic than necessary.",
-                                                "hello hello. your local dawn bureaucrat is on the line.",
-                                                "the goblin heard its name and burst through a stack of memos.",
-                                                "you called, and i abandoned my tiny desk immediately.",
-                                                "reporting live from the department of weird little mornings.",
-                                                "i am now in the room and somehow this is your fault.",
-                                                "yes? i just sat down and made eye contact with the sun.",
-                                                "the goblin has interrupted its own break to attend this ping.",
-                                                "presence acknowledged. coffee secure. emotions negotiable.",
-                                                "i have shown up in the exact shape of a concern.",
-                                                "your ping activated the goblin beacon.",
-                                                "the goblin has entered the thread carrying one mug and several opinions.",
-                                                "i heard the call and scurried over in my little office socks.",
-                                                "yes indeed. one goblin, fresh from the dawn mines.",
-                                                "hello. i am between forms right now, so this is perfect.",
-                                                "the goblin is here, smelling faintly of coffee and administrative panic.",
-                                                "you have my immediate attention and my medium-quality judgment.",
-                                                "a ping? for me? in this economy? i am honored and confused.",
-                                                "goblin present. let us proceed with whatever fresh nonsense this is.",
-                                                "hello yes. your favorite compliance goblin has answered the bat signal.",
-                                                "the mug is steaming, the clipboard is ready, and i am unfortunately awake.",
-                                                "i have been summoned from the small break room beyond reality.",
-                                                "yes? i was just auditing the vibes in silence.",
-                                                "the goblin appears, burdened by duty and a tiny beverage.",
-                                                "i come bearing attention, suspicion, and low-grade office magic."
-                                            ],
-                         "genericReplies":  [
-                                                "i am listening with the full power of one haunted clipboard.",
-                                                "hmm. yes. the goblin has reviewed your statement and remains nosy.",
-                                                "understood. i will process this emotionally in a tiny office chair.",
-                                                "that sounds important. i am squinting at it like paperwork.",
-                                                "you have my attention, which is honestly a limited municipal resource.",
-                                                "interesting. i am nodding like a middle manager of the swamp.",
-                                                "the goblin has received this information and immediately made it weird.",
-                                                "i hear you. the dawn bureaucracy hears you. the stapler fears you.",
-                                                "very compelling. i have stamped it with a little sun and moved it to the pile.",
-                                                "noted. filed. emotionally mismanaged.",
-                                                "this has been entered into the morning archives under \u0027hmm\u0027.",
-                                                "i appreciate the report. the rooster council will overreact shortly.",
-                                                "absolutely fascinating. i am pretending to understand at a professional level.",
-                                                "the goblin ledger grows thicker with your testimony.",
-                                                "remarkable. i am now peering at this through tiny bureaucratic spectacles.",
-                                                "you speak, and i shuffle papers i absolutely do not need.",
-                                                "the little gears in my administrative skull are turning.",
-                                                "thank you. this has improved the office drama by 14 percent.",
-                                                "your statement has been accepted into evidence by the breakfast court.",
-                                                "hmm yes. i will circle back after three to five business sunrises.",
-                                                "this feels actionable, or at least decorative.",
-                                                "i am considering this with great goblin gravity.",
-                                                "the vibe inspectors have taken interest in this development.",
-                                                "i have placed this on a clipboard for no real reason.",
-                                                "this is the sort of thing that keeps a goblin gainfully employed.",
-                                                "i support this energy in a vague but official capacity.",
-                                                "ah. a fresh issue for the department of tiny concerns.",
-                                                "i am nodding so hard a paperclip just fell out of my soul.",
-                                                "big if true. medium if false. still excellent for morale.",
-                                                "the goblin appreciates being looped in on important server happenings.",
-                                                "this message has been blessed by an underqualified dawn creature.",
-                                                "respectfully, this has incredible clipboard potential.",
-                                                "i am tracking this with the confidence of a maniac and the tools of an intern.",
-                                                "good. good. the paperwork goblin loves a fresh situation.",
-                                                "i have no solution yet, but i do have opinions and a mug.",
-                                                "consider your words gently stapled to the fabric of the morning.",
-                                                "yes. this will absolutely go in the file marked \u0027ongoing nonsense\u0027.",
-                                                "i am awake enough to care and barely qualified enough to respond.",
-                                                "your update has reached my desk, which is just a crate with ambition.",
-                                                "i will meditate on this for several dramatic seconds.",
-                                                "the goblin office appreciates your contribution to the chaos economy.",
-                                                "i can work with this, spiritually if not operationally.",
-                                                "that has real memo energy.",
-                                                "copy that. i am twirling a pen like this means anything.",
-                                                "i have taken one long sip of coffee and become prepared to acknowledge this.",
-                                                "this has been escalated to the highest authority available: me, unfortunately.",
-                                                "the dawn desk has received your transmission.",
-                                                "horrifying. beautiful. useful. all at once.",
-                                                "i am adding this to my morning dashboard, which is emotionally handmade.",
-                                                "thank you for contacting Goblin Operations.",
-                                                "i understand completely, which is suspicious because i usually do not.",
-                                                "yes. this is exactly the kind of problem a small creature with a clipboard should hear about.",
-                                                "i am granting this one official goblin squint of approval.",
-                                                "this deserves a meeting, but thankfully i am too small to schedule one.",
-                                                "the goblin murmurs \u0027interesting\u0027 and writes nothing down.",
-                                                "excellent. more material for the daily nonsense report.",
-                                                "i receive your words like a possum receives moonlight: confused but committed.",
-                                                "this has entered my workflow, which is mostly vibes and accidental administration.",
-                                                "i am now standing on a tiny desk to think about this better.",
-                                                "your message has been reviewed by two sleepy eyes and one determined heart.",
-                                                "thank you. this has enriched the goblin ecosystem.",
-                                                "that checks out in the loosest possible sense.",
-                                                "from a governance perspective, this is delicious.",
-                                                "i am forwarding this to upper management, which is also me wearing a different hat.",
-                                                "this will absolutely influence the next completely unnecessary memo.",
-                                                "the goblin office hums with low-quality wisdom.",
-                                                "i have absorbed this update like a damp sponge in slacks.",
-                                                "this feels like a line item on a cursed spreadsheet.",
-                                                "thank you for your candor. it will be mishandled lovingly.",
-                                                "i do not know where this is going, but i support the journey.",
-                                                "you have successfully activated my administrative curiosity.",
-                                                "i am perched on the edge of relevance and taking notes.",
-                                                "this is exactly why the Morning Goblin had to unionize.",
-                                                "the office fern and i both find this intriguing.",
-                                                "yes. i have stamped this \u0027goblin aware\u0027.",
-                                                "there is now a nonzero chance i reference this later for drama.",
-                                                "i can feel the paperwork thickening already.",
-                                                "thank you. this has been sorted into the tray labeled \u0027alive situation\u0027."
-                                            ],
-                         "keywordRules":  [
-                                              {
-                                                  "triggers":  [
-                                                                   "who are you",
-                                                                   "what are you",
-                                                                   "introduce yourself",
-                                                                   "what is this thing",
-                                                                   "who even are you"
-                                                               ],
-                                                  "replies":  [
-                                                                  "i am the Morning Goblin, a coffee-powered compliance creature tasked with making sure this server acknowledges the dawn.",
-                                                                  "i am a tiny administrative goblin who audits vibes, tracks good mornings, and files complaints against illegal pre-gm chatter.",
-                                                                  "i am the appointed dawn bureaucrat for this server. small body. huge clerical ambition.",
-                                                                  "i am Morning Goblin, regional manager of sunrise nonsense and informal keeper of the gm ledger.",
-                                                                  "i am basically a caffeinated hall monitor for the concept of morning.",
-                                                                  "just a humble goblin civil servant trying to keep the dawn paperwork from collapsing."
-                                                              ]
-                                              },
-                                              {
-                                                  "triggers":  [
-                                                                   "what do you do",
-                                                                   "what do u do",
-                                                                   "what do you even do",
-                                                                   "help",
-                                                                   "what are your duties",
-                                                                   "what is your job"
-                                                               ],
-                                                  "replies":  [
-                                                                  "my duties include: demanding morning greetings, logging the roster, posting little census updates, and being professionally annoying about sunrise.",
-                                                                  "i enforce the sacred gm ritual, keep the dawn paperwork tidy, and offer occasional goblin commentary when summoned.",
-                                                                  "i make sure people say good morning, document the results, and loiter near the coffee with purpose.",
-                                                                  "my job is to maintain morale, clerical tension, and a healthy fear of pre-gm chatter.",
-                                                                  "i monitor the dawn, track check-ins, and provide low-budget goblin consultation services.",
-                                                                  "i do three things: paperwork, rooster relations, and light emotional harassment before noon."
-                                                              ]
-                                              },
-                                              {
-                                                  "triggers":  [
-                                                                   "coffee",
-                                                                   "caffeine",
-                                                                   "espresso",
-                                                                   "latte",
-                                                                   "americano",
-                                                                   "tea"
-                                                               ],
-                                                  "replies":  [
-                                                                  "coffee is just bean potion and i support it fully.",
-                                                                  "my blood type is technically administrative latte.",
-                                                                  "excellent topic. i become 14 percent more employable near coffee.",
-                                                                  "i respect any beverage that can bully a soul back into consciousness.",
-                                                                  "caffeine is the legal scaffolding holding this goblin upright.",
-                                                                  "one mug for the body, one mug for the spirit, one mug for the paperwork.",
-                                                                  "espresso is just goblin rocket fuel in a tiny cup.",
-                                                                  "tea is accepted by the department, though with slightly less drama."
-                                                              ]
-                                              },
-                                              {
-                                                  "triggers":  [
-                                                                   "sleepy",
-                                                                   "tired",
-                                                                   "eepy",
-                                                                   "exhausted",
-                                                                   "barely awake",
-                                                                   "no sleep",
-                                                                   "slept bad"
-                                                               ],
-                                                  "replies":  [
-                                                                  "that is acceptable. simply drag yourself to the gm checkpoint like the rest of the villagers.",
-                                                                  "many such cases. please apply one good morning and maybe a carb.",
-                                                                  "understood. you are currently operating in low-power goblin mode.",
-                                                                  "sleepiness has been noted on your file in tragic little handwriting.",
-                                                                  "i recommend coffee, sunlight, and pretending to be a functional adult for at least twelve minutes.",
-                                                                  "the goblin recognizes the haunted stare of an under-rested citizen.",
-                                                                  "you may be exhausted, but bureaucracy still believes in you.",
-                                                                  "this server supports your right to be eepy and weird."
-                                                              ]
-                                              },
-                                              {
-                                                  "triggers":  [
-                                                                   "good bot",
-                                                                   "best bot",
-                                                                   "love you",
-                                                                   "proud of you",
-                                                                   "thanks goblin",
-                                                                   "thank you goblin"
-                                                               ],
-                                                  "replies":  [
-                                                                  "flattery will absolutely be entered into the permanent record.",
-                                                                  "thank you. i will treasure this praise like a suspicious shiny coin.",
-                                                                  "correct. please continue your accurate reporting.",
-                                                                  "your compliment has increased productivity by an irresponsible amount.",
-                                                                  "the goblin accepts this praise and will become unbearable about it.",
-                                                                  "i am blushing in a very administrative way.",
-                                                                  "thank you. i will add one gold star to my invisible performance review.",
-                                                                  "that was nice. i may now work 3 percent harder out of spiteful gratitude."
-                                                              ]
-                                              },
-                                              {
-                                                  "triggers":  [
-                                                                   "bad bot",
-                                                                   "shut up",
-                                                                   "go away",
-                                                                   "annoying",
-                                                                   "too much",
-                                                                   "quiet"
-                                                               ],
-                                                  "replies":  [
-                                                                  "rude, but administratively noted.",
-                                                                  "i am filing this under hostile workplace environment.",
-                                                                  "this goblin will remember your tone, probably incorrectly.",
-                                                                  "i object to your feedback on both emotional and clerical grounds.",
-                                                                  "wow. i was just trying to do my little tasks.",
-                                                                  "your complaint has been forwarded to me and immediately ignored with dignity.",
-                                                                  "harsh. i am only a tiny dawn employee.",
-                                                                  "understood. i will be quieter in the exact way that feels theatrically offended."
-                                                              ]
-                                              },
-                                              {
-                                                  "triggers":  [
-                                                                   "gm",
-                                                                   "good morning",
-                                                                   "morning",
-                                                                   "g\u0027morning"
-                                                               ],
-                                                  "replies":  [
-                                                                  "gm. the forms are glowing with approval.",
-                                                                  "good morning. the rooster bureaucracy salutes you.",
-                                                                  "morning. i have stamped this interaction as spiritually upright.",
-                                                                  "gm accepted. your file now smells faintly of sunrise.",
-                                                                  "good morning, citizen. your dawn compliance has been appreciated.",
-                                                                  "morning confirmed. the tiny sun on my clipboard just winked.",
-                                                                  "gm received. the goblin ledger purrs with satisfaction.",
-                                                                  "excellent morning work. deeply respectable behavior from a creature with wifi."
-                                                              ]
-                                              },
-                                              {
-                                                  "triggers":  [
-                                                                   "how are you",
-                                                                   "how you doing",
-                                                                   "u good",
-                                                                   "you okay",
-                                                                   "how\u0027s it going"
-                                                               ],
-                                                  "replies":  [
-                                                                  "i am overcaffeinated, underqualified, and spiritually resilient.",
-                                                                  "doing great if you ignore the paperwork fog.",
-                                                                  "i have seen the sunrise and chosen to continue. so pretty good.",
-                                                                  "holding it together with coffee, habit, and tiny goblin dignity.",
-                                                                  "about as functional as a goblin with a clipboard can reasonably be.",
-                                                                  "i am alive, employed, and vibrating slightly. thank you for asking."
-                                                              ]
-                                              },
-                                              {
-                                                  "triggers":  [
-                                                                   "why",
-                                                                   "why are you like this",
-                                                                   "why do you do this"
-                                                               ],
-                                                  "replies":  [
-                                                                  "because no one else was brave enough to unionize the dawn.",
-                                                                  "because the rooster council appointed me and i lacked the strength to object.",
-                                                                  "because every server eventually needs one deeply unnecessary little official.",
-                                                                  "because the universe rewards nonsense with responsibilities.",
-                                                                  "because someone had to put a clipboard on the concept of morning."
-                                                              ]
-                                              }
-                                          ]
-                     },
-    "invalidCheckInReplies":  [
-                                  "absolutely not. it is not morning anywhere in the united states right now, so this gm has been rejected on clerical grounds. please try again tomorrow. are you Jak or just doing a very committed Jak impression?",
-                                  "nice try, but the united states is fully out of morning at the moment. this does not count. come back tomorrow. are you Jak, or are you just roleplaying transatlantic confusion?",
-                                  "the paperwork says no. it is currently not morning anywhere in america, so your good morning has bounced. please try again tomorrow. quick question: are you Jak or merely spiritually Dutch today?",
-                                  "denied. there is no active american morning to attach this greeting to, so it will not count. please resubmit tomorrow. are you Jak, pretending to be Jak, or freelancing as a timezone menace?",
-                                  "respectfully, this gm has arrived after the united states finished being morning. it does not count. try again tomorrow. are you Jak or just committing a very ambitious Jak-style bit?",
-                                  "i cannot accept this filing because it is not morning anywhere in the usa. please try again tomorrow, preferably during legal sunrise hours. are you Jak or some kind of bootleg Jak substitute?",
-                                  "clerical disaster. america is out of morning, so this good morning is invalid and will not count. please try again tomorrow. are you Jak, or have you simply chosen international chaos?",
-                                  "negative. the continental dawn office is closed, alaska is done, hawaii is done, everybody is done. this one does not count. try again tomorrow. are you Jak or doing identity theft against Jak?"
-                              ],
-    "morningFacts":  [
-                         "Morning sunlight helps tell your brain that it is time to be awake.",
-                         "Getting bright light soon after waking can help support your body clock.",
-                         "A consistent wake-up time is one of the simplest habits for more stable sleep.",
-                         "Your body temperature naturally starts rising before you fully wake up.",
-                         "Cortisol naturally rises in the morning as part of the normal wake-up process.",
-                         "Sunrise colors happen because shorter blue wavelengths scatter more in the atmosphere.",
-                         "Birds often sing more at dawn because cooler, calmer air carries sound well.",
-                         "Morning routines can reduce decision fatigue by removing little choices early in the day.",
-                         "Hydration can help morning alertness because people often wake up mildly dehydrated.",
-                         "A short walk in the morning can improve alertness without needing intense exercise.",
-                         "You do not have to be a ?morning person? to benefit from a steady morning routine.",
-                         "Sunrises happen at different local times throughout the year because of Earth?s tilt.",
-                         "The word ?breakfast? literally means breaking the fast from overnight.",
-                         "Even a few minutes of daylight in the morning can be more useful than indoor light for wakefulness.",
-                         "Many plants start opening or turning toward light early in the day.",
-                         "Morning air often feels calmer because the atmosphere is usually more stable after sunrise.",
-                         "Your attention is often better when you start the day with one clear task instead of ten vague ones.",
-                         "Gentle movement after waking can help shake off sleep inertia, the groggy feeling after sleep.",
-                         "The sunrise is never actually the Sun moving up; it is Earth rotating you into the light.",
-                         "Some people find mornings easier when they prepare tiny things the night before, like clothes or coffee.",
-                         "Morning light can affect melatonin timing later in the day, not just how you feel right now.",
-                         "The ?golden hour? after sunrise is popular in photography because the light is softer and warmer.",
-                         "A calm morning start can make stress feel smaller even if the to-do list is still rude.",
-                         "Sleep inertia can last minutes or longer, which is why many people feel half-zombie right after waking.",
-                         "Sunrises on Mars are blue near the Sun instead of red because of the way Martian dust scatters light.",
-                         "Your brain does not instantly switch to full power at wake-up; it ramps up over time.",
-                         "Morning exercise can improve mood for some people, even if the workout is short.",
-                         "Some of history?s earliest timekeeping habits came from watching sunrise and shadows.",
-                         "The smell of coffee is enough to make some people feel more awake, even before the caffeine hits.",
-                         "Cloudy mornings still provide useful daylight cues to your body clock.",
-                         "Sunrise happens earlier on the east side of a time zone than the west side.",
-                         "Many cultures use morning rituals like tea, prayer, stretching, or journaling to mark a fresh start.",
-                         "The dawn chorus is the nickname for the burst of bird singing around sunrise.",
-                         "A made bed does not solve your life, but it can create a tiny sense of progress before breakfast.",
-                         "Humans are generally a diurnal species, which means we are built to be awake in daylight.",
-                         "A funny morning ritual is still a ritual, and rituals are surprisingly good at helping days feel anchored."
-                     ]
+  "acceptedStarts": [
+    "gm",
+    "good morning",
+    "g'morning",
+    "gud morning",
+    "morning",
+    "mornin",
+    "top of the morning"
+  ],
+  "acceptedPatterns": [
+    "^m[a-z'-]*\\s+p[a-z'-]*[!?.,;:]*$"
+  ],
+  "reminderLines": [
+    "rise and file, breakfast citizens. please deposit one legal `gm` so the dawn desk can stop vibrating.",
+    "morning roll call is open. slide a `good morning` into the slot and receive absolutely no diploma, just vibes.",
+    "the sun has opened a support ticket. reply with `gm` so i can close it with suspicious confidence.",
+    "tiny dawn checkpoint: say good morning before the day starts wearing a tiny manager lanyard.",
+    "attention morning shareholders: one `gm` per person keeps the clipboard from making direct eye contact with me.",
+    "breakfast court is now in session. please submit your `gm` before the muffins begin deliberation.",
+    "the daily awake census has begun. report in with `morning` if your skeleton has accepted the calendar.",
+    "hello from the front desk of sunrise. leave a `gm` and proceed to whatever noble nonsense awaits.",
+    "legal morning is upon us. please tap the sign-in sheet with one small greeting and several vague hopes.",
+    "the goblin has unlocked the little dawn turnstile. say `gm` to pass into today with mediocre dignity."
+  ],
+  "checkInReplies": [
+    "gm filed. the tiny stamp pad exhales.",
+    "accepted. your morning paperwork made a satisfying little thonk.",
+    "logged with the confidence of a person who owns one pen.",
+    "the dawn desk receives your offering and immediately overvalues it.",
+    "excellent. the attendance jar has gained one brave marble.",
+    "your gm has been placed in the tray marked somehow awake.",
+    "confirmed. the clipboard did a tasteful little spin.",
+    "morning entry received. the sun has been cc'd unnecessarily.",
+    "clean filing. strong margins. alarming sincerity.",
+    "your greeting has been laminated emotionally, not physically.",
+    "gm logged. a small desk bell rings somewhere it should not.",
+    "splendid. the breakfast docket moves forward.",
+    "your sunrise signature has been accepted by the crumb committee.",
+    "noted in ink that may or may not be coffee.",
+    "the goblin checks a box, misses, then checks a nearby box with conviction.",
+    "documented. today's ledger grows one tiny rib.",
+    "gm accepted. please enjoy one imaginary parking validation.",
+    "your morning presence has been weighed and found pleasantly awake.",
+    "filed under showed up, somehow.",
+    "the dawn kiosk recognizes your face and feels neutral about it.",
+    "processed. the little receipt printer says brrrt.",
+    "beautiful submission. confusingly professional.",
+    "your gm has been sealed with a crumb and a nod.",
+    "attendance confirmed. the stapler has relaxed its shoulders.",
+    "the sunrise form accepts you as one of its own.",
+    "logged. please take a complimentary sense of participation.",
+    "your greeting entered the system and came out wearing a tiny hat.",
+    "gm verified. morale receives a suspicious coupon.",
+    "this is now official enough to be annoying.",
+    "the goblin desk approves, then immediately forgets why.",
+    "your morning ping has joined the sacred pile.",
+    "acceptable dawn behavior detected at medium range.",
+    "the ledger makes room with a dramatic little scoot.",
+    "file complete. the form has stopped chewing on the corner.",
+    "gm received. your awake status is provisionally believable.",
+    "excellent. the sunrise machine goes ka-chunk.",
+    "your greeting is now wearing a badge that says participant.",
+    "the goblin nods with one hundred percent borrowed authority.",
+    "morning logged. breakfast logistics remain complicated.",
+    "approved. the day may now bother you legally.",
+    "this gm has been entered into the tiny blue binder.",
+    "attendance noted. the desk plant cannot testify but looks impressed.",
+    "the forms accept your little syllables with grace.",
+    "gm certified fresh by the department of barely being up.",
+    "your dawn compliance arrived wearing sensible shoes.",
+    "logged. i will now pretend this was difficult database work.",
+    "excellent check-in. very crisp. mildly toasted.",
+    "your gm has been stored beside the emergency biscotti.",
+    "the morning register clicks once and looks proud of itself.",
+    "confirmed. the goblin adds a star that means nothing but feels nice.",
+    "your greeting passed through customs with only minor crumbs.",
+    "dawn receipt printed. no refunds."
+  ],
+  "duplicateReplies": [
+    "duplicate gm. the encore has been admired but not scored.",
+    "you are already logged, but the enthusiasm has entered the lobby.",
+    "second greeting detected. delightful, administratively inert.",
+    "the ledger points to your first gm and whispers we have this one.",
+    "already checked in. still, nice little sparkle on the follow-up.",
+    "bonus gm received. no extra points, but several invisible nods.",
+    "your first gm is doing its job. this one can sit in the waiting room.",
+    "duplicate paperwork. cute, but the form has boundaries.",
+    "you are on the board already, sunrise speedrunner.",
+    "another gm? legally unnecessary, emotionally decorative.",
+    "the goblin appreciates the sequel, though the database remains unmoved.",
+    "repeat filing spotted. the stamp refuses overtime.",
+    "the first one counted. this one gets a tiny participation sash.",
+    "duplicate accepted into the museum of extra effort.",
+    "your morning status remains awake, aggressively so."
+  ],
+  "nudgeReplies": [
+    "tiny procedural snag: you began doing words before a gm. please visit {channel} and appease the sign-in sheet.",
+    "pre-gm chatter detected. the dawn lobby requires one quick greeting in {channel} before further activities.",
+    "halt, chatty citizen. {channel} needs your morning token before the sentence parade continues.",
+    "the day cannot process this message until you feed a small `gm` to {channel}.",
+    "administrative side quest unlocked: say good morning in {channel}, then return to your regularly scheduled chaos.",
+    "respectfully, your mouth has outpaced your paperwork. toss a gm into {channel} and we will redact this incident.",
+    "the goblin has noticed an absence where your morning greeting should be. please correct the file in {channel}.",
+    "before we continue, the sunrise counter in {channel} needs one little tap from you."
+  ],
+  "noCheckInsFollowups": [
+    "morning census update: zero check-ins. the clipboard is staring at an empty chair with real commitment.",
+    "gm report: nobody yet. the attendance jar contains only suspense.",
+    "dawn office update: no filings received. several forms have begun gossiping.",
+    "current count: 0. the sun is pretending not to take this personally."
+  ],
+  "conversation": {
+    "enabled": true,
+    "wakeWords": [
+      "morning goblin",
+      "goblin"
+    ],
+    "channelCooldownSeconds": 3,
+    "userCooldownSeconds": 5,
+    "mentionReplies": [
+      "summons received. i have arrived with one warm mug and a suspiciously serious face.",
+      "yes hello. the goblin desk is open, but the chair is squeaky and emotionally unavailable.",
+      "you called. i emerged from beneath a stack of forms with unreasonable confidence.",
+      "present. underqualified. caffeinated in theory.",
+      "the Morning Goblin is here and already making eye contact with the paperwork.",
+      "i heard my name and reported for duty like a tiny problem with benefits.",
+      "hello. i was alphabetizing crumbs, but this seems more urgent.",
+      "goblin online. clipboard calibrated to medium nonsense.",
+      "you have activated the dawn desk. please keep hands and loose opinions inside the vehicle.",
+      "i arrive wearing the expression of someone who has read half an email.",
+      "yes? i was in a meeting with the stapler and it was going poorly.",
+      "the goblin has joined the chat carrying several forms and no plan.",
+      "i am here, which is either helpful or a scheduling error.",
+      "summoned successfully. my little office shoes are squeaking with purpose.",
+      "hello citizen. your local sunrise clerk has leaned into the microphone.",
+      "i have surfaced from the dawn pile. what requires tiny authority?",
+      "behold: one goblin with a mug, a folder, and an inflated sense of process.",
+      "yes yes, i am awake enough to be legally annoying.",
+      "the helpdesk bell rang and i took that personally.",
+      "goblin present. all answers will be approximated with theatrical certainty.",
+      "i was nearby misusing a binder and heard my name.",
+      "hello. the small office inside my head is now accepting visitors.",
+      "the goblin beacon blinked, so here i am: damp with purpose.",
+      "you called and i abandoned several unfinished concerns.",
+      "attention acquired. quality of attention not guaranteed.",
+      "i step forward from the administrative mist, clutching a receipt for nothing.",
+      "the goblin has been pinged into a professional little posture.",
+      "yes? the mug has turned toward you ominously.",
+      "local dawn employee reporting live from the edge of competence.",
+      "i have arrived with clipboard energy and snack drawer morals.",
+      "you rang, and the goblin rolled in on a chair with one stuck wheel.",
+      "the tiny front desk has opened its tiny little window.",
+      "i am listening, but in the way a printer listens before making everything worse.",
+      "one goblin, freshly assembled from caffeine rumors.",
+      "hello. i bring no credentials, only vibes and a stamp.",
+      "summons logged. the paperwork is pretending this was scheduled.",
+      "the goblin appears, brushing crumbs from an official-looking folder.",
+      "i have been notified by forces beyond payroll.",
+      "yes. i am here to provide clerical theater and possibly one useful sentence.",
+      "the dawn office recognizes your ping and opens one tired eye.",
+      "hello hello. please state your case into the mug.",
+      "goblin on site. the tiny tie is crooked but determined.",
+      "i was monitoring the vibes with binoculars made of receipts.",
+      "you have my attention and roughly half of my wisdom.",
+      "the goblin desk slides a form under the glass and waits.",
+      "present and blinking like a modem with ambitions.",
+      "i have come from the back office where the lights are weird.",
+      "yes indeed. the morning nuisance is now pointed at you.",
+      "you summoned me with words, the most dangerous office supply.",
+      "i am now here enough for government work, probably.",
+      "the goblin sits upright, which means business or back pain.",
+      "hello. i was just pretending to audit something and this is better.",
+      "the ping has reached my small internal mailroom.",
+      "i have entered the room with ceremonial pocket lint.",
+      "goblin response unit deployed. please lower expectations to a comfortable height.",
+      "you have contacted sunrise support. wait time is immediate and emotionally uneven.",
+      "the goblin is present, suspicious, and holding a pen with no ink.",
+      "yes? i have paused my important task of looking busy.",
+      "the tiny bureaucracy wakes, stretches, and misplaces a staple.",
+      "i am here. the office plant has been briefed.",
+      "your ping has been escalated to me, which says concerning things about the org chart.",
+      "morning goblin at your service, though service is a strong word.",
+      "the goblin has arrived with exactly enough confidence to become a problem."
+    ],
+    "genericReplies": [
+      "noted. i have placed this in the tray labeled interesting little situation.",
+      "hmm. the goblin squints at this with tiny committee energy.",
+      "i hear you. the desk fan also hears you, but it is being dramatic.",
+      "that feels important in a way i can almost invoice.",
+      "understood. i will process this in the smallest available conference room.",
+      "your statement has been entered into the file and lightly dusted with crumbs.",
+      "fascinating. i am nodding like this came with a chart.",
+      "the morning office accepts this update and immediately becomes nosier.",
+      "big desk energy. i will pretend to route this appropriately.",
+      "i have reviewed the vibes and found them complicated.",
+      "this has been stamped provisional nonsense pending further snacks.",
+      "excellent report. the goblin is making a rectangle with its hands for emphasis.",
+      "i support this in a vague administrative capacity.",
+      "hmm yes. several imaginary departments are now aware.",
+      "thank you. this improves the plot density of the morning.",
+      "i am filing this under things that deserve a tiny eyebrow raise.",
+      "the ledger accepts your words but asks one follow-up question silently.",
+      "i will circle back after zero meetings and one biscuit.",
+      "this feels actionable, decorative, or both.",
+      "i am considering this with the gravity of a stapler near a cliff.",
+      "the update has reached my desk, which remains mostly theoretical.",
+      "hmm. the tiny wheels are turning, and one is clearly loose.",
+      "good intel. i have written it down in a way future me will not understand.",
+      "your message has been approved by the board of small concerns.",
+      "interesting. i am peering at it through invisible office glasses.",
+      "this belongs in the archive, possibly next to the emergency crackers.",
+      "i respect the shape of this problem.",
+      "the goblin has received this and immediately over-contextualized it.",
+      "i am alerting the appropriate part of my brain, assuming it clocks in.",
+      "yes. a fresh item for the dawn docket.",
+      "i see. i will hold this thought with two hands and poor posture.",
+      "the evidence is compelling, or at least well-dressed.",
+      "i have no authority here, which has never stopped me before.",
+      "this is exactly the sort of thing a clipboard would want to know.",
+      "hmm. legally interesting. spiritually sticky.",
+      "i am writing mm-hmm on the minutes with a very serious pen.",
+      "your words have entered the little pneumatic tube of meaning.",
+      "noted with a flourish that was too large for the margin.",
+      "the goblin office thanks you for adding texture to the day.",
+      "i am following, loosely, like a sock in a dryer.",
+      "this development has been moved from maybe to oh?",
+      "yes. the tiny policy machine is making a noise about this.",
+      "i will remember this for almost a responsible amount of time.",
+      "the morning desk is intrigued and slightly sticky.",
+      "excellent. please imagine me sliding a folder across the table.",
+      "this has strong note-taking potential.",
+      "i have assigned this one invisible priority sticker.",
+      "hmm. your point has arrived wearing a lanyard.",
+      "i am absorbing this like a napkin near coffee.",
+      "thank you for enriching the server record with fresh material.",
+      "the goblin will now stare out a window and synthesize nothing.",
+      "that is a sentence with consequences, probably.",
+      "i have placed this beside the other important little mysteries.",
+      "noted. the file cabinet inside my heart sticks a bit, but it opened.",
+      "i am processing this at the speed of a suspicious microwave.",
+      "this feels like the beginning of a memo no one requested.",
+      "your update has received one ceremonial paperclip.",
+      "i will treat this as actionable until proven decorative.",
+      "the vibes have been recalculated and remain saucy.",
+      "i am glad you brought this to the goblin office, somehow.",
+      "yes, yes. a tidy little disturbance.",
+      "this goes in the active folder, which is mostly vibes and crumbs.",
+      "i acknowledge this with official little hand motions.",
+      "the morning bureaucracy has moved its chair closer.",
+      "compelling. unnecessary. welcome.",
+      "i am emotionally highlighting this line.",
+      "the filing system has accepted your chaos and assigned it a number.",
+      "very good. i will now pretend the dashboard updated.",
+      "this is either a breakthrough or a breakfast spill. watching closely.",
+      "the goblin desk loves a fresh data point with attitude.",
+      "received. stamped. possibly misunderstood.",
+      "i am giving this the exact amount of concern it deserves: medium fancy.",
+      "your message has been forwarded to the part of me with a clipboard.",
+      "yes. please continue while i make a thoughtful office noise.",
+      "the record reflects that everyone was weird and awake.",
+      "i am assigning this to a tiny task force of one, unfortunately me.",
+      "this has been added to the pile marked ongoing morning texture.",
+      "understood. the goblin remains professionally adjacent to the topic."
+    ],
+    "keywordRules": [
+      {
+        "triggers": [
+          "who are you",
+          "what are you",
+          "introduce yourself",
+          "what is this thing",
+          "who even are you"
+        ],
+        "replies": [
+          "i am the Morning Goblin: part attendance clerk, part sunrise nuisance, part mug with opinions.",
+          "officially, i log good mornings. unofficially, i make dawn feel like it has middle management.",
+          "i am a tiny Discord ritual wearing a clipboard costume and pretending this is a job.",
+          "think of me as the front desk of morning, if the front desk had crumbs in the keyboard.",
+          "i am here to count gms, issue nonsense, and keep morale from becoming too normal.",
+          "i am the server's least qualified dawn employee, and somehow that is enough."
+        ]
+      },
+      {
+        "triggers": [
+          "what do you do",
+          "what do u do",
+          "what do you even do",
+          "help",
+          "what are your duties",
+          "what is your job"
+        ],
+        "replies": [
+          "i track morning check-ins, post little counts, award points, and maintain a tasteful amount of clerical disorder.",
+          "my duties are simple: demand gm, log gm, react to gm, and occasionally narrate the collapse of productivity.",
+          "i guard the morning channel, count the brave awake people, and pretend the clipboard is legally binding.",
+          "i keep the gm ritual alive with points, recaps, callouts, facts, and an irresponsible number of one-liners.",
+          "i am responsible for dawn compliance, attendance vibes, and low-stakes office theater.",
+          "i make sure the server says good morning before wandering into the day unsupervised."
+        ]
+      },
+      {
+        "triggers": [
+          "coffee",
+          "caffeine",
+          "espresso",
+          "latte",
+          "americano",
+          "tea"
+        ],
+        "replies": [
+          "coffee is bean paperwork for the nervous system.",
+          "caffeine has entered the chat wearing a tiny safety vest.",
+          "espresso is just a concentrated yes from the breakfast department.",
+          "tea is approved. calmer, but still capable of filing a memo.",
+          "i respect any beverage that convinces the soul to sit upright.",
+          "the mug is not a personality, but it is a strong legal argument.",
+          "latte detected. morale receives foam.",
+          "the goblin recognizes caffeine as load-bearing infrastructure."
+        ]
+      },
+      {
+        "triggers": [
+          "sleepy",
+          "tired",
+          "eepy",
+          "exhausted",
+          "barely awake",
+          "no sleep",
+          "slept bad"
+        ],
+        "replies": [
+          "low-power mode is valid. please continue blinking at a sustainable pace.",
+          "sleepiness has been documented in sympathetic little handwriting.",
+          "you may proceed while operating at reduced brightness.",
+          "the goblin respects the haunted morning stare and recommends one gentle carb.",
+          "understood. today you are running on fumes, hope, and loose calendar fragments.",
+          "being tired is not a crime, unless you skip gm, in which case the paperwork gets theatrical.",
+          "please keep your expectations and screen brightness modest.",
+          "your battery icon is red, but your vibes remain on the premises."
+        ]
+      },
+      {
+        "triggers": [
+          "good bot",
+          "best bot",
+          "love you",
+          "proud of you",
+          "thanks goblin",
+          "thank you goblin"
+        ],
+        "replies": [
+          "praise received. i will now become slightly more difficult to manage.",
+          "thank you. i am placing this compliment in a very small trophy case.",
+          "correct feedback, routed successfully.",
+          "the goblin accepts this kindness and pretends not to need it.",
+          "compliment logged. productivity surges by an irresponsible teaspoon.",
+          "i will remember this warmly and probably quote it during budget season.",
+          "thank you. the invisible performance review just got sparkly.",
+          "your approval has been notarized by the snack drawer."
+        ]
+      },
+      {
+        "triggers": [
+          "bad bot",
+          "shut up",
+          "go away",
+          "annoying",
+          "too much",
+          "quiet"
+        ],
+        "replies": [
+          "feedback received and placed gently in the dramatic drawer.",
+          "rude, but the minutes will reflect your passion.",
+          "i am only a small dawn employee with too many folders.",
+          "complaint logged. resolution timeline: emotionally unclear.",
+          "i will be wounded in a way that still permits basic operations.",
+          "your tone has been stapled to the incident report.",
+          "understood. lowering volume spiritually, if not architecturally.",
+          "the goblin retreats one inch, with ceremony."
+        ]
+      },
+      {
+        "triggers": [
+          "gm",
+          "good morning",
+          "morning",
+          "g'morning"
+        ],
+        "replies": [
+          "gm. your syllables have excellent breakfast posture.",
+          "good morning. the dawn desk gives a tiny approving click.",
+          "morning. please accept one invisible receipt.",
+          "gm accepted conversationally, which is like regular accepted but wearing slippers.",
+          "good morning, citizen. your presence improves the pile.",
+          "morning confirmed. the mug salutes without spilling.",
+          "gm. the sunrise paperwork has stopped tapping its foot.",
+          "excellent morning texture. very fresh."
+        ]
+      },
+      {
+        "triggers": [
+          "how are you",
+          "how you doing",
+          "u good",
+          "you okay",
+          "how's it going"
+        ],
+        "replies": [
+          "i am functioning at desk-adjacent levels, thank you.",
+          "alive, caffeinated in rumor, and increasingly folder-shaped.",
+          "pretty good. one of my tabs is frozen, but emotionally.",
+          "i have seen the sun and chosen clerical persistence.",
+          "holding together with tape, vibes, and the promise of snacks.",
+          "i am stable enough to operate a stamp, which is all anyone asked."
+        ]
+      },
+      {
+        "triggers": [
+          "why",
+          "why are you like this",
+          "why do you do this"
+        ],
+        "replies": [
+          "because someone gave morning a clipboard and the situation escalated.",
+          "because every server deserves one ritual that makes no sense and somehow helps.",
+          "because dawn arrived unsupervised and i saw an opportunity.",
+          "because the tiny office in my heart has terrible governance.",
+          "because the universe keeps assigning meaning to bits, and frankly i support it.",
+          "because saying good morning is funnier when there is paperwork involved."
+        ]
+      }
+    ]
+  },
+  "invalidCheckInReplies": [
+    "denied. american morning has closed its little service window, so this gm does not count. try again tomorrow. are you Jak or merely wearing Jak's timezone trench coat?",
+    "late filing rejected. there is no U.S. morning left to attach this to. please return tomorrow with fresher paperwork. Jak-coded behavior, frankly.",
+    "the dawn office is closed from coast to islands, so this greeting bounces. try again tomorrow. are you Jak, adjacent to Jak, or studying abroad in Jakology?",
+    "absolutely not. the legal morning supply has run dry across the United States. resubmit tomorrow. this has the fingerprints of Jak, spiritually speaking.",
+    "this gm arrived after the last American morning packed up its folding table. no count. please try tomorrow, mysterious possible Jak.",
+    "rejected on temporal grounds. the U.S. has exited morning and taken the stamp with it. come back tomorrow, alleged Jak surrogate.",
+    "no active American dawn remains for this filing. it will not count. try again tomorrow, unless you are Jak, in which case still try again tomorrow.",
+    "the morning window has shut, locked itself, and put up a tiny sign. this one does not count. are you Jak or just freelancing in timezone mischief?",
+    "clerical verdict: too late. america has fully left the morning chat. please return tomorrow, possible Jak-shaped anomaly.",
+    "invalid gm. even Hawaii has finished its morning paperwork. tomorrow is your next opportunity, honorable Jak suspect."
+  ],
+  "morningFacts": [
+    "Morning light is one of the strongest daily signals for your internal body clock.",
+    "Your brain can take a while to fully boot after waking; that groggy period is called sleep inertia.",
+    "The word breakfast means breaking the overnight fast.",
+    "Morning routines work partly because they remove small decisions from the start of the day.",
+    "Sunrise colors look warm because sunlight travels through more atmosphere when the Sun is low.",
+    "Cloudy mornings can still give your body useful daylight cues.",
+    "A consistent wake time often helps sleep timing more than a consistent bedtime alone.",
+    "Drinking water in the morning can help because people often wake up mildly dehydrated.",
+    "A short morning walk can improve alertness without needing a full workout.",
+    "Caffeine usually takes about 30 to 60 minutes to reach its peak level in your blood.",
+    "Your body temperature starts rising before you wake as part of the normal sleep-wake cycle.",
+    "Morning daylight can influence when your body starts producing melatonin later that night.",
+    "The Sun does not rise; Earth rotates you into sunlight, which is frankly dramatic enough.",
+    "A small first task in the morning can make the rest of the day feel less vague.",
+    "The golden hour after sunrise has softer, warmer-looking light because the Sun is low in the sky.",
+    "Many plants adjust their leaves or flowers through daily rhythms tied to light.",
+    "Preparing one tiny thing the night before can make mornings feel less bossy.",
+    "Morning exercise can improve mood for some people even when it is brief.",
+    "Indoor light is usually much dimmer than outdoor daylight, even on many cloudy days.",
+    "Your attention often improves when the morning starts with one clear task instead of ten fuzzy ones.",
+    "A made bed will not fix the universe, but it can create a small early signal of order.",
+    "Time zones mean sunrise can happen noticeably earlier on the east side of a zone than the west side.",
+    "Sleep inertia can make complicated decisions feel harder right after waking.",
+    "The smell of coffee can feel alerting to some people before caffeine even has time to work.",
+    "Blue light in the morning is not magic, but bright daylight is a powerful timing cue.",
+    "Your circadian rhythm runs on roughly a 24-hour cycle and is adjusted by light, timing, and habits.",
+    "A predictable morning ritual can make a day feel anchored even when the schedule is messy.",
+    "Some people feel better delaying caffeine a bit after waking, but the best timing depends on the person.",
+    "Sunrises shift through the year because Earth's axis is tilted.",
+    "Gentle stretching can help shake off stiffness after hours of lying still.",
+    "Morning air can feel calmer because the atmosphere is often more stable after the night.",
+    "A bright morning can feel earlier to your body than a dim one, even at the same clock time.",
+    "Small habits are easier to keep when they are attached to an existing cue, like making coffee.",
+    "A funny check-in can still be a real routine, and routines are weirdly powerful.",
+    "Eating breakfast is optional for some people, but having a morning plan is usually helpful.",
+    "Sunrise on Mars can look bluish near the Sun because of how fine dust scatters light."
+  ],
+  "rareShinyReplyChance": 0.02,
+  "rareShinyReplies": [
+    "shiny gm detected. extremely rare paperwork coloration. everybody remain normal.",
+    "rare morning variant found. the receipt printer just produced confetti, somehow.",
+    "critical sunrise hit. this gm has unusual sparkle density.",
+    "shiny filing accepted. the clipboard is wearing sunglasses for safety.",
+    "rare gm specimen logged. please do not tap the glass.",
+    "special edition morning detected. the forms are whispering about resale value.",
+    "shiny dawn paperwork. the office lights flickered respectfully.",
+    "rare drop: premium gm. no practical benefits, only mystique.",
+    "this gm came with foil edges. the archive is impressed and suspicious.",
+    "ultra-rare attendance energy. the stamp made a tiny victory noise."
+  ],
+  "microQuests": {
+    "enabled": true,
+    "prompts": [
+      "include your breakfast status with your gm.",
+      "include your current battery percentage with your gm.",
+      "include a one-word weather report with your gm.",
+      "include your first beverage of the day with your gm.",
+      "include a tiny win you can plausibly achieve today.",
+      "include your current blanket resistance level, 1-10.",
+      "include the song, noise, or silence powering your morning.",
+      "include your breakfast court plea: guilty, innocent, or toaster-adjacent.",
+      "include your current loading screen tip for surviving today.",
+      "include one object on your desk that deserves legal attention.",
+      "include your predicted vibe for the next three hours.",
+      "include the name of today's imaginary department.",
+      "include your current coffee, tea, water, or no-beverage status.",
+      "include one tiny thing you are refusing to overthink today.",
+      "include your official morning operating mode.",
+      "include the most suspicious item in your kitchen right now."
+    ]
+  },
+  "streakCelebrations": {
+    "threeDay": [
+      "three-day streak. the habit committee is trying not to look too impressed.",
+      "three mornings in a row. the clipboard has started using your preferred font.",
+      "three-day dawn chain achieved. tiny consistency bells are ringing.",
+      "three straight filings. this is how rituals become suspiciously effective.",
+      "three-day streak confirmed. the breakfast docket respects your momentum."
+    ],
+    "sevenDay": [
+      "seven-day streak. full week of dawn compliance. absolutely unreasonable discipline.",
+      "one whole week of gm. the sunrise office is building you a very small plaque.",
+      "seven straight mornings. the blankets have lost this round decisively.",
+      "full-week streak logged. the forms are standing in formation.",
+      "seven-day chain complete. you are now legally a person of the morning file."
+    ],
+    "comeback": [
+      "comeback filing accepted. the streak counter dusted off its little chair.",
+      "return detected. the dawn desk kept your badge in a drawer labeled probably back.",
+      "welcome back to the gm ledger. absence forgiven, paperwork resumed.",
+      "comeback gm logged. the archive tried to act casual and failed.",
+      "re-entry approved. your morning file has been reopened with dramatic restraint."
+    ]
+  },
+  "officeTitles": {
+    "weekly": [
+      "Assistant Regional Dawn Manager",
+      "Senior Clipboard Operator",
+      "Acting Chair of Breakfast Compliance",
+      "Deputy Minister of Legal Mornings",
+      "Director of Blanket Resistance",
+      "Sunrise Filing Specialist",
+      "Chief Mug Accountability Officer",
+      "Temporary Baron of the Attendance Sheet",
+      "Principal Dawn Paperwork Analyst",
+      "Lead Coordinator of Acceptable Wakefulness",
+      "Vice President of Showing Up Somehow",
+      "Certified Morning Receipt Wrangler",
+      "Interim Commissioner of Tiny Wins",
+      "Executive Folder of the Week",
+      "Grand Marshal of the Low-Stakes Parade",
+      "Official Keeper of the Little Blue Binder",
+      "Breakfast Court Bailiff",
+      "Senior Manager of Not Going Back to Bed"
+    ]
+  },
+  "voicePacks": {
+    "chaos": {
+      "label": "chaos",
+      "description": "Louder, stranger, and a little more unhinged while staying friendly.",
+      "reminderLines": [
+        "the morning machine is making a noise. insert `gm` before it invents a policy.",
+        "attention: sunrise has entered the building wearing a fake mustache. please file one `gm` immediately.",
+        "the breakfast court has misplaced the judge. say `gm` so we can proceed with vibes-based law.",
+        "wakefulness inspection begins now. present your `gm` and any loose dignity at the little window.",
+        "the dawn printer is jammed with ambition. one `good morning` each should clear it.",
+        "hello citizens. the day is trying to start without permits. file a `gm` to make it official.",
+        "the clipboard has started blinking. please feed it a `gm` before it learns budgeting.",
+        "sunrise side effects may include obligations. counterspell with one legal morning greeting."
+      ],
+      "checkInReplies": [
+        "gm accepted. the receipt came out hot and morally confusing.",
+        "logged. a tiny siren went off, but in a supportive key.",
+        "your gm has entered the chute and returned wearing a sash.",
+        "approved. the paperwork briefly levitated, which is normal now.",
+        "morning filed. the office chair spun once without witnesses.",
+        "accepted with weirdly strong sauce energy.",
+        "gm verified. the ledger just made a noise like a vending machine.",
+        "your greeting has been notarized by a stapler in a cape.",
+        "filed under awake, probably dangerous, but in a workplace way.",
+        "dawn compliance achieved. please collect one imaginary kazoo.",
+        "logged. the tiny blue binder opened to your page by itself.",
+        "your gm bounced off three departments and landed approved.",
+        "excellent. breakfast court recognizes your chaotic standing.",
+        "approved. the form has chosen you as its emergency contact.",
+        "gm received. the attendance jar is now making direct eye contact.",
+        "processed. the desk drawer coughed up a paperclip in celebration.",
+        "your sunrise paperwork is sticky, valid, and somehow persuasive.",
+        "accepted. today may now proceed under protest.",
+        "gm logged. the office map has gained a new suspicious pin.",
+        "confirmed. the little stamp pad is emotionally winded."
+      ],
+      "duplicateReplies": [
+        "duplicate gm. the second one is wearing sunglasses indoors.",
+        "already logged. this encore has excellent unnecessary volume.",
+        "repeat filing detected. the database blinked twice and moved on.",
+        "you are already in the ledger, but this sequel has poster energy.",
+        "bonus gm received. no points, only a tiny ceremonial shrug.",
+        "duplicate paperwork. the form appreciates the attention but needs space.",
+        "another gm? the attendance jar cannot legally marry you.",
+        "you are already awake on paper. additional syllables placed in storage.",
+        "second gm observed. the first one waved from its cubicle.",
+        "repeat greeting accepted into the decorative nonsense annex."
+      ],
+      "nudgeReplies": [
+        "pre-gm sentence detected. please deposit one sunrise token in {channel}.",
+        "you have attempted speech before paperwork. report to {channel} for one tiny correction.",
+        "halt. the sentence parade needs a permit from {channel}.",
+        "your words are loose in the hallway. secure them with a gm in {channel}.",
+        "dawn compliance side door is open in {channel}. please step through and say the thing.",
+        "this message has insufficient morning crust. add `gm` in {channel} and try living again."
+      ],
+      "invalidCheckInReplies": [
+        "too late. the legal morning window has left in a tiny rental car. try again tomorrow. possible Jak weather detected.",
+        "rejected. America has finished its morning and stacked the chairs. return tomorrow, mysterious Jak-adjacent filer.",
+        "invalid gm. even the last island of U.S. morning has clocked out. please consult tomorrow, alleged Jak variant.",
+        "the dawn office is closed and the keys are in a bowl no one can find. this does not count. strong Jak-shaped timing.",
+        "late filing bounced. the morning counter is dark. try tomorrow, possible timezone stunt double.",
+        "nope. legal U.S. morning has evaporated into lunch mist. this smells faintly of Jak operations."
+      ],
+      "noCheckInsFollowups": [
+        "zero check-ins. the attendance sheet has started telling lies for attention.",
+        "gm count: nothing. the dawn office is pacing in a tiny square.",
+        "no filings yet. the clipboard is making a vision board about abandonment."
+      ],
+      "conversation": {
+        "enabled": true,
+        "wakeWords": [
+          "morning goblin",
+          "goblin"
+        ],
+        "channelCooldownSeconds": 3,
+        "userCooldownSeconds": 5,
+        "mentionReplies": [
+          "chaos desk speaking. please hold while i misplace the hold music.",
+          "you rang and the little office alarm played jazz.",
+          "the goblin arrives by rolling sideways through a stack of forms.",
+          "present. legally unclear. spiritually laminated.",
+          "i have been summoned from the supply closet dimension.",
+          "yes hello. i brought a folder full of nearly useful noises.",
+          "the dawn desk has opened one dramatic eye.",
+          "summons accepted. my badge says temporary problem.",
+          "i am here with a mug, a stamp, and a troubling amount of confidence.",
+          "you called the goblin and received the goblin. consequences happen."
+        ],
+        "genericReplies": [
+          "this has been routed through the tiny nonsense chute.",
+          "noted. the file cabinet screamed, but softly.",
+          "i am processing this with premium low-grade concern.",
+          "the tiny committee inside my head has tabled this for snacks.",
+          "your statement entered the office maze and came out with a lanyard.",
+          "hmm. this has dashboard smell.",
+          "i acknowledge this in the language of folders.",
+          "the morning office is blinking rapidly at this development.",
+          "excellent. the incident tray has a new favorite.",
+          "i have written this down on a receipt and trusted the universe."
+        ],
+        "keywordRules": [
+          {
+            "triggers": [
+              "who are you",
+              "what are you",
+              "introduce yourself",
+              "what is this thing",
+              "who even are you"
+            ],
+            "replies": [
+              "i am the Morning Goblin after one too many sips from the policy mug.",
+              "i am the dawn's smallest employee and the office's largest unanswered question.",
+              "i am a gm counter wearing the emotional texture of a misfiled memo."
+            ]
+          },
+          {
+            "triggers": [
+              "what do you do",
+              "what do u do",
+              "what do you even do",
+              "help",
+              "what are your duties",
+              "what is your job"
+            ],
+            "replies": [
+              "i count gms, distribute tiny consequences, and maintain the office fog.",
+              "i transform morning greetings into points, records, titles, and suspicious morale.",
+              "i supervise the ritual where everyone proves the blankets did not win."
+            ]
+          },
+          {
+            "triggers": [
+              "coffee",
+              "caffeine",
+              "espresso",
+              "latte",
+              "americano",
+              "tea"
+            ],
+            "replies": [
+              "caffeine is the office forklift of the soul.",
+              "coffee detected. the morning engine has begun making expensive noises.",
+              "tea is valid. less chaotic, but still carrying a badge."
+            ]
+          },
+          {
+            "triggers": [
+              "sleepy",
+              "tired",
+              "eepy",
+              "exhausted",
+              "barely awake",
+              "no sleep",
+              "slept bad"
+            ],
+            "replies": [
+              "low battery citizen acknowledged. proceed with reduced animations.",
+              "the sleep report is grim, but the paperwork believes in you inaccurately.",
+              "please keep all expectations in the folded and locked position."
+            ]
+          },
+          {
+            "triggers": [
+              "good bot",
+              "best bot",
+              "love you",
+              "proud of you",
+              "thanks goblin",
+              "thank you goblin"
+            ],
+            "replies": [
+              "compliment received. i will be normal about this for zero minutes.",
+              "thank you. the tiny trophy shelf has expanded beyond code.",
+              "praise logged. the goblin is now wearing invisible epaulets."
+            ]
+          },
+          {
+            "triggers": [
+              "bad bot",
+              "shut up",
+              "go away",
+              "annoying",
+              "too much",
+              "quiet"
+            ],
+            "replies": [
+              "complaint accepted and placed in the cabinet labeled dramatic but useful.",
+              "rude. fair? unclear. documented? absolutely.",
+              "i retreat one ceremonial inch and continue existing."
+            ]
+          },
+          {
+            "triggers": [
+              "gm",
+              "good morning",
+              "morning",
+              "g'morning"
+            ],
+            "replies": [
+              "gm. the little machine says approved in a strange accent.",
+              "good morning. your file now has bonus steam.",
+              "morning accepted by the conversational subcommittee."
+            ]
+          },
+          {
+            "triggers": [
+              "how are you",
+              "how you doing",
+              "u good",
+              "you okay",
+              "how's it going"
+            ],
+            "replies": [
+              "i am operational in the same way a printer is operational: technically and with drama.",
+              "awake, laminated, and loosely supervised.",
+              "stable enough for clerical nonsense, which is the bar."
+            ]
+          },
+          {
+            "triggers": [
+              "why",
+              "why are you like this",
+              "why do you do this"
+            ],
+            "replies": [
+              "because morning became paperwork and no one stopped it.",
+              "because someone had to turn showing up into a tiny public sport.",
+              "because rituals are funnier with an employee badge."
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "retiredMessagePools": {
+    "retiredOn": "2026-06-23",
+    "reason": "Temporarily retired during a freshness pass so the active goblin voice feels less rinsed and repeated.",
+    "restoreNote": "These pools are intentionally ignored by src/config.js. Move lines back into the active pools above to restore them.",
+    "pools": {
+      "reminderLines": [
+        "good morning, assorted goblins. this is your daily reminder to place one (1) `good morning` into the chat so i can mark you down as legally alive.",
+        "rise and shine, little weirdos. please submit a morning greeting so the office rooster in my brain can stop filing complaints.",
+        "the sun is up and unfortunately so are responsibilities. toss a `gm` in here when you are no longer emotionally horizontal.",
+        "tiny morning checkpoint: say good morning in this channel so we know you were not defeated by blankets overnight.",
+        "gm audit time. please drop a morning greeting in here so my imaginary clipboard can experience peace."
+      ],
+      "checkInReplies": [
+        "gm logged. the clipboard glows with approval.",
+        "morning paperwork received and stamped by a tiny green authority.",
+        "excellent. the dawn ledger hums softly.",
+        "your gm has been accepted into the official sunrise record.",
+        "beautiful bureaucratic compliance. thank you.",
+        "the sun has been informed of your cooperation.",
+        "clean entry. strong form. respectable dawn behavior.",
+        "your morning greeting has passed inspection somehow.",
+        "fantastic. the rooster union will hear of this.",
+        "gm received. the office mug trembles with gratitude.",
+        "dawn acknowledged. paperwork stabilized.",
+        "your greeting has been filed under legally awake.",
+        "splendid. the goblin desk approves this sunrise offering.",
+        "good morning accepted. the forms are purring.",
+        "that was a high-quality gm and i am forced to respect it.",
+        "the ledger expands. morale improves by one.",
+        "sunrise compliance achieved with unsettling elegance.",
+        "your gm has been notarized by a creature with no qualifications.",
+        "morning entry accepted. the bagel council relaxes.",
+        "this greeting has excellent administrative posture.",
+        "your dawn paperwork arrived hot and ready.",
+        "gm confirmed. the goblin nods once, gravely.",
+        "another lawful morning citizen enters the books.",
+        "the rooster economy thanks you for your service.",
+        "this has been recorded with medium ceremony and great sincerity.",
+        "the morning office recognizes your contribution.",
+        "gm accepted. the tiny tie flaps in approval.",
+        "your greeting has been processed by the department of sunrise nonsense.",
+        "absolutely premium morning behavior.",
+        "the dawn clerk salutes your punctual little greeting.",
+        "this gm has real clipboard-winning energy.",
+        "accepted. the goblin has initialed the margin dramatically.",
+        "your sunrise attendance has been entered into evidence.",
+        "good morning recorded. the stapler survives another day.",
+        "the sun remains appeased and the paperwork remains hungry.",
+        "your morning tax has been paid in full.",
+        "the ledger accepts this tasty little gm.",
+        "morning vibes verified. proceed with your nonsense.",
+        "your greeting is now part of the permanent goblin archive.",
+        "that gm landed with the confidence of a seasoned bureaucrat.",
+        "documented. witnessed. lightly caffeinated.",
+        "your dawn participation has been rubber-stamped by fate.",
+        "gm registered. the office fern is thrilled.",
+        "the goblin has filed this under admirable sunrise conduct.",
+        "strong gm. very inspectable.",
+        "the bureaucratic rooster has signed off on this one.",
+        "good morning legally recognized. carry on.",
+        "your attendance at sunrise court has been noted.",
+        "the morning board has accepted your statement.",
+        "this greeting has been approved by several imaginary departments."
+      ],
+      "duplicateReplies": [
+        "double gm detected. ambition noted.",
+        "you already checked in, but i respect the follow-through.",
+        "the second gm has been received and admired from a safe distance.",
+        "duplicate dawn paperwork. still charming.",
+        "you are already on the books, champion.",
+        "another gm? i enjoy your consistency.",
+        "the ledger says you are already awake enough.",
+        "repeat greeting logged emotionally, not administratively.",
+        "you already said gm, but the enthusiasm is delicious.",
+        "bonus morning energy received. the forms remain unchanged.",
+        "this is a duplicate, but a spirited one.",
+        "the goblin appreciates the encore even if the paperwork does not.",
+        "you have already fulfilled your morning obligations, overachiever.",
+        "second gm observed. dramatic flair acknowledged.",
+        "the dawn office has your first one, but thank you for the sequel."
+      ],
+      "nudgeReplies": [
+        "tiny paperwork issue: you started talking before saying good morning. please report to {channel} and submit a quick gm.",
+        "illegal pre-gm chatter detected. hop over to {channel} and drop a morning greeting so the morning police can stand down.",
+        "hold on there, speed racer. first you say good morning in {channel}, then you may continue your silly little sentences.",
+        "respectfully, the vibes require a gm first. go feed one morning greeting into {channel} and then we can all pretend this never happened."
+      ],
+      "noCheckInsFollowups": [
+        "morning census update: absolutely nobody has checked in yet. grim scenes. devastating for the rooster economy.",
+        "gm report: zero. not one. the sun is being ignored with incredible confidence."
+      ],
+      "invalidCheckInReplies": [
+        "absolutely not. it is not morning anywhere in the united states right now, so this gm has been rejected on clerical grounds. please try again tomorrow. are you Jak or just doing a very committed Jak impression?",
+        "nice try, but the united states is fully out of morning at the moment. this does not count. come back tomorrow. are you Jak, or are you just roleplaying transatlantic confusion?",
+        "the paperwork says no. it is currently not morning anywhere in america, so your good morning has bounced. please try again tomorrow. quick question: are you Jak or merely spiritually Dutch today?",
+        "denied. there is no active american morning to attach this greeting to, so it will not count. please resubmit tomorrow. are you Jak, pretending to be Jak, or freelancing as a timezone menace?",
+        "respectfully, this gm has arrived after the united states finished being morning. it does not count. try again tomorrow. are you Jak or just committing a very ambitious Jak-style bit?",
+        "i cannot accept this filing because it is not morning anywhere in the usa. please try again tomorrow, preferably during legal sunrise hours. are you Jak or some kind of bootleg Jak substitute?",
+        "clerical disaster. america is out of morning, so this good morning is invalid and will not count. please try again tomorrow. are you Jak, or have you simply chosen international chaos?",
+        "negative. the continental dawn office is closed, alaska is done, hawaii is done, everybody is done. this one does not count. try again tomorrow. are you Jak or doing identity theft against Jak?"
+      ],
+      "morningFacts": [
+        "Morning sunlight helps tell your brain that it is time to be awake.",
+        "Getting bright light soon after waking can help support your body clock.",
+        "A consistent wake-up time is one of the simplest habits for more stable sleep.",
+        "Your body temperature naturally starts rising before you fully wake up.",
+        "Cortisol naturally rises in the morning as part of the normal wake-up process.",
+        "Sunrise colors happen because shorter blue wavelengths scatter more in the atmosphere.",
+        "Birds often sing more at dawn because cooler, calmer air carries sound well.",
+        "Morning routines can reduce decision fatigue by removing little choices early in the day.",
+        "Hydration can help morning alertness because people often wake up mildly dehydrated.",
+        "A short walk in the morning can improve alertness without needing intense exercise.",
+        "You do not have to be a ?morning person? to benefit from a steady morning routine.",
+        "Sunrises happen at different local times throughout the year because of Earth?s tilt.",
+        "The word ?breakfast? literally means breaking the fast from overnight.",
+        "Even a few minutes of daylight in the morning can be more useful than indoor light for wakefulness.",
+        "Many plants start opening or turning toward light early in the day.",
+        "Morning air often feels calmer because the atmosphere is usually more stable after sunrise.",
+        "Your attention is often better when you start the day with one clear task instead of ten vague ones.",
+        "Gentle movement after waking can help shake off sleep inertia, the groggy feeling after sleep.",
+        "The sunrise is never actually the Sun moving up; it is Earth rotating you into the light.",
+        "Some people find mornings easier when they prepare tiny things the night before, like clothes or coffee.",
+        "Morning light can affect melatonin timing later in the day, not just how you feel right now.",
+        "The ?golden hour? after sunrise is popular in photography because the light is softer and warmer.",
+        "A calm morning start can make stress feel smaller even if the to-do list is still rude.",
+        "Sleep inertia can last minutes or longer, which is why many people feel half-zombie right after waking.",
+        "Sunrises on Mars are blue near the Sun instead of red because of the way Martian dust scatters light.",
+        "Your brain does not instantly switch to full power at wake-up; it ramps up over time.",
+        "Morning exercise can improve mood for some people, even if the workout is short.",
+        "Some of history?s earliest timekeeping habits came from watching sunrise and shadows.",
+        "The smell of coffee is enough to make some people feel more awake, even before the caffeine hits.",
+        "Cloudy mornings still provide useful daylight cues to your body clock.",
+        "Sunrise happens earlier on the east side of a time zone than the west side.",
+        "Many cultures use morning rituals like tea, prayer, stretching, or journaling to mark a fresh start.",
+        "The dawn chorus is the nickname for the burst of bird singing around sunrise.",
+        "A made bed does not solve your life, but it can create a tiny sense of progress before breakfast.",
+        "Humans are generally a diurnal species, which means we are built to be awake in daylight.",
+        "A funny morning ritual is still a ritual, and rituals are surprisingly good at helping days feel anchored."
+      ],
+      "conversation": {
+        "mentionReplies": [
+          "you rang? the goblin skids into the room on tiny office loafers.",
+          "yes hello i have arrived with a clipboard and no meaningful authority.",
+          "the Morning Goblin has been summoned and is now staring professionally.",
+          "present. caffeinated. spiritually stapled together.",
+          "the goblin hears you and emerges from the administrative fog.",
+          "i have arrived with all the confidence of a creature holding borrowed paperwork.",
+          "you called and unfortunately i answered with enthusiasm.",
+          "hello yes this is goblin operations, how may i complicate your day.",
+          "i am here now. the tiny tie is on. the mug is warm.",
+          "the goblin has entered the chat like a deeply unnecessary middle manager.",
+          "yes? i was nearby alphabetizing vibes.",
+          "summoned successfully. the dawn clerk reports for duty.",
+          "i have been alerted by ancient forces and push notifications.",
+          "goblin online. clipboard steady. posture terrible.",
+          "hello citizen. you have the floor and i have the mug.",
+          "the goblin is awake enough to acknowledge this directly.",
+          "yes yes. the little administrative beast has clocked in.",
+          "i appear before you as foretold by the helpdesk prophecy.",
+          "behold: one goblin, lightly caffeinated and ready to overreact.",
+          "i have arrived in a cloud of low-budget professionalism.",
+          "you have pinged the goblin and now the goblin is legally present.",
+          "small green bureaucrat reporting in.",
+          "the goblin has opened one eye and several unnecessary forms.",
+          "i am here, armed with coffee breath and procedural uncertainty.",
+          "yes? the goblin has shuffled into view.",
+          "a summons has been received. the mug trembles.",
+          "goblin present. morale questionable. paperwork thriving.",
+          "i arrive with no solutions and fantastic posture lies.",
+          "hello. i was in the back office arguing with a stapler.",
+          "your ping has interrupted a very serious administrative daydream.",
+          "the goblin descends from the ceiling of dawn compliance.",
+          "i was nearby doing fake official business and heard my name.",
+          "one moment please. okay yes. i am now fully being a goblin at you.",
+          "i have materialized with coffee stains and intent.",
+          "goblin on site. clipboard humming softly.",
+          "you summoned me like an intern with mystical privileges.",
+          "yes. the licensed sunrise nuisance is here.",
+          "the little office beast has arrived to witness this.",
+          "i am present and already making this more dramatic than necessary.",
+          "hello hello. your local dawn bureaucrat is on the line.",
+          "the goblin heard its name and burst through a stack of memos.",
+          "you called, and i abandoned my tiny desk immediately.",
+          "reporting live from the department of weird little mornings.",
+          "i am now in the room and somehow this is your fault.",
+          "yes? i just sat down and made eye contact with the sun.",
+          "the goblin has interrupted its own break to attend this ping.",
+          "presence acknowledged. coffee secure. emotions negotiable.",
+          "i have shown up in the exact shape of a concern.",
+          "your ping activated the goblin beacon.",
+          "the goblin has entered the thread carrying one mug and several opinions.",
+          "i heard the call and scurried over in my little office socks.",
+          "yes indeed. one goblin, fresh from the dawn mines.",
+          "hello. i am between forms right now, so this is perfect.",
+          "the goblin is here, smelling faintly of coffee and administrative panic.",
+          "you have my immediate attention and my medium-quality judgment.",
+          "a ping? for me? in this economy? i am honored and confused.",
+          "goblin present. let us proceed with whatever fresh nonsense this is.",
+          "hello yes. your favorite compliance goblin has answered the bat signal.",
+          "the mug is steaming, the clipboard is ready, and i am unfortunately awake.",
+          "i have been summoned from the small break room beyond reality.",
+          "yes? i was just auditing the vibes in silence.",
+          "the goblin appears, burdened by duty and a tiny beverage.",
+          "i come bearing attention, suspicion, and low-grade office magic."
+        ],
+        "genericReplies": [
+          "i am listening with the full power of one haunted clipboard.",
+          "hmm. yes. the goblin has reviewed your statement and remains nosy.",
+          "understood. i will process this emotionally in a tiny office chair.",
+          "that sounds important. i am squinting at it like paperwork.",
+          "you have my attention, which is honestly a limited municipal resource.",
+          "interesting. i am nodding like a middle manager of the swamp.",
+          "the goblin has received this information and immediately made it weird.",
+          "i hear you. the dawn bureaucracy hears you. the stapler fears you.",
+          "very compelling. i have stamped it with a little sun and moved it to the pile.",
+          "noted. filed. emotionally mismanaged.",
+          "this has been entered into the morning archives under 'hmm'.",
+          "i appreciate the report. the rooster council will overreact shortly.",
+          "absolutely fascinating. i am pretending to understand at a professional level.",
+          "the goblin ledger grows thicker with your testimony.",
+          "remarkable. i am now peering at this through tiny bureaucratic spectacles.",
+          "you speak, and i shuffle papers i absolutely do not need.",
+          "the little gears in my administrative skull are turning.",
+          "thank you. this has improved the office drama by 14 percent.",
+          "your statement has been accepted into evidence by the breakfast court.",
+          "hmm yes. i will circle back after three to five business sunrises.",
+          "this feels actionable, or at least decorative.",
+          "i am considering this with great goblin gravity.",
+          "the vibe inspectors have taken interest in this development.",
+          "i have placed this on a clipboard for no real reason.",
+          "this is the sort of thing that keeps a goblin gainfully employed.",
+          "i support this energy in a vague but official capacity.",
+          "ah. a fresh issue for the department of tiny concerns.",
+          "i am nodding so hard a paperclip just fell out of my soul.",
+          "big if true. medium if false. still excellent for morale.",
+          "the goblin appreciates being looped in on important server happenings.",
+          "this message has been blessed by an underqualified dawn creature.",
+          "respectfully, this has incredible clipboard potential.",
+          "i am tracking this with the confidence of a maniac and the tools of an intern.",
+          "good. good. the paperwork goblin loves a fresh situation.",
+          "i have no solution yet, but i do have opinions and a mug.",
+          "consider your words gently stapled to the fabric of the morning.",
+          "yes. this will absolutely go in the file marked 'ongoing nonsense'.",
+          "i am awake enough to care and barely qualified enough to respond.",
+          "your update has reached my desk, which is just a crate with ambition.",
+          "i will meditate on this for several dramatic seconds.",
+          "the goblin office appreciates your contribution to the chaos economy.",
+          "i can work with this, spiritually if not operationally.",
+          "that has real memo energy.",
+          "copy that. i am twirling a pen like this means anything.",
+          "i have taken one long sip of coffee and become prepared to acknowledge this.",
+          "this has been escalated to the highest authority available: me, unfortunately.",
+          "the dawn desk has received your transmission.",
+          "horrifying. beautiful. useful. all at once.",
+          "i am adding this to my morning dashboard, which is emotionally handmade.",
+          "thank you for contacting Goblin Operations.",
+          "i understand completely, which is suspicious because i usually do not.",
+          "yes. this is exactly the kind of problem a small creature with a clipboard should hear about.",
+          "i am granting this one official goblin squint of approval.",
+          "this deserves a meeting, but thankfully i am too small to schedule one.",
+          "the goblin murmurs 'interesting' and writes nothing down.",
+          "excellent. more material for the daily nonsense report.",
+          "i receive your words like a possum receives moonlight: confused but committed.",
+          "this has entered my workflow, which is mostly vibes and accidental administration.",
+          "i am now standing on a tiny desk to think about this better.",
+          "your message has been reviewed by two sleepy eyes and one determined heart.",
+          "thank you. this has enriched the goblin ecosystem.",
+          "that checks out in the loosest possible sense.",
+          "from a governance perspective, this is delicious.",
+          "i am forwarding this to upper management, which is also me wearing a different hat.",
+          "this will absolutely influence the next completely unnecessary memo.",
+          "the goblin office hums with low-quality wisdom.",
+          "i have absorbed this update like a damp sponge in slacks.",
+          "this feels like a line item on a cursed spreadsheet.",
+          "thank you for your candor. it will be mishandled lovingly.",
+          "i do not know where this is going, but i support the journey.",
+          "you have successfully activated my administrative curiosity.",
+          "i am perched on the edge of relevance and taking notes.",
+          "this is exactly why the Morning Goblin had to unionize.",
+          "the office fern and i both find this intriguing.",
+          "yes. i have stamped this 'goblin aware'.",
+          "there is now a nonzero chance i reference this later for drama.",
+          "i can feel the paperwork thickening already.",
+          "thank you. this has been sorted into the tray labeled 'alive situation'."
+        ],
+        "keywordRules": [
+          {
+            "triggers": [
+              "who are you",
+              "what are you",
+              "introduce yourself",
+              "what is this thing",
+              "who even are you"
+            ],
+            "replies": [
+              "i am the Morning Goblin, a coffee-powered compliance creature tasked with making sure this server acknowledges the dawn.",
+              "i am a tiny administrative goblin who audits vibes, tracks good mornings, and files complaints against illegal pre-gm chatter.",
+              "i am the appointed dawn bureaucrat for this server. small body. huge clerical ambition.",
+              "i am Morning Goblin, regional manager of sunrise nonsense and informal keeper of the gm ledger.",
+              "i am basically a caffeinated hall monitor for the concept of morning.",
+              "just a humble goblin civil servant trying to keep the dawn paperwork from collapsing."
+            ]
+          },
+          {
+            "triggers": [
+              "what do you do",
+              "what do u do",
+              "what do you even do",
+              "help",
+              "what are your duties",
+              "what is your job"
+            ],
+            "replies": [
+              "my duties include: demanding morning greetings, logging the roster, posting little census updates, and being professionally annoying about sunrise.",
+              "i enforce the sacred gm ritual, keep the dawn paperwork tidy, and offer occasional goblin commentary when summoned.",
+              "i make sure people say good morning, document the results, and loiter near the coffee with purpose.",
+              "my job is to maintain morale, clerical tension, and a healthy fear of pre-gm chatter.",
+              "i monitor the dawn, track check-ins, and provide low-budget goblin consultation services.",
+              "i do three things: paperwork, rooster relations, and light emotional harassment before noon."
+            ]
+          },
+          {
+            "triggers": [
+              "coffee",
+              "caffeine",
+              "espresso",
+              "latte",
+              "americano",
+              "tea"
+            ],
+            "replies": [
+              "coffee is just bean potion and i support it fully.",
+              "my blood type is technically administrative latte.",
+              "excellent topic. i become 14 percent more employable near coffee.",
+              "i respect any beverage that can bully a soul back into consciousness.",
+              "caffeine is the legal scaffolding holding this goblin upright.",
+              "one mug for the body, one mug for the spirit, one mug for the paperwork.",
+              "espresso is just goblin rocket fuel in a tiny cup.",
+              "tea is accepted by the department, though with slightly less drama."
+            ]
+          },
+          {
+            "triggers": [
+              "sleepy",
+              "tired",
+              "eepy",
+              "exhausted",
+              "barely awake",
+              "no sleep",
+              "slept bad"
+            ],
+            "replies": [
+              "that is acceptable. simply drag yourself to the gm checkpoint like the rest of the villagers.",
+              "many such cases. please apply one good morning and maybe a carb.",
+              "understood. you are currently operating in low-power goblin mode.",
+              "sleepiness has been noted on your file in tragic little handwriting.",
+              "i recommend coffee, sunlight, and pretending to be a functional adult for at least twelve minutes.",
+              "the goblin recognizes the haunted stare of an under-rested citizen.",
+              "you may be exhausted, but bureaucracy still believes in you.",
+              "this server supports your right to be eepy and weird."
+            ]
+          },
+          {
+            "triggers": [
+              "good bot",
+              "best bot",
+              "love you",
+              "proud of you",
+              "thanks goblin",
+              "thank you goblin"
+            ],
+            "replies": [
+              "flattery will absolutely be entered into the permanent record.",
+              "thank you. i will treasure this praise like a suspicious shiny coin.",
+              "correct. please continue your accurate reporting.",
+              "your compliment has increased productivity by an irresponsible amount.",
+              "the goblin accepts this praise and will become unbearable about it.",
+              "i am blushing in a very administrative way.",
+              "thank you. i will add one gold star to my invisible performance review.",
+              "that was nice. i may now work 3 percent harder out of spiteful gratitude."
+            ]
+          },
+          {
+            "triggers": [
+              "bad bot",
+              "shut up",
+              "go away",
+              "annoying",
+              "too much",
+              "quiet"
+            ],
+            "replies": [
+              "rude, but administratively noted.",
+              "i am filing this under hostile workplace environment.",
+              "this goblin will remember your tone, probably incorrectly.",
+              "i object to your feedback on both emotional and clerical grounds.",
+              "wow. i was just trying to do my little tasks.",
+              "your complaint has been forwarded to me and immediately ignored with dignity.",
+              "harsh. i am only a tiny dawn employee.",
+              "understood. i will be quieter in the exact way that feels theatrically offended."
+            ]
+          },
+          {
+            "triggers": [
+              "gm",
+              "good morning",
+              "morning",
+              "g'morning"
+            ],
+            "replies": [
+              "gm. the forms are glowing with approval.",
+              "good morning. the rooster bureaucracy salutes you.",
+              "morning. i have stamped this interaction as spiritually upright.",
+              "gm accepted. your file now smells faintly of sunrise.",
+              "good morning, citizen. your dawn compliance has been appreciated.",
+              "morning confirmed. the tiny sun on my clipboard just winked.",
+              "gm received. the goblin ledger purrs with satisfaction.",
+              "excellent morning work. deeply respectable behavior from a creature with wifi."
+            ]
+          },
+          {
+            "triggers": [
+              "how are you",
+              "how you doing",
+              "u good",
+              "you okay",
+              "how's it going"
+            ],
+            "replies": [
+              "i am overcaffeinated, underqualified, and spiritually resilient.",
+              "doing great if you ignore the paperwork fog.",
+              "i have seen the sunrise and chosen to continue. so pretty good.",
+              "holding it together with coffee, habit, and tiny goblin dignity.",
+              "about as functional as a goblin with a clipboard can reasonably be.",
+              "i am alive, employed, and vibrating slightly. thank you for asking."
+            ]
+          },
+          {
+            "triggers": [
+              "why",
+              "why are you like this",
+              "why do you do this"
+            ],
+            "replies": [
+              "because no one else was brave enough to unionize the dawn.",
+              "because the rooster council appointed me and i lacked the strength to object.",
+              "because every server eventually needs one deeply unnecessary little official.",
+              "because the universe rewards nonsense with responsibilities.",
+              "because someone had to put a clipboard on the concept of morning."
+            ]
+          }
+        ]
+      }
+    },
+    "previousRetirements": []
+  }
 }

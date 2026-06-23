@@ -1,6 +1,6 @@
 # Project Memory
 
-Last updated: 2026-04-02
+Last updated: 2026-06-23
 
 ## Purpose
 
@@ -13,6 +13,8 @@ Morning Goblin is a Discord.js bot for a specific friend server. Its main job is
 - playfully call out one random non-checker-inner each morning
 - act like a funny, casual, slightly dumb bureaucratic goblin
 - provide a small amount of owner/admin control for jokes and maintenance
+- rotate between voice packs to keep the bit from going stale
+- add light daily novelty through micro-quests, rare shiny replies, streak celebrations, and weekly office titles
 
 The personality direction is intentional: funny, casual, sarcastic, and a little stupid, but not mean-spirited.
 
@@ -56,11 +58,14 @@ On a valid check-in:
 - the user is logged for the day
 - the bot attempts to react with a random morning-themed emoji
 - the bot sends a text reply from `checkInReplies` or `duplicateReplies` unless the user is on the quiet list; those pools use shuffle-bag rotation to reduce repeats
+- first check-ins can append a micro-quest prompt, a rare shiny line, and/or a streak celebration
+- streak celebrations currently fire at 3 days, 7 days, and comeback check-ins after a missed day
 
 Quiet-list exception:
 
 - users on the per-guild quiet list still get logged and reacted to
 - they do not get the extra text reply
+- quiet users also do not receive streak, shiny, or micro-quest text because those are part of the suppressed reply
 
 ### Scheduler
 
@@ -70,6 +75,7 @@ Current scheduled behavior:
 - random offender callout: `8:00 AM` in `America/Phoenix`
 - noon recap: `12:00 PM` in `America/Los_Angeles`
 - nudge window: through `12:59 PM` in the guild timezone
+- noon recaps include a non-pinging weekly office-title watch when the current weekly board has a leader
 
 The scheduler runs every 30 seconds.
 
@@ -175,11 +181,55 @@ Behavior:
 - should rotate through facts without immediate back-to-back repeats
 - current config contains 36 facts
 
+## Freshness Features
+
+### Voice packs
+
+Per guild, `voicePackKey` selects the active voice pack.
+
+- `fresh`: top-level active pools in `config/morning-config.json`
+- `classic`: generated from `retiredMessagePools.pools` when that archive exists
+- `chaos`: configured under `voicePacks.chaos`
+
+`!gm voice` shows the current pack and available packs. `!gm voice <pack>` requires `Manage Server` and clears the in-memory shuffle bags so old lines do not leak after a season switch.
+
+### Micro-quests
+
+Micro-quests are optional daily prompts from `microQuests.prompts`.
+
+- enabled by default through `microQuests.enabled`
+- per-guild override lives in `microQuestsEnabled`
+- today's selected prompt lives in `daily.microQuestPrompt`
+- `!gm quest` shows today's prompt
+- `!gm quest reroll|on|off|reset` requires `Manage Server`
+
+### Rare shiny replies
+
+First check-in replies can append one rare line from `rareShinyReplies`. Probability is controlled by `rareShinyReplyChance`; current config uses `0.02`.
+
+### Streaks
+
+Per-user streak state lives under `streaks.users.<userId>`.
+
+Fields:
+
+- `current`
+- `best`
+- `lastDateKey`
+
+Milestone lines come from `streakCelebrations.threeDay`, `streakCelebrations.sevenDay`, and `streakCelebrations.comeback`.
+
+### Weekly office titles
+
+Weekly point-period finalization saves `officeTitle` on the champion history entry. Titles come from `officeTitles.weekly` and appear in weekly champion announcements plus `!gm points`.
+
 ## Commands
 
 ### User commands
 
 - `!gm stats`
+- `!gm voice`
+- `!gm quest`
 
 ### Admin/server commands
 
@@ -190,6 +240,8 @@ Require `Manage Server`:
 - `!gm status`
 - `!gm points`
 - `!gm fact`
+- `!gm voice <pack>`
+- `!gm quest reroll|on|off|reset`
 - `!gm phrases`
 - `!gm reload`
 - `!gm quiet @user`
@@ -231,12 +283,15 @@ Current important fields:
 
 - `morningChannelId`
 - `timezone`
+- `voicePackKey`
+- `microQuestsEnabled`
 - `daily`
 - `catchupLoggedCheckIns`
 - `suppressedCheckInReplyUserIds`
 - `records`
 - `points`
 - `offlineNotice`
+- `streaks`
 
 `daily` includes:
 
@@ -244,6 +299,7 @@ Current important fields:
 - `reminderSent`
 - `recapSent`
 - `randomOffenderSent`
+- `microQuestPrompt`
 - `checkIns`
 - `nudgedUsers`
 
@@ -268,6 +324,12 @@ Current important fields:
 - `pendingReturn`
 - `channelId`
 
+`streaks.users.<userId>` includes:
+
+- `current`
+- `best`
+- `lastDateKey`
+
 Top-level state also includes:
 
 - `botPresence`
@@ -291,6 +353,15 @@ In `config/morning-config.json`:
 - `nudgeReplies`
 - `morningFacts`
 - `conversation`
+- `retiredMessagePools`
+- `rareShinyReplyChance`
+- `rareShinyReplies`
+- `microQuests`
+- `streakCelebrations`
+- `officeTitles`
+- `voicePacks`
+
+`retiredMessagePools` is not loaded into the default active pools. When present, `src/config.js` exposes it as the generated `classic` voice pack so old active lines can be preserved and temporarily restored without moving them back into the top-level pools.
 
 `conversation` contains:
 

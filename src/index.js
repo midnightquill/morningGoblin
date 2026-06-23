@@ -83,6 +83,7 @@ const DEFAULT_PRESENCE = {
   type: "watching",
   name: "watching for illegal pre-gm chatter",
 };
+const DEFAULT_VOICE_PACK_KEY = "fresh";
 const AUTO_PRESENCE_MIN_DELAY_MS = 6 * 60 * 60 * 1000;
 const AUTO_PRESENCE_MAX_DELAY_MS = 12 * 60 * 60 * 1000;
 const AUTO_PRESENCE_OPTIONS = [
@@ -563,6 +564,8 @@ function createDailyState(dateKey) {
 
     randomOffenderSent: false,
 
+    microQuestPrompt: null,
+
     checkIns: {},
 
     nudgedUsers: {},
@@ -585,6 +588,8 @@ function ensureGuildState(guildId) {
       morningChannelId: null,
       timezone: DEFAULT_TIMEZONE,
       daily: null,
+      voicePackKey: DEFAULT_VOICE_PACK_KEY,
+      microQuestsEnabled: null,
       suppressedCheckInReplyUserIds: [],
       catchupLoggedCheckIns: {},
       records: {
@@ -596,6 +601,9 @@ function ensureGuildState(guildId) {
         pendingReturn: false,
         channelId: null,
       },
+      streaks: {
+        users: {},
+      },
     };
 
   }
@@ -604,6 +612,17 @@ function ensureGuildState(guildId) {
 
   if (!Array.isArray(guilds[guildId].suppressedCheckInReplyUserIds)) {
     guilds[guildId].suppressedCheckInReplyUserIds = [];
+  }
+
+  if (typeof guilds[guildId].voicePackKey !== "string") {
+    guilds[guildId].voicePackKey = DEFAULT_VOICE_PACK_KEY;
+  }
+
+  if (
+    !("microQuestsEnabled" in guilds[guildId]) ||
+    (typeof guilds[guildId].microQuestsEnabled !== "boolean" && guilds[guildId].microQuestsEnabled !== null)
+  ) {
+    guilds[guildId].microQuestsEnabled = null;
   }
 
   if (!guilds[guildId].catchupLoggedCheckIns || typeof guilds[guildId].catchupLoggedCheckIns !== "object") {
@@ -630,6 +649,14 @@ function ensureGuildState(guildId) {
     guilds[guildId].offlineNotice = { pendingReturn: false, channelId: null };
   }
 
+  if (!guilds[guildId].streaks || typeof guilds[guildId].streaks !== "object") {
+    guilds[guildId].streaks = { users: {} };
+  }
+
+  if (!guilds[guildId].streaks.users || typeof guilds[guildId].streaks.users !== "object") {
+    guilds[guildId].streaks.users = {};
+  }
+
   if (!("pendingReturn" in guilds[guildId].offlineNotice)) {
     guilds[guildId].offlineNotice.pendingReturn = false;
   }
@@ -646,6 +673,10 @@ function ensureGuildState(guildId) {
     if (!("randomOffenderSent" in guilds[guildId].daily)) {
       guilds[guildId].daily.randomOffenderSent = false;
     }
+
+    if (!("microQuestPrompt" in guilds[guildId].daily)) {
+      guilds[guildId].daily.microQuestPrompt = null;
+    }
   }
 
   return guilds[guildId];
@@ -657,6 +688,207 @@ function getGuildTimezone(guildState) {
 
   return isValidTimeZoneName(guildState.timezone) ? guildState.timezone : DEFAULT_TIMEZONE;
 
+}
+
+function getAvailableVoicePackKeys() {
+  return Object.keys(morningConfig?.voicePacks ?? { [DEFAULT_VOICE_PACK_KEY]: morningConfig });
+}
+
+function getGuildVoicePackKey(guildState) {
+  const candidate = guildState?.voicePackKey;
+
+  if (typeof candidate === "string" && morningConfig?.voicePacks?.[candidate]) {
+    return candidate;
+  }
+
+  return DEFAULT_VOICE_PACK_KEY;
+}
+
+function getGuildVoiceConfig(guildState) {
+  const key = getGuildVoicePackKey(guildState);
+  return morningConfig?.voicePacks?.[key] ?? morningConfig;
+}
+
+function getVoicePoolBagKey(guildState, poolName) {
+  return `${getGuildVoicePackKey(guildState)}:${poolName}`;
+}
+
+function formatTemplate(template, replacements) {
+  return Object.entries(replacements).reduce(
+    (text, [key, value]) => text.replaceAll(`{${key}}`, String(value)),
+    template,
+  );
+}
+
+function validateGuildVoicePack(guildState) {
+  if (!morningConfig?.voicePacks?.[guildState.voicePackKey]) {
+    guildState.voicePackKey = DEFAULT_VOICE_PACK_KEY;
+  }
+
+  return guildState.voicePackKey;
+}
+
+function getMicroQuestsEnabled(guildState) {
+  return typeof guildState.microQuestsEnabled === "boolean"
+    ? guildState.microQuestsEnabled
+    : morningConfig.microQuests.enabled;
+}
+
+function ensureDailyMicroQuest(guildState, dailyState, options = {}) {
+  const { reroll = false } = options;
+
+  if (!getMicroQuestsEnabled(guildState)) {
+    return { prompt: null, changed: false };
+  }
+
+  const prompts = morningConfig.microQuests.prompts;
+
+  if (!Array.isArray(prompts) || prompts.length === 0) {
+    return { prompt: null, changed: false };
+  }
+
+  if (reroll || !dailyState.microQuestPrompt || !prompts.includes(dailyState.microQuestPrompt)) {
+    dailyState.microQuestPrompt = pickFromPoolBag("microQuests:prompts", prompts);
+    return { prompt: dailyState.microQuestPrompt, changed: true };
+  }
+
+  return { prompt: dailyState.microQuestPrompt, changed: false };
+}
+
+function formatMicroQuestLine(prompt) {
+  return prompt ? `micro-quest: ${prompt}` : null;
+}
+
+function getPreviousDateKey(dateKey) {
+  const date = parseDateKey(dateKey);
+
+  if (!date) {
+    return null;
+  }
+
+  date.setUTCDate(date.getUTCDate() - 1);
+  return formatUtcDateKey(date);
+}
+
+function ensureStreakState(guildState) {
+  if (!guildState.streaks || typeof guildState.streaks !== "object") {
+    guildState.streaks = { users: {} };
+  }
+
+  if (!guildState.streaks.users || typeof guildState.streaks.users !== "object") {
+    guildState.streaks.users = {};
+  }
+
+  return guildState.streaks;
+}
+
+function updateUserStreak(guildState, userId, dateKey) {
+  const streaks = ensureStreakState(guildState);
+  const previous = streaks.users[userId] ?? { current: 0, best: 0, lastDateKey: null };
+
+  if (previous.lastDateKey === dateKey) {
+    return { type: null, current: previous.current ?? 0, best: previous.best ?? 0 };
+  }
+
+  const previousDateKey = getPreviousDateKey(dateKey);
+  const continued = previous.lastDateKey === previousDateKey;
+  const gapDays = previous.lastDateKey ? getDateKeyDifference(previous.lastDateKey, dateKey) : null;
+  const comeback = Boolean(previous.lastDateKey && !continued && gapDays !== null && gapDays > 1);
+  const current = continued ? (previous.current ?? 0) + 1 : 1;
+  const best = Math.max(previous.best ?? 0, current);
+
+  streaks.users[userId] = {
+    current,
+    best,
+    lastDateKey: dateKey,
+  };
+
+  let type = null;
+
+  if (current === 7) {
+    type = "sevenDay";
+  } else if (current === 3) {
+    type = "threeDay";
+  } else if (comeback) {
+    type = "comeback";
+  }
+
+  return {
+    type,
+    current,
+    best,
+    previous: previous.current ?? 0,
+    gapDays,
+  };
+}
+
+function buildStreakCelebrationLine(streakEvent, message) {
+  if (!streakEvent?.type) {
+    return null;
+  }
+
+  const pool = morningConfig.streakCelebrations[streakEvent.type] ?? [];
+
+  if (pool.length === 0) {
+    return null;
+  }
+
+  return formatTemplate(pickFromPoolBag(`streak:${streakEvent.type}`, pool), {
+    user: message.member?.displayName || message.author.username,
+    streak: streakEvent.current,
+    best: streakEvent.best,
+    previous: streakEvent.previous,
+    gapDays: streakEvent.gapDays ?? 0,
+  });
+}
+
+function maybeBuildRareShinyLine(message) {
+  if (morningConfig.rareShinyReplyChance <= 0 || morningConfig.rareShinyReplies.length === 0) {
+    return null;
+  }
+
+  if (Math.random() >= morningConfig.rareShinyReplyChance) {
+    return null;
+  }
+
+  return formatBotText(pickFromPoolBag("checkin:rareShinyReplies", morningConfig.rareShinyReplies), message);
+}
+
+function buildCheckInBonusLines(message, guildState, dailyState, streakEvent) {
+  const lines = [];
+  const shinyLine = maybeBuildRareShinyLine(message);
+  const streakLine = buildStreakCelebrationLine(streakEvent, message);
+  const quest = ensureDailyMicroQuest(guildState, dailyState);
+  const questLine = formatMicroQuestLine(quest.prompt);
+
+  if (shinyLine) {
+    lines.push(shinyLine);
+  }
+
+  if (streakLine) {
+    lines.push(streakLine);
+  }
+
+  if (questLine) {
+    lines.push(questLine);
+  }
+
+  return lines;
+}
+
+function pickWeeklyOfficeTitle() {
+  return pickFromPoolBag("officeTitles:weekly", morningConfig.officeTitles.weekly);
+}
+
+function getTopScoreUserIds(scores) {
+  const entries = getSortedScoreEntries(scores);
+
+  if (entries.length === 0 || entries[0][1] <= 0) {
+    return [];
+  }
+
+  const topScore = entries[0][1];
+  return entries.filter(([, score]) => score === topScore).map(([userId]) => userId);
 }
 
 
@@ -974,6 +1206,10 @@ function finalizePointPeriod(pointsState, periodType, periodState) {
     winnerUserIds,
     points: topScore,
   };
+
+  if (periodType === "week") {
+    entry.officeTitle = pickWeeklyOfficeTitle();
+  }
 
   pointsState.history[periodType].unshift(entry);
 
@@ -1602,7 +1838,7 @@ function isEveningGreetingMessage(content) {
 
 
 
-function isWakeWordMessage(content) {
+function isWakeWordMessage(content, guildState) {
 
   const normalized = cleanMessageContent(content).toLowerCase();
 
@@ -1616,19 +1852,19 @@ function isWakeWordMessage(content) {
 
 
 
-  return morningConfig.conversation.wakeWords.some((wakeWord) => normalized.includes(wakeWord));
+  return getGuildVoiceConfig(guildState).conversation.wakeWords.some((wakeWord) => normalized.includes(wakeWord));
 
 }
 
 
 
-function getMatchingKeywordReply(message) {
+function getMatchingKeywordReply(message, guildState) {
 
   const normalized = cleanMessageContent(message.content).toLowerCase();
 
 
 
-  for (const rule of morningConfig.conversation.keywordRules) {
+  for (const rule of getGuildVoiceConfig(guildState).conversation.keywordRules) {
 
     if (rule.triggers.some((trigger) => normalized.includes(trigger.toLowerCase()))) {
 
@@ -1646,11 +1882,14 @@ function getMatchingKeywordReply(message) {
 
 
 
-function getMentionReply(message) {
+function getMentionReply(message, guildState) {
 
   return formatBotText(
 
-    pickFromPoolBag("conversation:mentionReplies", morningConfig.conversation.mentionReplies),
+    pickFromPoolBag(
+      getVoicePoolBagKey(guildState, "conversation:mentionReplies"),
+      getGuildVoiceConfig(guildState).conversation.mentionReplies,
+    ),
 
     message,
 
@@ -1660,11 +1899,14 @@ function getMentionReply(message) {
 
 
 
-function getGenericReply(message) {
+function getGenericReply(message, guildState) {
 
   return formatBotText(
 
-    pickFromPoolBag("conversation:genericReplies", morningConfig.conversation.genericReplies),
+    pickFromPoolBag(
+      getVoicePoolBagKey(guildState, "conversation:genericReplies"),
+      getGuildVoiceConfig(guildState).conversation.genericReplies,
+    ),
 
     message,
 
@@ -1674,13 +1916,15 @@ function getGenericReply(message) {
 
 
 
-function isConversationCoolingDown(message) {
+function isConversationCoolingDown(message, guildState) {
 
   const now = Date.now();
 
-  const channelCooldownMs = morningConfig.conversation.channelCooldownSeconds * 1000;
+  const conversationConfig = getGuildVoiceConfig(guildState).conversation;
 
-  const userCooldownMs = morningConfig.conversation.userCooldownSeconds * 1000;
+  const channelCooldownMs = conversationConfig.channelCooldownSeconds * 1000;
+
+  const userCooldownMs = conversationConfig.userCooldownSeconds * 1000;
 
   const lastChannelReply = conversationState.channelLastReply.get(message.channelId) ?? 0;
 
@@ -1749,29 +1993,32 @@ async function isReplyToBot(message) {
 
 
 async function getConversationReply(message) {
-  if (!morningConfig.conversation.enabled) {
+  const guildState = ensureGuildState(message.guild.id);
+  const conversationConfig = getGuildVoiceConfig(guildState).conversation;
+
+  if (!conversationConfig.enabled) {
     return null;
   }
 
   const directlyMentioned = message.mentions.users.has(client.user.id);
 
   if (directlyMentioned) {
-    const keywordReply = getMatchingKeywordReply(message);
-    return keywordReply ?? getMentionReply(message);
+    const keywordReply = getMatchingKeywordReply(message, guildState);
+    return keywordReply ?? getMentionReply(message, guildState);
   }
 
-  if (isConversationCoolingDown(message)) {
+  if (isConversationCoolingDown(message, guildState)) {
     return null;
   }
 
   if (await isReplyToBot(message)) {
-    const keywordReply = getMatchingKeywordReply(message);
-    return keywordReply ?? getGenericReply(message);
+    const keywordReply = getMatchingKeywordReply(message, guildState);
+    return keywordReply ?? getGenericReply(message, guildState);
   }
 
-  if (isWakeWordMessage(message.content)) {
-    const keywordReply = getMatchingKeywordReply(message);
-    return keywordReply ?? getGenericReply(message);
+  if (isWakeWordMessage(message.content, guildState)) {
+    const keywordReply = getMatchingKeywordReply(message, guildState);
+    return keywordReply ?? getGenericReply(message, guildState);
   }
 
   return null;
@@ -1820,6 +2067,21 @@ async function reloadMorningConfig() {
   acceptedStarts = normalizeAcceptedStarts(morningConfig.acceptedStarts);
 
   acceptedPatterns = morningConfig.acceptedPatterns.map((pattern) => new RegExp(pattern, "i"));
+
+  let stateChanged = false;
+
+  for (const guildState of Object.values(store.state.guilds ?? {})) {
+    const previousVoicePackKey = guildState.voicePackKey;
+    validateGuildVoicePack(guildState);
+
+    if (guildState.voicePackKey !== previousVoicePackKey) {
+      stateChanged = true;
+    }
+  }
+
+  if (stateChanged) {
+    await store.save();
+  }
 
 }
 
@@ -1983,6 +2245,10 @@ async function announcePendingReturnMessages() {
 
 
 async function postReminder(guild) {
+  const guildState = ensureGuildState(guild.id);
+  const timeZone = getGuildTimezone(guildState);
+  const dailyState = ensureDailyState(guildState, getZonedParts(new Date(), timeZone).dateKey);
+  const voiceConfig = getGuildVoiceConfig(guildState);
 
   const channel = await getMorningChannel(guild);
 
@@ -1994,9 +2260,17 @@ async function postReminder(guild) {
 
   }
 
+  const quest = ensureDailyMicroQuest(guildState, dailyState);
 
+  if (quest.changed) {
+    await store.save();
+  }
 
-  return Boolean(await safeSend(channel, pickRandom(morningConfig.reminderLines)));
+  const questLine = formatMicroQuestLine(quest.prompt);
+  const reminderLine = pickRandom(voiceConfig.reminderLines);
+  const content = questLine ? `${reminderLine}\n${questLine}` : reminderLine;
+
+  return Boolean(await safeSend(channel, content));
 
 }
 
@@ -2020,9 +2294,36 @@ async function getHumanMemberCount(guild) {
 
 }
 
+async function buildWeeklyTitleWatchLine(guild, guildState) {
+  const todayKey = getZonedParts(new Date(), getGuildTimezone(guildState)).dateKey;
+  const pointsState = ensurePointsState(guildState, todayKey);
+  const leaderUserIds = getTopScoreUserIds(pointsState.periods.week.scores);
+
+  if (leaderUserIds.length === 0) {
+    return null;
+  }
+
+  const leaderNames = [];
+
+  for (const userId of leaderUserIds) {
+    leaderNames.push(await getUserDisplayLabel(guild, userId));
+  }
+
+  const title = pickWeeklyOfficeTitle();
+  const verb = leaderUserIds.length === 1 ? "is" : "are";
+
+  return `weekly title watch: ${leaderNames.join(", ")} ${verb} currently acting ${title}.`;
+}
+
+async function appendWeeklyTitleWatch(guild, guildState, recap) {
+  const weeklyTitleLine = await buildWeeklyTitleWatchLine(guild, guildState);
+  return weeklyTitleLine ? `${recap}\n${weeklyTitleLine}` : recap;
+}
+
 
 
 async function buildNoonRecapMessage(guild, dailyState) {
+  const guildState = ensureGuildState(guild.id);
 
   const checkInCount = Object.keys(dailyState.checkIns).length;
 
@@ -2030,7 +2331,7 @@ async function buildNoonRecapMessage(guild, dailyState) {
 
   if (checkInCount === 0) {
 
-    return pickFromPoolBag("recap:zero", NOON_RECAP_ZERO_LINES);
+    return appendWeeklyTitleWatch(guild, guildState, pickFromPoolBag("recap:zero", NOON_RECAP_ZERO_LINES));
 
   }
 
@@ -2042,15 +2343,23 @@ async function buildNoonRecapMessage(guild, dailyState) {
 
   if (!totalHumans) {
 
-    return pickFromPoolBag("recap:noTotal", NOON_RECAP_NO_TOTAL_LINES).replace("{count}", String(checkInCount));
+    return appendWeeklyTitleWatch(
+      guild,
+      guildState,
+      pickFromPoolBag("recap:noTotal", NOON_RECAP_NO_TOTAL_LINES).replace("{count}", String(checkInCount)),
+    );
 
   }
 
 
 
-  return pickFromPoolBag("recap:withTotal", NOON_RECAP_LINES)
-    .replace("{count}", String(checkInCount))
-    .replace("{total}", String(totalHumans));
+  return appendWeeklyTitleWatch(
+    guild,
+    guildState,
+    pickFromPoolBag("recap:withTotal", NOON_RECAP_LINES)
+      .replace("{count}", String(checkInCount))
+      .replace("{total}", String(totalHumans)),
+  );
 
 }
 
@@ -2248,15 +2557,16 @@ function buildChampionAnnouncement(entry) {
   const pointsText = formatPointsWord(entry.points);
   const label = formatPeriodLabel(entry.periodType, entry.periodKey);
   const championWord = entry.winnerUserIds.length === 1 ? "champion" : "co-champions";
+  const titleText = entry.officeTitle ? ` official title: ${entry.officeTitle}.` : "";
 
   let templates = [];
 
   switch (entry.periodType) {
     case "week":
       templates = [
-        `weekly good morning ${championWord} for the ${label}: ${winners} with ${pointsText}. the goblin salutes your sustained sunrise paperwork.`,
-        `the ${label} weekly dawn title goes to ${winners} with ${pointsText}. an incredible seven-day display of administrative discipline.`,
-        `weekly gm throne claimed for the ${label}: ${winners}, posting ${pointsText} and terrifying the blankets.`,
+        `weekly good morning ${championWord} for the ${label}: ${winners} with ${pointsText}.${titleText} the goblin salutes your sustained sunrise paperwork.`,
+        `the ${label} weekly dawn title goes to ${winners} with ${pointsText}.${titleText} an incredible seven-day display of administrative discipline.`,
+        `weekly gm throne claimed for the ${label}: ${winners}, posting ${pointsText}.${titleText} the blankets have filed an appeal.`,
       ];
       break;
 
@@ -2493,7 +2803,9 @@ async function formatChampionSummary(guild, entry) {
     winnerNames.push(await getUserDisplayLabel(guild, userId));
   }
 
-  return `${winnerNames.join(", ")} with ${formatPointsWord(entry.points)} (${formatPeriodLabel(entry.periodType, entry.periodKey)})`;
+  const titleText = entry.officeTitle ? `, ${entry.officeTitle}` : "";
+
+  return `${winnerNames.join(", ")} with ${formatPointsWord(entry.points)}${titleText} (${formatPeriodLabel(entry.periodType, entry.periodKey)})`;
 
 }
 
@@ -2596,6 +2908,8 @@ function recordCheckIn(guildState, dateKey, userId, entry) {
   dailyState.checkIns[userId] = entry;
   delete dailyState.nudgedUsers[userId];
 
+  const streakEvent = alreadyCheckedIn ? null : updateUserStreak(guildState, userId, dateKey);
+
   if (!alreadyCheckedIn) {
     awardPoint(guildState, userId, dateKey);
   }
@@ -2605,6 +2919,7 @@ function recordCheckIn(guildState, dateKey, userId, entry) {
     alreadyCheckedIn,
     totalCheckIns: Object.keys(dailyState.checkIns).length,
     pointsAwarded: alreadyCheckedIn ? 0 : POINTS_PER_CHECK_IN,
+    streakEvent,
   };
 
 }
@@ -2612,7 +2927,7 @@ function recordCheckIn(guildState, dateKey, userId, entry) {
 
 
 async function maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, totalCheckIns, options = {}) {
-  const { forceReply = false, ignoreQuietList = false } = options;
+  const { forceReply = false, ignoreQuietList = false, bonusLines = [] } = options;
 
   try {
     await message.react(pickFromPoolBag("checkin:reactionEmojis", MORNING_REACTION_EMOJIS));
@@ -2624,9 +2939,13 @@ async function maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, tota
     return;
   }
 
+  const voiceConfig = getGuildVoiceConfig(guildState);
   const reply = alreadyCheckedIn
-    ? pickFromPoolBag("checkin:duplicateReplies", morningConfig.duplicateReplies)
-    : `${pickFromPoolBag("checkin:checkInReplies", morningConfig.checkInReplies)} (${totalCheckIns} logged today.)`;
+    ? pickFromPoolBag(getVoicePoolBagKey(guildState, "checkin:duplicateReplies"), voiceConfig.duplicateReplies)
+    : [
+        `${pickFromPoolBag(getVoicePoolBagKey(guildState, "checkin:checkInReplies"), voiceConfig.checkInReplies)} (${totalCheckIns} logged today.)`,
+        ...bonusLines,
+      ].join("\n");
 
   await message.reply({
     content: reply,
@@ -2684,7 +3003,7 @@ async function maybeNudge(message, guildState, dailyState, nowMinutes) {
 
   const channelMention = `<#${guildState.morningChannelId}>`;
 
-  const reply = pickRandom(morningConfig.nudgeReplies).replace("{channel}", channelMention);
+  const reply = pickRandom(getGuildVoiceConfig(guildState).nudgeReplies).replace("{channel}", channelMention);
 
 
 
@@ -3261,20 +3580,26 @@ async function handleCheckIn(message) {
   const timeZone = getGuildTimezone(guildState);
   const zonedNow = getZonedParts(new Date(), timeZone);
 
-  const { alreadyCheckedIn, totalCheckIns } = recordCheckIn(guildState, zonedNow.dateKey, message.author.id, {
+  const { dailyState, alreadyCheckedIn, totalCheckIns, streakEvent } = recordCheckIn(guildState, zonedNow.dateKey, message.author.id, {
     displayName: message.member?.displayName || message.author.username,
     timestamp: Date.now(),
     channelId: message.channelId,
     message: message.content,
   });
 
+  const bonusLines = alreadyCheckedIn
+    ? []
+    : buildCheckInBonusLines(message, guildState, dailyState, streakEvent);
+
   await store.save();
-  await maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, totalCheckIns);
+  await maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, totalCheckIns, { bonusLines });
 }
 
 async function handleRejectedCheckIn(message) {
+  const guildState = ensureGuildState(message.guild.id);
+  const voiceConfig = getGuildVoiceConfig(guildState);
   const reply = formatBotText(
-    pickFromPoolBag("checkin:invalidCheckInReplies", morningConfig.invalidCheckInReplies),
+    pickFromPoolBag(getVoicePoolBagKey(guildState, "checkin:invalidCheckInReplies"), voiceConfig.invalidCheckInReplies),
     message,
   );
 
@@ -3587,6 +3912,146 @@ async function handleOwnerSpeech(message, commandName, body) {
 
 }
 
+function formatVoicePackList(guildState) {
+  return getAvailableVoicePackKeys()
+    .map((key) => {
+      const pack = morningConfig.voicePacks[key];
+      const currentMark = key === getGuildVoicePackKey(guildState) ? " (current)" : "";
+      const description = pack.description ? ` - ${pack.description}` : "";
+      return `- \`${key}\`${currentMark}${description}`;
+    })
+    .join("\n");
+}
+
+async function handleVoiceCommand(message, args) {
+  const guildState = ensureGuildState(message.guild.id);
+  const requestedPack = args[0]?.toLowerCase();
+
+  if (!requestedPack) {
+    await message.reply({
+      content: `current voice pack: \`${getGuildVoicePackKey(guildState)}\`\navailable voice packs:\n${formatVoicePackList(guildState)}`,
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  if (!hasManageGuild(message.member)) {
+    await message.reply({
+      content: "you need `Manage Server` to change the goblin voice season.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  if (!morningConfig.voicePacks[requestedPack]) {
+    await message.reply({
+      content: `unknown voice pack \`${requestedPack}\`. available packs: ${getAvailableVoicePackKeys().map((key) => `\`${key}\``).join(", ")}.`,
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  guildState.voicePackKey = requestedPack;
+  conversationState.poolBags.clear();
+  await store.save();
+
+  await message.reply({
+    content: `voice pack set to \`${requestedPack}\`. the goblin has changed costumes without consulting HR.`,
+    allowedMentions: { repliedUser: false, parse: [] },
+  });
+}
+
+async function handleQuestCommand(message, args) {
+  const guildState = ensureGuildState(message.guild.id);
+  const timeZone = getGuildTimezone(guildState);
+  const dailyState = ensureDailyState(guildState, getZonedParts(new Date(), timeZone).dateKey);
+  const subcommand = args[0]?.toLowerCase();
+
+  if (!subcommand) {
+    if (!getMicroQuestsEnabled(guildState)) {
+      await message.reply({
+        content: "today's micro-quest is disabled. the side paperwork is asleep.",
+        allowedMentions: { repliedUser: false, parse: [] },
+      });
+      return;
+    }
+
+    const { prompt } = ensureDailyMicroQuest(guildState, dailyState);
+    await store.save();
+    await message.reply({
+      content: formatMicroQuestLine(prompt) ?? "no micro-quest prompt is configured right now.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  if (!hasManageGuild(message.member)) {
+    await message.reply({
+      content: "you need `Manage Server` to adjust the daily micro-quest.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  if (subcommand === "on") {
+    guildState.microQuestsEnabled = true;
+    const { prompt } = ensureDailyMicroQuest(guildState, dailyState);
+    await store.save();
+    await message.reply({
+      content: `micro-quests enabled. ${formatMicroQuestLine(prompt) ?? "no prompt is configured right now."}`,
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  if (subcommand === "off") {
+    guildState.microQuestsEnabled = false;
+    dailyState.microQuestPrompt = null;
+    await store.save();
+    await message.reply({
+      content: "micro-quests disabled. the optional side quest has been gently returned to its drawer.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  if (subcommand === "reset") {
+    guildState.microQuestsEnabled = null;
+    const { prompt } = ensureDailyMicroQuest(guildState, dailyState, { reroll: true });
+    await store.save();
+    await message.reply({
+      content: getMicroQuestsEnabled(guildState)
+        ? `micro-quest setting reset to config default. ${formatMicroQuestLine(prompt) ?? "no prompt is configured right now."}`
+        : "micro-quest setting reset to config default, which is currently disabled.",
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  if (subcommand === "reroll") {
+    if (!getMicroQuestsEnabled(guildState)) {
+      await message.reply({
+        content: "micro-quests are disabled right now. use `" + COMMAND_PREFIX + " quest on` before rerolling.",
+        allowedMentions: { repliedUser: false, parse: [] },
+      });
+      return;
+    }
+
+    const { prompt } = ensureDailyMicroQuest(guildState, dailyState, { reroll: true });
+    await store.save();
+    await message.reply({
+      content: `micro-quest rerolled. ${formatMicroQuestLine(prompt) ?? "no prompt is configured right now."}`,
+      allowedMentions: { repliedUser: false, parse: [] },
+    });
+    return;
+  }
+
+  await message.reply({
+    content: "use `" + COMMAND_PREFIX + " quest`, `" + COMMAND_PREFIX + " quest reroll`, `" + COMMAND_PREFIX + " quest on`, `" + COMMAND_PREFIX + " quest off`, or `" + COMMAND_PREFIX + " quest reset`.",
+    allowedMentions: { repliedUser: false, parse: [] },
+  });
+}
+
 
 
 async function handleCommand(message) {
@@ -3622,6 +4087,8 @@ async function handleCommand(message) {
           `- \`${COMMAND_PREFIX} stats\` in #${RANK_CHECK_CHANNEL_NAME} to see your all-time gm stats`,
 
           `- \`${COMMAND_PREFIX} phrases\` to see accepted morning openings`,
+          `- \`${COMMAND_PREFIX} voice\` to see or change the current voice pack`,
+          `- \`${COMMAND_PREFIX} quest\` to see or manage today's optional micro-quest`,
           `- \`${COMMAND_PREFIX} quiet @user\` to suppress check-in text replies for a user`,
           `- \`${COMMAND_PREFIX} unquiet @user\` to re-enable check-in text replies for a user`,
           `- \`${COMMAND_PREFIX} quietlist\` to show the no-reply check-in list`,
@@ -3699,6 +4166,15 @@ async function handleCommand(message) {
       });
       return;
     }
+    case "voice": {
+      await handleVoiceCommand(message, args);
+      return;
+    }
+    case "quest":
+    case "microquest": {
+      await handleQuestCommand(message, args);
+      return;
+    }
     case "quietlist": {
       if (!hasManageGuild(message.member)) {
         await message.reply({
@@ -3770,7 +4246,8 @@ async function handleCommand(message) {
     }
     case "fact":
     case "morningfact": {
-      const fact = pickFromPoolBag("facts:morningFacts", morningConfig.morningFacts);
+      const voiceConfig = getGuildVoiceConfig(guildState);
+      const fact = pickFromPoolBag(getVoicePoolBagKey(guildState, "facts:morningFacts"), voiceConfig.morningFacts);
       await message.reply({
         content: `morning fact: ${fact}`,
         allowedMentions: { repliedUser: false, parse: [] },
