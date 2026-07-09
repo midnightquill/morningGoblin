@@ -12,11 +12,11 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 - Gives silly replies for check-ins, duplicate check-ins, nudges, and random offender callouts
 - Supports switchable voice packs with `fresh`, `classic`, and `chaos` seasons
 - Adds optional daily micro-quests to reminders and first check-in replies
-- Occasionally appends rare shiny check-in replies
+- Occasionally appends rare shiny check-in replies that award bonus points
 - Tracks per-user check-in streaks and celebrates 3-day, 7-day, and comeback moments
 - Nudges people once per day if they start chatting before saying good morning
 - Posts a short noon recap of the current day's check-in totals
-- Adds a silly weekly office-title watch to noon recaps when someone is leading the weekly board
+- Occasionally adds a silly weekly office-title watch to noon recaps when someone is leading the weekly board
 - Randomly calls out one non-checker-inner each morning with a playful goblin accusation
 - Talks back when people mention it, reply to it, or use configured wake words like `morning goblin`
 - Suppresses further automatic bot posts after too many bot-only messages in a row until a human speaks again
@@ -285,10 +285,12 @@ Main message pools:
 - `conversation.genericReplies`
 - `conversation.keywordRules`
 - `rareShinyReplyChance`
+- `rareShinyPointReward`
 - `rareShinyReplies`
 - `microQuests`
 - `streakCelebrations`
 - `officeTitles.weekly`
+- `weeklyTitleWatchChance`
 - `voicePacks`
 
 Temporarily retired lines can be kept under `retiredMessagePools`. The bot does not load them into the default active pools, but it can expose them as the `classic` voice pack when that archive is present.

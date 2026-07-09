@@ -14,7 +14,7 @@ Morning Goblin is a Discord.js bot for a specific friend server. Its main job is
 - act like a funny, casual, slightly dumb bureaucratic goblin
 - provide a small amount of owner/admin control for jokes and maintenance
 - rotate between voice packs to keep the bit from going stale
-- add light daily novelty through micro-quests, rare shiny replies, streak celebrations, and weekly office titles
+- add light daily novelty through micro-quests, rare shiny bonus rewards, streak celebrations, and weekly office titles
 
 The personality direction is intentional: funny, casual, sarcastic, and a little stupid, but not mean-spirited.
 
@@ -58,7 +58,7 @@ On a valid check-in:
 - the user is logged for the day
 - the bot attempts to react with a random morning-themed emoji
 - the bot sends a text reply from `checkInReplies` or `duplicateReplies` unless the user is on the quiet list; those pools use shuffle-bag rotation to reduce repeats
-- first check-ins can append a micro-quest prompt, a rare shiny line, and/or a streak celebration
+- first check-ins can append a micro-quest prompt, a rare shiny bonus reward, and/or a streak celebration
 - streak celebrations currently fire at 3 days, 7 days, and comeback check-ins after a missed day
 
 Quiet-list exception:
@@ -75,7 +75,7 @@ Current scheduled behavior:
 - random offender callout: `8:00 AM` in `America/Phoenix`
 - noon recap: `12:00 PM` in `America/Los_Angeles`
 - nudge window: through `12:59 PM` in the guild timezone
-- noon recaps include a non-pinging weekly office-title watch when the current weekly board has a leader
+- noon recaps occasionally include a non-pinging weekly office-title watch when the current weekly board has a leader
 
 The scheduler runs every 30 seconds.
 
@@ -205,7 +205,9 @@ Micro-quests are optional daily prompts from `microQuests.prompts`.
 
 ### Rare shiny replies
 
-First check-in replies can append one rare line from `rareShinyReplies`. Probability is controlled by `rareShinyReplyChance`; current config uses `0.02`.
+First visible check-in replies can append one rare line from `rareShinyReplies` and award bonus points. Probability is controlled by `rareShinyReplyChance`; current config uses `0.02`. The point bonus is controlled by `rareShinyPointReward`; current config uses `7`.
+
+Quiet-list users do not roll for shiny replies because they would not see the discovery line.
 
 ### Streaks
 
@@ -221,7 +223,7 @@ Milestone lines come from `streakCelebrations.threeDay`, `streakCelebrations.sev
 
 ### Weekly office titles
 
-Weekly point-period finalization saves `officeTitle` on the champion history entry. Titles come from `officeTitles.weekly` and appear in weekly champion announcements plus `!gm points`.
+Weekly point-period finalization saves `officeTitle` on the champion history entry. Titles come from `officeTitles.weekly` and appear in weekly champion announcements plus `!gm points`. Noon recap previews are controlled by `weeklyTitleWatchChance`, currently `0.25`, so the title watch only shows up occasionally before the weekly title is won.
 
 ## Commands
 
@@ -355,10 +357,12 @@ In `config/morning-config.json`:
 - `conversation`
 - `retiredMessagePools`
 - `rareShinyReplyChance`
+- `rareShinyPointReward`
 - `rareShinyReplies`
 - `microQuests`
 - `streakCelebrations`
 - `officeTitles`
+- `weeklyTitleWatchChance`
 - `voicePacks`
 
 `retiredMessagePools` is not loaded into the default active pools. When present, `src/config.js` exposes it as the generated `classic` voice pack so old active lines can be preserved and temporarily restored without moving them back into the top-level pools.

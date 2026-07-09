@@ -19,7 +19,7 @@ const FALLBACK_CONFIG = {
   reminderLines: [
     "good morning, assorted goblins. this is your daily reminder to place one (1) `good morning` into the chat so i can mark you down as legally alive.",
   ],
-  checkInReplies: ["gm logged. clipboard kissed. sun appeased."],
+  checkInReplies: ["gm logged. clipboard stamped. sun appeased."],
   duplicateReplies: ["double gm detected. enthusiasm noted."],
   invalidCheckInReplies: [
     "absolutely not. it is not morning anywhere in the united states right now, so this gm has been rejected on clerical grounds. please try again tomorrow. are you jak or just doing a very committed jak impression?",
@@ -34,8 +34,9 @@ const FALLBACK_CONFIG = {
     "Morning sunlight helps signal to your brain that it is time to be awake.",
   ],
   rareShinyReplyChance: 0.02,
+  rareShinyPointReward: 7,
   rareShinyReplies: [
-    "shiny gm detected. extremely rare paperwork coloration. everybody remain normal.",
+    "shiny gm detected. extremely rare paperwork coloration. {points} bonus points have fallen out of the drawer.",
   ],
   microQuests: {
     enabled: true,
@@ -61,6 +62,7 @@ const FALLBACK_CONFIG = {
       "Senior Clipboard Operator",
     ],
   },
+  weeklyTitleWatchChance: 0.25,
   conversation: {
     enabled: true,
     wakeWords: ["morning goblin", "goblin"],
@@ -336,6 +338,11 @@ function cleanMorningConfig(parsed) {
       source.rareShinyReplyChance,
       FALLBACK_CONFIG.rareShinyReplyChance,
     ),
+    rareShinyPointReward: cleanNumber(
+      source.rareShinyPointReward,
+      FALLBACK_CONFIG.rareShinyPointReward,
+      0,
+    ),
     rareShinyReplies: cleanStringArray(source.rareShinyReplies, FALLBACK_CONFIG.rareShinyReplies),
     microQuests: cleanMicroQuests(source.microQuests, FALLBACK_CONFIG.microQuests),
     streakCelebrations: cleanStreakCelebrations(
@@ -343,6 +350,10 @@ function cleanMorningConfig(parsed) {
       FALLBACK_CONFIG.streakCelebrations,
     ),
     officeTitles: cleanOfficeTitles(source.officeTitles, FALLBACK_CONFIG.officeTitles),
+    weeklyTitleWatchChance: cleanProbability(
+      source.weeklyTitleWatchChance,
+      FALLBACK_CONFIG.weeklyTitleWatchChance,
+    ),
     conversation: cleanConversationConfig(source.conversation, FALLBACK_CONFIG.conversation),
   };
 

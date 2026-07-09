@@ -88,15 +88,15 @@ const AUTO_PRESENCE_MIN_DELAY_MS = 6 * 60 * 60 * 1000;
 const AUTO_PRESENCE_MAX_DELAY_MS = 12 * 60 * 60 * 1000;
 const AUTO_PRESENCE_OPTIONS = [
   { type: "watching", name: "watching for illegal pre-gm chatter" },
-  { type: "watching", name: "hiding from Grandma" },
-  { type: "watching", name: "trying to be like Kap" },
-  { type: "watching", name: "searching for crown animals" },
-  { type: "watching", name: "exploring Denmark" },
-  { type: "watching", name: "exploring The Netherlands" },
+  { type: "watching", name: "hiding from the snooze button" },
+  { type: "watching", name: "trying to outwork the sunrise" },
+  { type: "watching", name: "searching for missing gm paperwork" },
+  { type: "watching", name: "checking distant time zones for legal morning" },
+  { type: "watching", name: "auditing international dawn behavior" },
   { type: "watching", name: "researching mong plorp origins" },
-  { type: "listening", name: "blahhblahblahbabaapapaDODO" },
-  { type: "watching", name: "making salty Nate memes" },
-  { type: "watching", name: "not playing Slay the Spire 2" },
+  { type: "listening", name: "listening to the sign-in sheet rustle" },
+  { type: "watching", name: "making tiny sunrise incident reports" },
+  { type: "watching", name: "not losing to the snooze button" },
   { type: "watching", name: "watching suspicious sunrise activity" },
   { type: "watching", name: "watching the clock with distrust" },
   { type: "watching", name: "watching the dawn paperwork pile up" },
@@ -118,10 +118,10 @@ const AUTO_PRESENCE_OPTIONS = [
   { type: "watching", name: "watching for rogue afternoon greetings" },
   { type: "playing", name: "playing clipboard simulator" },
   { type: "playing", name: "playing dawn patrol" },
-  { type: "playing", name: "playing coffee% any%" },
+  { type: "playing", name: "playing gm% any%" },
   { type: "playing", name: "playing sunrise compliance" },
   { type: "playing", name: "playing catch fake mornings" },
-  { type: "playing", name: "playing hide and shriek" },
+  { type: "playing", name: "playing snooze button defense" },
   { type: "playing", name: "playing goblin office tycoon" },
   { type: "playing", name: "playing deadline chicken with the sun" },
   { type: "playing", name: "playing spreadsheet goblin deluxe" },
@@ -140,20 +140,20 @@ const AUTO_PRESENCE_OPTIONS = [
   { type: "listening", name: "listening for Dutch complaints" },
   { type: "competing", name: "competing in sunrise compliance" },
   { type: "competing", name: "competing against the concept of sleep" },
-  { type: "competing", name: "competing with the rooster lobby" },
+  { type: "competing", name: "competing with the sunrise lobby" },
   { type: "competing", name: "competing in office goblin finals" },
   { type: "competing", name: "competing for employee of the dawn" },
   { type: "competing", name: "competing against illegal noon behavior" },
   { type: "competing", name: "competing in paperwork endurance" },
   { type: "competing", name: "competing for regional sunrise dominance" },
-  { type: "competing", name: "competing with the bagel mafia" },
+  { type: "competing", name: "competing with the breakfast board" },
   { type: "competing", name: "competing in advanced gm studies" },
 ];
 const OFFLINE_AWAY_LINES = [
   "administrative notice: the Morning Goblin is going offline for a bit. remain calm, remain weird, and try not to commit any sunrise crimes while i am gone.",
   "the Morning Goblin will be temporarily unavailable due to important goblin logistics. do not panic. do not form a committee. i will be back.",
   "brief goblin outage: i am clocking out for a while. please continue your nonsense in an orderly fashion until i return.",
-  "the goblin is stepping away to recharge, regroup, and maybe hiss at a power cable. i will return when circumstances become less rude.",
+  "the goblin is stepping away to recharge, regroup, and argue with the router in a professional tone. i will return when circumstances become less rude.",
   "small scheduling update: i am about to vanish for a bit. this is a temporary goblin situation, not a collapse of civilization.",
 ];
 const OFFLINE_RETURN_LINES = [
@@ -167,8 +167,8 @@ const NOON_RECAP_LINES = [
   "noon recap: {count}/{total} checked in.",
   "noon recap: {count}/{total}. decent paperwork output.",
   "noon recap: {count}/{total}. the goblin has counted the forms.",
-  "noon recap: {count}/{total}. continue your little lives.",
-  "noon recap: {count}/{total}. numbers reviewed. vibes mixed.",
+  "noon recap: {count}/{total}. continue your lawful little mornings.",
+  "noon recap: {count}/{total}. forms reviewed. dawn status pending.",
 ];
 const NOON_RECAP_NO_TOTAL_LINES = [
   "noon recap: {count} checked in.",
@@ -189,13 +189,13 @@ const RANDOM_OFFENDER_LINES = [
   "by deeply unserious lottery, {user} is today's featured didn't-say-gm goblin criminal.",
   "today's random gm delinquent is {user}. this is going on the tiny clipboard.",
   "goblin raffle update: {user} has won the title of today's no-gm rascal.",
-  "official morning misconduct draw: {user}. wow. wow, chief.",
+  "official morning misconduct draw: {user}. the clipboard is staring directly at you.",
   "today's randomly chosen sunrise scofflaw is {user}. embarrassing, but in a fun way.",
   "the department of dawn nonsense has selected {user} as today's missing-gm character of interest.",
   "tiny public notice: {user} has been randomly selected for possible anti-gm activity.",
   "today's little paperwork goblin finger points at {user}. very suspicious non-gm posture.",
   "the goblin drumroll has concluded: {user} is today's randomly selected gm offender.",
-  "random accountability gremlin says {user} is today's didn't-say-gm champion of shame.",
+  "random accountability goblin says {user} is today's didn't-say-gm champion of shame.",
 ];
 const MORNING_REACTION_EMOJIS = [
   "\u2600\uFE0F",
@@ -842,7 +842,7 @@ function buildStreakCelebrationLine(streakEvent, message) {
   });
 }
 
-function maybeBuildRareShinyLine(message) {
+function maybeBuildRareShinyReward(message) {
   if (morningConfig.rareShinyReplyChance <= 0 || morningConfig.rareShinyReplies.length === 0) {
     return null;
   }
@@ -851,18 +851,30 @@ function maybeBuildRareShinyLine(message) {
     return null;
   }
 
-  return formatBotText(pickFromPoolBag("checkin:rareShinyReplies", morningConfig.rareShinyReplies), message);
+  const points = Math.max(0, Math.floor(morningConfig.rareShinyPointReward));
+
+  if (points <= 0) {
+    return null;
+  }
+
+  const line = formatTemplate(
+    formatBotText(pickFromPoolBag("checkin:rareShinyReplies", morningConfig.rareShinyReplies), message),
+    { points },
+  );
+
+  return { line, points };
 }
 
 function buildCheckInBonusLines(message, guildState, dailyState, streakEvent) {
   const lines = [];
-  const shinyLine = maybeBuildRareShinyLine(message);
+  const shinyReward = maybeBuildRareShinyReward(message);
   const streakLine = buildStreakCelebrationLine(streakEvent, message);
   const quest = ensureDailyMicroQuest(guildState, dailyState);
   const questLine = formatMicroQuestLine(quest.prompt);
 
-  if (shinyLine) {
-    lines.push(shinyLine);
+  if (shinyReward) {
+    awardPoint(guildState, message.author.id, dailyState.dateKey, shinyReward.points);
+    lines.push(shinyReward.line);
   }
 
   if (streakLine) {
@@ -2316,6 +2328,13 @@ async function buildWeeklyTitleWatchLine(guild, guildState) {
 }
 
 async function appendWeeklyTitleWatch(guild, guildState, recap) {
+  if (
+    morningConfig.weeklyTitleWatchChance <= 0 ||
+    Math.random() >= morningConfig.weeklyTitleWatchChance
+  ) {
+    return recap;
+  }
+
   const weeklyTitleLine = await buildWeeklyTitleWatchLine(guild, guildState);
   return weeklyTitleLine ? `${recap}\n${weeklyTitleLine}` : recap;
 }
@@ -3587,7 +3606,8 @@ async function handleCheckIn(message) {
     message: message.content,
   });
 
-  const bonusLines = alreadyCheckedIn
+  const suppressTextReply = guildState.suppressedCheckInReplyUserIds.includes(message.author.id);
+  const bonusLines = alreadyCheckedIn || suppressTextReply
     ? []
     : buildCheckInBonusLines(message, guildState, dailyState, streakEvent);
 
@@ -3860,7 +3880,9 @@ async function handleOwnerSpeech(message, commandName, body) {
 
 
 
-  const targetChannel = message.mentions.channels.first();
+  const sayToInput = body.slice(commandName.length).trim();
+  const targetToken = sayToInput.match(/^\S+/)?.[0] ?? "";
+  const targetChannel = await resolveSayToChannel(message, targetToken);
 
 
 
@@ -3868,7 +3890,7 @@ async function handleOwnerSpeech(message, commandName, body) {
 
     await message.reply({
 
-      content: "use it like `" + COMMAND_PREFIX + " sayto #general hello goblins`.",
+      content: "use it like `" + COMMAND_PREFIX + " sayto #general hello goblins` or `" + COMMAND_PREFIX + " sayto <#channel> hello goblins`.",
 
       allowedMentions: { repliedUser: false, parse: [] },
 
@@ -3886,7 +3908,7 @@ async function handleOwnerSpeech(message, commandName, body) {
 
     .trim()
 
-    .replace(/^<#[0-9]+>s*/, "")
+    .slice(targetToken.length)
 
     .trim();
 
@@ -3910,6 +3932,42 @@ async function handleOwnerSpeech(message, commandName, body) {
 
   await safeSend(targetChannel, text);
 
+}
+
+async function resolveSayToChannel(message, targetToken) {
+  if (!targetToken) {
+    return null;
+  }
+
+  const mentionMatch = targetToken.match(/^<#([0-9]+)>$/);
+
+  if (mentionMatch) {
+    return message.guild.channels.fetch(mentionMatch[1]).catch(() => null);
+  }
+
+  if (!targetToken.startsWith("#")) {
+    return null;
+  }
+
+  const requestedName = normalizeChannelName(targetToken.slice(1));
+
+  if (!requestedName) {
+    return null;
+  }
+
+  const cachedChannel = message.guild.channels.cache.find(
+    (channel) => channel.isTextBased() && normalizeChannelName(channel.name) === requestedName,
+  );
+
+  if (cachedChannel) {
+    return cachedChannel;
+  }
+
+  const fetchedChannels = await message.guild.channels.fetch().catch(() => null);
+
+  return fetchedChannels?.find(
+    (channel) => channel?.isTextBased() && normalizeChannelName(channel.name) === requestedName,
+  ) ?? null;
 }
 
 function formatVoicePackList(guildState) {

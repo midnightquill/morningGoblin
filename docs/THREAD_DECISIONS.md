@@ -32,7 +32,7 @@ This file captures key product decisions from the development thread that are ea
 - The bot should support switchable voice packs so old and new material can rotate without editing JSON live.
 - Retired message pools should stay recoverable and can serve as the `classic` voice pack.
 - Optional daily micro-quests should add small novelty without requiring users to answer them.
-- First check-in replies may occasionally append rare shiny lines.
+- First visible check-in replies may occasionally append rare shiny lines and award arbitrary bonus points.
 - The bot should celebrate 3-day, 7-day, and comeback streaks without adding extra bot messages.
 - Weekly champions should receive a silly saved office title.
 
