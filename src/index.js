@@ -10,6 +10,8 @@ import { loadMorningConfig, normalizeAcceptedStarts } from "./config.js";
 
 import { JsonStore } from "./storage.js";
 
+const formatterCache = new Map();
+const invalidTimeZones = new Set();
 
 
 const FALLBACK_TIMEZONE = "America/Phoenix";
@@ -55,6 +57,10 @@ const RANDOM_OFFENDER_TIMEZONE = resolveTimeZoneWithFallback(
 const MORNING_WINDOW_END_HOUR = readNumber("MORNING_WINDOW_END_HOUR", 12, 0, 23);
 
 const MAX_CONSECUTIVE_BOT_MESSAGES = readNumber("MAX_CONSECUTIVE_BOT_MESSAGES", 3, 1, 20);
+
+const MORNING_REMINDER_MINUTES = MORNING_REMINDER_HOUR * 60 + MORNING_REMINDER_MINUTE;
+const NOON_RECAP_MINUTES = NOON_RECAP_HOUR * 60 + NOON_RECAP_MINUTE;
+const RANDOM_OFFENDER_MINUTES = RANDOM_OFFENDER_HOUR * 60 + RANDOM_OFFENDER_MINUTE;
 
 const REMINDER_GRACE_MINUTES = 180;
 
@@ -253,8 +259,6 @@ const client = new Client({
 
 const store = new JsonStore();
 
-const formatterCache = new Map();
-
 const conversationState = {
 
   channelLastReply: new Map(),
@@ -280,6 +284,7 @@ let acceptedPatterns;
 let lockHandle = null;
 let currentAutoPresence = null;
 let autoPresenceTimeout = null;
+let schedulerTickPromise = null;
 
 
 
@@ -361,16 +366,24 @@ function isValidTimeZoneName(timeZone) {
 
   }
 
+  if (formatterCache.has(timeZone)) {
+    return true;
+  }
+
+  if (invalidTimeZones.has(timeZone)) {
+    return false;
+  }
 
 
   try {
 
-    new Intl.DateTimeFormat("en-CA", { timeZone }).format(new Date());
+    getFormatter(timeZone).format(new Date());
 
     return true;
 
   } catch {
 
+    invalidTimeZones.add(timeZone);
     return false;
 
   }
@@ -893,14 +906,19 @@ function pickWeeklyOfficeTitle() {
 }
 
 function getTopScoreUserIds(scores) {
-  const entries = getSortedScoreEntries(scores);
+  let topScore = 0;
+  let topUserIds = [];
 
-  if (entries.length === 0 || entries[0][1] <= 0) {
-    return [];
+  for (const [userId, score] of Object.entries(scores ?? {})) {
+    if (score > topScore) {
+      topScore = score;
+      topUserIds = [userId];
+    } else if (score === topScore && score > 0) {
+      topUserIds.push(userId);
+    }
   }
 
-  const topScore = entries[0][1];
-  return entries.filter(([, score]) => score === topScore).map(([userId]) => userId);
+  return topUserIds.sort((left, right) => left.localeCompare(right));
 }
 
 
@@ -946,16 +964,13 @@ function getFormatter(timeZone) {
 function getZonedParts(date, timeZone) {
 
   const parts = getFormatter(timeZone).formatToParts(date);
+  const values = {};
 
-  const values = Object.fromEntries(
-
-    parts
-
-      .filter((part) => part.type !== "literal")
-
-      .map((part) => [part.type, part.value]),
-
-  );
+  for (const part of parts) {
+    if (part.type !== "literal") {
+      values[part.type] = part.value;
+    }
+  }
 
 
 
@@ -987,11 +1002,20 @@ function parseDateKey(dateKey) {
 
 
 
-  return new Date(Date.UTC(
-    Number.parseInt(match[1], 10),
-    Number.parseInt(match[2], 10) - 1,
-    Number.parseInt(match[3], 10),
-  ));
+  const year = Number.parseInt(match[1], 10);
+  const month = Number.parseInt(match[2], 10) - 1;
+  const day = Number.parseInt(match[3], 10);
+  const date = new Date(Date.UTC(year, month, day));
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
 
 }
 
@@ -2315,11 +2339,9 @@ async function buildWeeklyTitleWatchLine(guild, guildState) {
     return null;
   }
 
-  const leaderNames = [];
-
-  for (const userId of leaderUserIds) {
-    leaderNames.push(await getUserDisplayLabel(guild, userId));
-  }
+  const leaderNames = await Promise.all(
+    leaderUserIds.map((userId) => getUserDisplayLabel(guild, userId)),
+  );
 
   const title = pickWeeklyOfficeTitle();
   const verb = leaderUserIds.length === 1 ? "is" : "are";
@@ -2691,9 +2713,21 @@ async function getUserDisplayLabel(guild, userId) {
 
 }
 
+function createUserDisplayLabelResolver(guild) {
+  const pendingLabels = new Map();
+
+  return (userId) => {
+    if (!pendingLabels.has(userId)) {
+      pendingLabels.set(userId, getUserDisplayLabel(guild, userId));
+    }
+
+    return pendingLabels.get(userId);
+  };
+}
 
 
-async function formatScoreboard(guild, scores, limit = 5) {
+
+async function formatScoreboard(guild, scores, limit = 5, resolveLabel = null) {
 
   const entries = getSortedScoreEntries(scores).slice(0, limit);
 
@@ -2707,11 +2741,10 @@ async function formatScoreboard(guild, scores, limit = 5) {
 
 
 
-  const formatted = [];
-
-  for (const [userId, score] of entries) {
-    formatted.push(`${await getUserDisplayLabel(guild, userId)} (${score})`);
-  }
+  const getLabel = resolveLabel ?? createUserDisplayLabelResolver(guild);
+  const formatted = await Promise.all(
+    entries.map(async ([userId, score]) => `${await getLabel(userId)} (${score})`),
+  );
 
   return formatted.join(", ");
 
@@ -2748,14 +2781,22 @@ function getScoreRank(scores, userId) {
     return null;
   }
 
-  const entries = getSortedScoreEntries(scores);
-  const higherScores = entries.filter(([, score]) => score > userScore).length;
-  const tiedScores = entries.filter(([, score]) => score === userScore).length;
+  const scoreValues = Object.values(scores ?? {});
+  let higherScores = 0;
+  let tiedScores = 0;
+
+  for (const score of scoreValues) {
+    if (score > userScore) {
+      higherScores += 1;
+    } else if (score === userScore) {
+      tiedScores += 1;
+    }
+  }
 
   return {
     rank: higherScores + 1,
     tiedCount: tiedScores,
-    totalRanked: entries.length,
+    totalRanked: scoreValues.length,
     score: userScore,
   };
 }
@@ -2810,17 +2851,14 @@ async function postUserStats(message) {
 
 
 
-async function formatChampionSummary(guild, entry) {
+async function formatChampionSummary(guild, entry, resolveLabel = null) {
 
   if (!entry) {
     return null;
   }
 
-  const winnerNames = [];
-
-  for (const userId of entry.winnerUserIds) {
-    winnerNames.push(await getUserDisplayLabel(guild, userId));
-  }
+  const getLabel = resolveLabel ?? createUserDisplayLabelResolver(guild);
+  const winnerNames = await Promise.all(entry.winnerUserIds.map(getLabel));
 
   const titleText = entry.officeTitle ? `, ${entry.officeTitle}` : "";
 
@@ -2838,20 +2876,32 @@ async function postPoints(message) {
   ensureDailyState(guildState, todayKey);
 
   const pointsState = ensurePointsState(guildState, todayKey);
+  const resolveLabel = createUserDisplayLabelResolver(message.guild);
+  const [weekBoard, monthBoard, yearBoard, lifetimeBoard, ...championSummaries] =
+    await Promise.all([
+      formatScoreboard(message.guild, pointsState.periods.week.scores, 3, resolveLabel),
+      formatScoreboard(message.guild, pointsState.periods.month.scores, 3, resolveLabel),
+      formatScoreboard(message.guild, pointsState.periods.year.scores, 3, resolveLabel),
+      formatScoreboard(message.guild, pointsState.lifetime, 5, resolveLabel),
+      ...PERIOD_TYPES.map((periodType) =>
+        formatChampionSummary(
+          message.guild,
+          pointsState.history[periodType]?.[0],
+          resolveLabel,
+        ),
+      ),
+    ]);
   const lines = [
     "gm points board:",
-    `this week (${formatPeriodLabel("week", pointsState.periods.week.key)}): ${await formatScoreboard(message.guild, pointsState.periods.week.scores, 3)}`,
-    `this month (${formatPeriodLabel("month", pointsState.periods.month.key)}): ${await formatScoreboard(message.guild, pointsState.periods.month.scores, 3)}`,
-    `this year (${formatPeriodLabel("year", pointsState.periods.year.key)}): ${await formatScoreboard(message.guild, pointsState.periods.year.scores, 3)}`,
-    `lifetime: ${await formatScoreboard(message.guild, pointsState.lifetime, 5)}`,
+    `this week (${formatPeriodLabel("week", pointsState.periods.week.key)}): ${weekBoard}`,
+    `this month (${formatPeriodLabel("month", pointsState.periods.month.key)}): ${monthBoard}`,
+    `this year (${formatPeriodLabel("year", pointsState.periods.year.key)}): ${yearBoard}`,
+    `lifetime: ${lifetimeBoard}`,
   ];
 
-  for (const periodType of PERIOD_TYPES) {
-    const latestChampion = pointsState.history[periodType]?.[0];
-    const summary = await formatChampionSummary(message.guild, latestChampion);
-
+  for (const [index, summary] of championSummaries.entries()) {
     if (summary) {
-      lines.push(`last ${periodType} champion: ${summary}`);
+      lines.push(`last ${PERIOD_TYPES[index]} champion: ${summary}`);
     }
   }
 
@@ -2946,7 +2996,7 @@ function recordCheckIn(guildState, dateKey, userId, entry) {
 
 
 async function maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, totalCheckIns, options = {}) {
-  const { forceReply = false, ignoreQuietList = false, bonusLines = [] } = options;
+  const { ignoreQuietList = false, bonusLines = [] } = options;
 
   try {
     await message.react(pickFromPoolBag("checkin:reactionEmojis", MORNING_REACTION_EMOJIS));
@@ -2976,13 +3026,11 @@ async function maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, tota
 
 async function maybeNudge(message, guildState, dailyState, nowMinutes) {
 
-  const startMinutes = MORNING_REMINDER_HOUR * 60 + MORNING_REMINDER_MINUTE;
-
   const endMinutes = MORNING_WINDOW_END_HOUR * 60 + 59;
 
 
 
-  if (nowMinutes < startMinutes || nowMinutes > endMinutes) {
+  if (nowMinutes < MORNING_REMINDER_MINUTES || nowMinutes > endMinutes) {
 
     return;
 
@@ -3150,6 +3198,10 @@ async function hasBotReaction(sourceMessage) {
   }
 
   for (const reaction of sourceMessage.reactions.cache.values()) {
+    if (reaction.me || reaction.users.cache.has(client.user.id)) {
+      return true;
+    }
+
     try {
       const users = await reaction.users.fetch();
 
@@ -3578,7 +3630,6 @@ async function handleManualLogReply(message, body) {
 
   try {
     await maybeCelebrateCheckIn(sourceMessage, guildState, alreadyCheckedIn, totalCheckIns, {
-      forceReply: true,
       ignoreQuietList: true,
     });
   } catch {
@@ -4588,6 +4639,12 @@ async function schedulerTick() {
 
 
 
+  const now = new Date();
+  const recapNow = getZonedParts(now, NOON_RECAP_TIMEZONE);
+  const recapMinutesNow = recapNow.hour * 60 + recapNow.minute;
+  const offenderNow = getZonedParts(now, RANDOM_OFFENDER_TIMEZONE);
+  const offenderMinutesNow = offenderNow.hour * 60 + offenderNow.minute;
+
   for (const guild of client.guilds.cache.values()) {
 
     const guildState = ensureGuildState(guild.id);
@@ -4600,27 +4657,11 @@ async function schedulerTick() {
 
     }
 
-    const now = new Date();
-
     const zonedNow = getZonedParts(now, getGuildTimezone(guildState));
 
     const dailyState = ensureDailyState(guildState, zonedNow.dateKey);
 
     const nowMinutes = zonedNow.hour * 60 + zonedNow.minute;
-
-    const recapNow = getZonedParts(now, NOON_RECAP_TIMEZONE);
-    const recapMinutesNow = recapNow.hour * 60 + recapNow.minute;
-
-    const offenderNow = getZonedParts(now, RANDOM_OFFENDER_TIMEZONE);
-    const offenderMinutesNow = offenderNow.hour * 60 + offenderNow.minute;
-
-    const reminderMinutes = MORNING_REMINDER_HOUR * 60 + MORNING_REMINDER_MINUTE;
-
-    const recapMinutes = NOON_RECAP_HOUR * 60 + NOON_RECAP_MINUTE;
-
-    const offenderMinutes = RANDOM_OFFENDER_HOUR * 60 + RANDOM_OFFENDER_MINUTE;
-
-
 
     if (
 
@@ -4628,9 +4669,9 @@ async function schedulerTick() {
 
       !dailyState.reminderSent &&
 
-      nowMinutes >= reminderMinutes &&
+      nowMinutes >= MORNING_REMINDER_MINUTES &&
 
-      nowMinutes <= reminderMinutes + REMINDER_GRACE_MINUTES
+      nowMinutes <= MORNING_REMINDER_MINUTES + REMINDER_GRACE_MINUTES
 
     ) {
 
@@ -4662,9 +4703,9 @@ async function schedulerTick() {
 
       !dailyState.randomOffenderSent &&
 
-      offenderMinutesNow >= offenderMinutes &&
+      offenderMinutesNow >= RANDOM_OFFENDER_MINUTES &&
 
-      offenderMinutesNow <= offenderMinutes + REMINDER_GRACE_MINUTES
+      offenderMinutesNow <= RANDOM_OFFENDER_MINUTES + REMINDER_GRACE_MINUTES
 
     ) {
 
@@ -4684,7 +4725,7 @@ async function schedulerTick() {
 
 
 
-    if (nowMinutes >= reminderMinutes) {
+    if (nowMinutes >= MORNING_REMINDER_MINUTES) {
 
       await maybePostPendingChampionAnnouncements(guild, guildState);
 
@@ -4699,9 +4740,9 @@ async function schedulerTick() {
 
       !dailyState.recapSent &&
 
-      recapMinutesNow >= recapMinutes &&
+      recapMinutesNow >= NOON_RECAP_MINUTES &&
 
-      recapMinutesNow <= recapMinutes + FOLLOWUP_GRACE_MINUTES
+      recapMinutesNow <= NOON_RECAP_MINUTES + FOLLOWUP_GRACE_MINUTES
 
     ) {
 
@@ -4723,6 +4764,16 @@ async function schedulerTick() {
 
 }
 
+function runSchedulerTick() {
+  if (!schedulerTickPromise) {
+    schedulerTickPromise = schedulerTick().finally(() => {
+      schedulerTickPromise = null;
+    });
+  }
+
+  return schedulerTickPromise;
+}
+
 
 
 client.once("clientReady", async () => {
@@ -4741,13 +4792,13 @@ client.once("clientReady", async () => {
 
   await announcePendingReturnMessages();
 
-  await schedulerTick();
+  await runSchedulerTick();
 
 
 
   setInterval(() => {
 
-    schedulerTick().catch((error) => {
+    runSchedulerTick().catch((error) => {
 
       console.error("Scheduler tick failed:", error);
 

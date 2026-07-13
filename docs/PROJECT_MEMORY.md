@@ -22,7 +22,7 @@ The personality direction is intentional: funny, casual, sarcastic, and a little
 
 - `src/index.js`: main bot logic, commands, scheduling, conversation behavior, record tracking
 - `src/config.js`: config loading, cleaning, fallback defaults
-- `src/storage.js`: JSON file persistence layer for `data/state.json`
+- `src/storage.js`: coalescing JSON persistence layer for `data/state.json`
 - `config/morning-config.json`: phrase lists, reply pools, conversation content, facts
 - `data/state.json`: runtime state and per-guild persisted settings
 - `assets/`: bot icon assets
@@ -384,7 +384,7 @@ In `config/morning-config.json`:
 Typical Windows restart:
 
 ```powershell
-cd "C:\Dev\Codex\Discord Morning Bot"
+cd "C:\Dev\morningGoblin"
 Ctrl+C
 npm.cmd start
 ```
@@ -426,7 +426,7 @@ These are user-driven product decisions that should be preserved.
 
 - The bot ignores DMs entirely because the main message handler exits unless `message.inGuild()` is true.
 - DMing other users as the bot is not implemented.
-- There are no automated tests in the repo yet.
+- Automated coverage currently focuses on configuration and persistence; Discord integration paths still need manual verification.
 - `src/index.js` is large and has accumulated many feature edits; future refactors should probably split it into modules.
 
 ## Good Future Refactors

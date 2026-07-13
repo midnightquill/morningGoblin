@@ -17,7 +17,7 @@ If you need context fast, read these in order:
 ### Restart the bot on Windows
 
 ```powershell
-cd "C:\Dev\Codex\Discord Morning Bot"
+cd "C:\Dev\morningGoblin"
 Ctrl+C
 npm.cmd start
 ```
@@ -25,15 +25,16 @@ npm.cmd start
 ### Install dependencies
 
 ```powershell
-cd "C:\Dev\Codex\Discord Morning Bot"
+cd "C:\Dev\morningGoblin"
 npm.cmd install
 ```
 
-### Syntax-check the main code
+### Check and test the code
 
 ```powershell
-& 'C:\Program Files\nodejs\node.exe' --check 'C:\Dev\Codex\Discord Morning Bot\src\index.js'
-& 'C:\Program Files\nodejs\node.exe' --check 'C:\Dev\Codex\Discord Morning Bot\src\config.js'
+cd "C:\Dev\morningGoblin"
+npm.cmd run check
+npm.cmd test
 ```
 
 ### Reload config without restarting
@@ -47,7 +48,7 @@ In Discord:
 ### Push to GitHub
 
 ```powershell
-cd "C:\Dev\Codex\Discord Morning Bot"
+cd "C:\Dev\morningGoblin"
 git status --short
 git add .
 git commit -m "Your message"

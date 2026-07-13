@@ -110,12 +110,6 @@
     "the goblin has noticed an absence where your morning greeting should be. please correct the file in {channel}.",
     "before we continue, the sunrise counter in {channel} needs one little tap from you."
   ],
-  "noCheckInsFollowups": [
-    "morning census update: zero check-ins. the clipboard is staring at an empty chair with real commitment.",
-    "gm report: nobody yet. the attendance jar contains only suspense.",
-    "dawn office update: no filings received. several forms have begun gossiping.",
-    "current count: 0. the sun is pretending not to take this personally."
-  ],
   "conversation": {
     "enabled": true,
     "wakeWords": [
@@ -643,11 +637,6 @@
         "late filing bounced. the morning counter is dark. try tomorrow, possible timezone stunt double.",
         "nope. legal U.S. morning has evaporated into lunch mist. this smells faintly of Jak operations."
       ],
-      "noCheckInsFollowups": [
-        "zero check-ins. the attendance sheet has started telling lies for attention.",
-        "gm count: nothing. the dawn office is pacing in a tiny square.",
-        "no filings yet. the clipboard is making a vision board about abandonment."
-      ],
       "conversation": {
         "enabled": true,
         "wakeWords": [
@@ -900,10 +889,6 @@
         "illegal pre-gm chatter detected. hop over to {channel} and drop a morning greeting so the morning police can stand down.",
         "hold on there, speed racer. first you say good morning in {channel}, then you may continue your silly little sentences.",
         "respectfully, the vibes require a gm first. go feed one morning greeting into {channel} and then we can all pretend this never happened."
-      ],
-      "noCheckInsFollowups": [
-        "morning census update: absolutely nobody has checked in yet. grim scenes. devastating for the rooster economy.",
-        "gm report: zero. not one. the sun is being ignored with incredible confidence."
       ],
       "invalidCheckInReplies": [
         "absolutely not. it is not morning anywhere in the united states right now, so this gm has been rejected on clerical grounds. please try again tomorrow. are you Jak or just doing a very committed Jak impression?",

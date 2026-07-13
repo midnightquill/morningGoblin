@@ -1,2 +1,0 @@
-﻿This is a temporary Codex git commit test file.
-Safe to delete after verifying commit/push flow.

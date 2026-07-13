@@ -27,9 +27,6 @@ const FALLBACK_CONFIG = {
   nudgeReplies: [
     "tiny paperwork issue: you started talking before saying good morning. please report to {channel} and submit a quick gm.",
   ],
-  noCheckInsFollowups: [
-    "morning census update: absolutely nobody has checked in yet. grim scenes. devastating for the rooster economy.",
-  ],
   morningFacts: [
     "Morning sunlight helps signal to your brain that it is time to be awake.",
   ],
@@ -97,9 +94,6 @@ const FALLBACK_CONFIG = {
       ],
       nudgeReplies: [
         "pre-gm sentence detected. please deposit one sunrise token in {channel}.",
-      ],
-      noCheckInsFollowups: [
-        "zero check-ins. the attendance sheet has started telling lies for attention.",
       ],
       morningFacts: [
         "Morning sunlight helps signal to your brain that it is time to be awake.",
@@ -221,7 +215,6 @@ function cloneMessagePools(source) {
     duplicateReplies: [...source.duplicateReplies],
     invalidCheckInReplies: [...source.invalidCheckInReplies],
     nudgeReplies: [...source.nudgeReplies],
-    noCheckInsFollowups: [...source.noCheckInsFollowups],
     morningFacts: [...source.morningFacts],
     conversation: cleanConversationConfig(source.conversation, source.conversation),
   };
@@ -236,7 +229,6 @@ function cleanMessagePoolConfig(value, fallback) {
     duplicateReplies: cleanStringArray(source.duplicateReplies, fallback.duplicateReplies),
     invalidCheckInReplies: cleanStringArray(source.invalidCheckInReplies, fallback.invalidCheckInReplies),
     nudgeReplies: cleanStringArray(source.nudgeReplies, fallback.nudgeReplies),
-    noCheckInsFollowups: cleanStringArray(source.noCheckInsFollowups, fallback.noCheckInsFollowups),
     morningFacts: cleanStringArray(source.morningFacts, fallback.morningFacts),
     conversation: cleanConversationConfig(source.conversation, fallback.conversation),
   };
@@ -329,10 +321,6 @@ function cleanMorningConfig(parsed) {
       FALLBACK_CONFIG.invalidCheckInReplies,
     ),
     nudgeReplies: cleanStringArray(source.nudgeReplies, FALLBACK_CONFIG.nudgeReplies),
-    noCheckInsFollowups: cleanStringArray(
-      source.noCheckInsFollowups,
-      FALLBACK_CONFIG.noCheckInsFollowups,
-    ),
     morningFacts: cleanStringArray(source.morningFacts, FALLBACK_CONFIG.morningFacts),
     rareShinyReplyChance: cleanProbability(
       source.rareShinyReplyChance,

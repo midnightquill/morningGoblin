@@ -1,8 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const DATA_DIR = path.resolve(process.cwd(), "data");
-const STATE_PATH = path.join(DATA_DIR, "state.json");
+const DEFAULT_DATA_DIR = path.resolve(process.cwd(), "data");
 
 function createEmptyState() {
   return {
@@ -12,16 +11,31 @@ function createEmptyState() {
 }
 
 export class JsonStore {
-  constructor() {
+  constructor({ dataDir = DEFAULT_DATA_DIR } = {}) {
+    this.dataDir = dataDir;
+    this.statePath = path.join(dataDir, "state.json");
     this.state = createEmptyState();
-    this.writeQueue = Promise.resolve();
+    this.directoryReady = null;
+    this.pendingSnapshot = null;
+    this.flushPromise = null;
+  }
+
+  async ensureDataDirectory() {
+    if (!this.directoryReady) {
+      this.directoryReady = mkdir(this.dataDir, { recursive: true }).catch((error) => {
+        this.directoryReady = null;
+        throw error;
+      });
+    }
+
+    return this.directoryReady;
   }
 
   async load() {
-    await mkdir(DATA_DIR, { recursive: true });
+    await this.ensureDataDirectory();
 
     try {
-      const raw = await readFile(STATE_PATH, "utf8");
+      const raw = await readFile(this.statePath, "utf8");
       const parsed = JSON.parse(raw);
       this.state = {
         ...createEmptyState(),
@@ -42,13 +56,25 @@ export class JsonStore {
   }
 
   async save() {
-    await mkdir(DATA_DIR, { recursive: true });
-    const snapshot = JSON.stringify(this.state, null, 2);
+    await this.ensureDataDirectory();
+    this.pendingSnapshot = JSON.stringify(this.state, null, 2);
 
-    this.writeQueue = this.writeQueue.then(() =>
-      writeFile(STATE_PATH, snapshot, "utf8"),
-    );
+    if (!this.flushPromise) {
+      this.flushPromise = this.flushPendingSnapshots();
+    }
 
-    return this.writeQueue;
+    return this.flushPromise;
+  }
+
+  async flushPendingSnapshots() {
+    try {
+      while (this.pendingSnapshot !== null) {
+        const snapshot = this.pendingSnapshot;
+        this.pendingSnapshot = null;
+        await writeFile(this.statePath, snapshot, "utf8");
+      }
+    } finally {
+      this.flushPromise = null;
+    }
   }
 }
