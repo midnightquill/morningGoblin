@@ -8,6 +8,15 @@ import { ActivityType, Client, GatewayIntentBits, PermissionsBitField } from "di
 
 import { loadMorningConfig, normalizeAcceptedStarts } from "./config.js";
 
+import {
+  containsPhrase,
+  findMatchingKeywordRule,
+  isSilenceRequest,
+  normalizeConversationText,
+} from "./conversation-text.js";
+
+import { ChannelMessageGuard } from "./message-guard.js";
+
 import { JsonStore } from "./storage.js";
 
 const formatterCache = new Map();
@@ -56,8 +65,6 @@ const RANDOM_OFFENDER_TIMEZONE = resolveTimeZoneWithFallback(
 
 const MORNING_WINDOW_END_HOUR = readNumber("MORNING_WINDOW_END_HOUR", 12, 0, 23);
 
-const MAX_CONSECUTIVE_BOT_MESSAGES = readNumber("MAX_CONSECUTIVE_BOT_MESSAGES", 3, 1, 20);
-
 const MORNING_REMINDER_MINUTES = MORNING_REMINDER_HOUR * 60 + MORNING_REMINDER_MINUTE;
 const NOON_RECAP_MINUTES = NOON_RECAP_HOUR * 60 + NOON_RECAP_MINUTE;
 const RANDOM_OFFENDER_MINUTES = RANDOM_OFFENDER_HOUR * 60 + RANDOM_OFFENDER_MINUTE;
@@ -70,6 +77,7 @@ const CATCHUP_MIN_HOURS = 1;
 const CATCHUP_MAX_HOURS = 168;
 const CATCHUP_FETCH_PAGE_SIZE = 100;
 const CATCHUP_FETCH_MAX_MESSAGES = 5000;
+const DISCORD_MESSAGE_MAX_LENGTH = 2000;
 
 const LOCK_PATH = path.resolve(process.cwd(), "data", "bot.lock");
 
@@ -87,22 +95,22 @@ const DEFAULT_LAST_STREAM_DATE_KEY = "2025-04-26";
 
 const DEFAULT_PRESENCE = {
   type: "watching",
-  name: "watching for illegal pre-gm chatter",
+  name: "for illegal pre-gm chatter",
 };
 const DEFAULT_VOICE_PACK_KEY = "fresh";
 const AUTO_PRESENCE_MIN_DELAY_MS = 6 * 60 * 60 * 1000;
 const AUTO_PRESENCE_MAX_DELAY_MS = 12 * 60 * 60 * 1000;
 const AUTO_PRESENCE_OPTIONS = [
   { type: "watching", name: "watching for illegal pre-gm chatter" },
-  { type: "watching", name: "hiding from the snooze button" },
-  { type: "watching", name: "trying to outwork the sunrise" },
-  { type: "watching", name: "searching for missing gm paperwork" },
-  { type: "watching", name: "checking distant time zones for legal morning" },
-  { type: "watching", name: "auditing international dawn behavior" },
-  { type: "watching", name: "researching mong plorp origins" },
+  { type: "watching", name: "the snooze button plot its next move" },
+  { type: "watching", name: "the sunrise lose another argument" },
+  { type: "watching", name: "for missing gm paperwork" },
+  { type: "watching", name: "distant time zones for legal morning" },
+  { type: "watching", name: "international dawn behavior" },
+  { type: "watching", name: "Mong Plorp origin documentaries" },
   { type: "listening", name: "listening to the sign-in sheet rustle" },
-  { type: "watching", name: "making tiny sunrise incident reports" },
-  { type: "watching", name: "not losing to the snooze button" },
+  { type: "watching", name: "tiny sunrise incident reports pile up" },
+  { type: "competing", name: "snooze-button defense" },
   { type: "watching", name: "watching suspicious sunrise activity" },
   { type: "watching", name: "watching the clock with distrust" },
   { type: "watching", name: "watching the dawn paperwork pile up" },
@@ -136,23 +144,23 @@ const AUTO_PRESENCE_OPTIONS = [
   { type: "listening", name: "listening to morning excuses" },
   { type: "listening", name: "listening to distant coffee brewing" },
   { type: "listening", name: "listening to tiny administrative screams" },
-  { type: "listening", name: "listening for the first yawn of the day" },
+  { type: "listening", name: "the first yawn of the day" },
   { type: "listening", name: "listening to the sound of legal morning" },
-  { type: "listening", name: "listening for goblin praise" },
-  { type: "listening", name: "listening for suspicious silence" },
+  { type: "listening", name: "goblin praise" },
+  { type: "listening", name: "suspicious silence" },
   { type: "listening", name: "listening to the breakfast economy" },
   { type: "listening", name: "listening to a very loud sunrise" },
-  { type: "listening", name: "listening for fake productivity" },
-  { type: "listening", name: "listening for Dutch complaints" },
+  { type: "listening", name: "fake productivity" },
+  { type: "listening", name: "Dutch complaints" },
   { type: "competing", name: "competing in sunrise compliance" },
-  { type: "competing", name: "competing against the concept of sleep" },
-  { type: "competing", name: "competing with the sunrise lobby" },
+  { type: "competing", name: "the anti-sleep division" },
+  { type: "competing", name: "the sunrise lobby games" },
   { type: "competing", name: "competing in office goblin finals" },
-  { type: "competing", name: "competing for employee of the dawn" },
-  { type: "competing", name: "competing against illegal noon behavior" },
+  { type: "competing", name: "employee-of-the-dawn trials" },
+  { type: "competing", name: "illegal-noon prevention" },
   { type: "competing", name: "competing in paperwork endurance" },
-  { type: "competing", name: "competing for regional sunrise dominance" },
-  { type: "competing", name: "competing with the breakfast board" },
+  { type: "competing", name: "regional sunrise dominance" },
+  { type: "competing", name: "the breakfast board games" },
   { type: "competing", name: "competing in advanced gm studies" },
 ];
 const OFFLINE_AWAY_LINES = [
@@ -189,19 +197,19 @@ const NOON_RECAP_ZERO_LINES = [
 const RANDOM_OFFENDER_LINES = [
   "today's randomly selected didn't-say-gm offender is {user}. how dare you.",
   "clipboard lottery results: {user} has been chosen as today's alleged gm evader.",
-  "administrative spotlight of shame falls upon {user}, today's randomly selected non-gm citizen.",
+  "administrative spotlight lands on {user}, today's randomly selected non-gm citizen.",
   "breaking goblin news: {user} has been randomly selected for suspicious lack-of-gm behavior.",
   "the dawn compliance wheel has spoken. today's playful offender is {user}. explain yourself eventually.",
   "by deeply unserious lottery, {user} is today's featured didn't-say-gm goblin criminal.",
   "today's random gm delinquent is {user}. this is going on the tiny clipboard.",
   "goblin raffle update: {user} has won the title of today's no-gm rascal.",
   "official morning misconduct draw: {user}. the clipboard is staring directly at you.",
-  "today's randomly chosen sunrise scofflaw is {user}. embarrassing, but in a fun way.",
+  "today's randomly chosen sunrise scofflaw is {user}. the clipboard has questions.",
   "the department of dawn nonsense has selected {user} as today's missing-gm character of interest.",
   "tiny public notice: {user} has been randomly selected for possible anti-gm activity.",
   "today's little paperwork goblin finger points at {user}. very suspicious non-gm posture.",
   "the goblin drumroll has concluded: {user} is today's randomly selected gm offender.",
-  "random accountability goblin says {user} is today's didn't-say-gm champion of shame.",
+  "random accountability goblin says {user} is today's didn't-say-gm wildcard.",
 ];
 const MORNING_REACTION_EMOJIS = [
   "\u2600\uFE0F",
@@ -268,10 +276,7 @@ const conversationState = {
   poolBags: new Map(),
 
 };
-const botMessageState = {
-  consecutiveByChannel: new Map(),
-  trackedMessageIds: new Set(),
-};
+const messageGuard = new ChannelMessageGuard(() => client.user?.id ?? null);
 
 
 
@@ -1378,11 +1383,20 @@ function parseStreamDateInput(input) {
 
 function buildStreamGapMessage(daysSinceLastStream, lastStreamDateKey) {
 
+  if (daysSinceLastStream === 0) {
+    return pickFromPoolBag("stream:status:today", [
+      `stream activity confirmed today (${lastStreamDateKey}). the drought paperwork has been shredded.`,
+      `the last stream was today (${lastStreamDateKey}). the goblin has stopped counting for now.`,
+    ]);
+  }
+
+  const dayWord = daysSinceLastStream === 1 ? "day" : "days";
+
   const templates = [
-    `it has been ${daysSinceLastStream} days since the last stream on ${lastStreamDateKey}. the drought paperwork is thriving.`,
-    `${daysSinceLastStream} days since stream activity. last confirmed incident: ${lastStreamDateKey}.`,
-    `current stream drought: ${daysSinceLastStream} days. the last known stream was ${lastStreamDateKey}.`,
-    `the goblin records show ${daysSinceLastStream} days since the last stream (${lastStreamDateKey}). grim but well-documented.`,
+    `it has been ${daysSinceLastStream} ${dayWord} since the last stream on ${lastStreamDateKey}. the drought paperwork is thriving.`,
+    `${daysSinceLastStream} ${dayWord} since stream activity. last confirmed incident: ${lastStreamDateKey}.`,
+    `current stream drought: ${daysSinceLastStream} ${dayWord}. the last known stream was ${lastStreamDateKey}.`,
+    `the goblin records show ${daysSinceLastStream} ${dayWord} since the last stream (${lastStreamDateKey}). grim but well-documented.`,
   ];
 
   return pickFromPoolBag("stream:status", templates);
@@ -1554,7 +1568,7 @@ function getSavedBotPresence() {
 
 
 
-  if (!savedPresence?.name || !parsePresenceType(savedPresence.type)) {
+  if (!savedPresence?.name || parsePresenceType(savedPresence.type) === null) {
 
     return null;
 
@@ -1580,7 +1594,7 @@ function getNextAutoPresence() {
 
 
 
-  if (!nextPresence?.name || !parsePresenceType(nextPresence.type)) {
+  if (!nextPresence?.name || parsePresenceType(nextPresence.type) === null) {
 
     return DEFAULT_PRESENCE;
 
@@ -1610,14 +1624,30 @@ function getRandomAutoPresenceDelayMs() {
 
 function describePresence(presence) {
 
+  const displayPrefixes = {
+    playing: "playing",
+    watching: "watching",
+    listening: "listening to",
+    competing: "competing in",
+  };
+
+  return `\`${displayPrefixes[presence.type]} ${getDiscordActivityName(presence)}\``;
+
+}
+
+function getDiscordActivityName(presence) {
+  const removablePrefixes = {
+    playing: ["playing "],
+    watching: ["watching "],
+    listening: ["listening to ", "to "],
+    competing: ["competing in ", "in "],
+  };
   const normalizedName = presence.name.toLowerCase();
+  const prefix = (removablePrefixes[presence.type] ?? []).find((candidate) =>
+    normalizedName.startsWith(candidate),
+  );
 
-  if (normalizedName.startsWith(presence.type + " ")) {
-    return "`" + presence.name + "`";
-  }
-
-  return presence.type + " `" + presence.name + "`";
-
+  return prefix ? presence.name.slice(prefix.length) : presence.name;
 }
 
 
@@ -1744,7 +1774,7 @@ async function applyBotPresence() {
 
       {
 
-        name: presence.name,
+        name: getDiscordActivityName(presence),
 
         type: activityType,
 
@@ -1769,7 +1799,7 @@ function formatSuppressedReplyList(guild) {
     return "nobody is currently on the no-reply check-in list. the goblin remains chatty.";
   }
 
-  return "check-in reply suppression list: " + suppressed.map((userId) => `<@${userId}>`).join(", ");
+  return "check-in reply suppression list: " + formatRoster(suppressed.map((userId) => `<@${userId}>`));
 }
 
 function formatRoster(names) {
@@ -1790,6 +1820,26 @@ function formatRoster(names) {
 
   return `${shown}, and ${names.length - limit} more`;
 
+}
+
+function formatMentionRoster(userIds, limit = 20) {
+  const displayedUserIds = userIds.slice(0, limit);
+  const mentions = displayedUserIds.map((userId) => `<@${userId}>`);
+  const overflow = userIds.length - displayedUserIds.length;
+
+  return {
+    text: overflow > 0 ? `${mentions.join(" ")} and ${overflow} more` : mentions.join(" "),
+    userIds: displayedUserIds,
+  };
+}
+
+async function formatUserRoster(guild, userIds, limit = 20, resolveLabel = null) {
+  const displayedUserIds = userIds.slice(0, limit);
+  const getLabel = resolveLabel ?? createUserDisplayLabelResolver(guild);
+  const names = await Promise.all(displayedUserIds.map(getLabel));
+  const overflow = userIds.length - displayedUserIds.length;
+
+  return overflow > 0 ? `${names.join(", ")}, and ${overflow} more` : names.join(", ");
 }
 
 
@@ -1888,31 +1938,31 @@ function isWakeWordMessage(content, guildState) {
 
 
 
-  return getGuildVoiceConfig(guildState).conversation.wakeWords.some((wakeWord) => normalized.includes(wakeWord));
+  return getGuildVoiceConfig(guildState).conversation.wakeWords.some((wakeWord) =>
+    containsPhrase(normalized, wakeWord),
+  );
 
 }
 
 
 
 function getMatchingKeywordReply(message, guildState) {
+  const conversationConfig = getGuildVoiceConfig(guildState).conversation;
+  const rule = findMatchingKeywordRule(
+    message.content,
+    conversationConfig.wakeWords,
+    conversationConfig.keywordRules,
+  );
 
-  const normalized = cleanMessageContent(message.content).toLowerCase();
-
-
-
-  for (const rule of getGuildVoiceConfig(guildState).conversation.keywordRules) {
-
-    if (rule.triggers.some((trigger) => normalized.includes(trigger.toLowerCase()))) {
-
-      return formatBotText(pickRandom(rule.replies), message);
-
-    }
-
+  if (!rule) {
+    return null;
   }
 
-
-
-  return null;
+  const poolKey = `conversation:keyword:${rule.triggers[0]}`;
+  return formatBotText(
+    pickFromPoolBag(getVoicePoolBagKey(guildState, poolKey), rule.replies),
+    message,
+  );
 
 }
 
@@ -2066,12 +2116,26 @@ async function maybeHandleConversation(message) {
 
   if (message.mentions.users.has(client.user.id) && isEveningGreetingMessage(message.content)) {
     try {
-      await message.react("\uD83D\uDC4E");
+      await message.react("\uD83C\uDF19");
     } catch {
       // Reactions are optional sugar.
     }
 
     return true;
+  }
+
+  const guildState = ensureGuildState(message.guild.id);
+  const conversationConfig = getGuildVoiceConfig(guildState).conversation;
+
+  if (isSilenceRequest(message.content, conversationConfig.wakeWords, morningConfig.acceptedStarts)) {
+    const directedAtBot =
+      message.mentions.users.has(client.user.id) ||
+      isWakeWordMessage(message.content, guildState) ||
+      await isReplyToBot(message);
+
+    if (directedAtBot) {
+      return true;
+    }
   }
 
   const reply = await getConversationReply(message);
@@ -2086,11 +2150,13 @@ async function maybeHandleConversation(message) {
 
 
 
-  markConversationReply(message);
+  const sent = await safeSend(message.channel, reply);
 
-  await safeSend(message.channel, reply);
+  if (sent) {
+    markConversationReply(message);
+  }
 
-  return true;
+  return Boolean(sent);
 
 }
 
@@ -2167,45 +2233,64 @@ function isChannelInGuild(channel, guild) {
 
 }
 
-function resetConsecutiveBotMessages(channelId) {
-  botMessageState.consecutiveByChannel.set(channelId, 0);
-}
+function getPendingReturnStateForChannel(channel) {
+  const guildId = channel?.guildId ?? channel?.guild?.id;
 
-function incrementConsecutiveBotMessages(channelId) {
-  const current = botMessageState.consecutiveByChannel.get(channelId) ?? 0;
-  botMessageState.consecutiveByChannel.set(channelId, current + 1);
-}
-
-function rememberSentBotMessage(sentMessage) {
-  if (!sentMessage) {
-    return sentMessage;
-  }
-
-  botMessageState.trackedMessageIds.add(sentMessage.id);
-  incrementConsecutiveBotMessages(sentMessage.channelId);
-  return sentMessage;
-}
-
-function markObservedBotMessage(message) {
-  if (botMessageState.trackedMessageIds.delete(message.id)) {
-    return;
-  }
-
-  incrementConsecutiveBotMessages(message.channelId);
-}
-
-function hasReachedConsecutiveBotMessageLimit(channelId) {
-  return (botMessageState.consecutiveByChannel.get(channelId) ?? 0) >= MAX_CONSECUTIVE_BOT_MESSAGES;
-}
-
-async function sendBotPayload(channel, payload, options = {}) {
-  const { bypassConsecutiveLimit = false } = options;
-
-  if (!bypassConsecutiveLimit && hasReachedConsecutiveBotMessageLimit(channel.id)) {
+  if (!guildId) {
     return null;
   }
 
-  return rememberSentBotMessage(await channel.send(payload));
+  const guildState = ensureGuildState(guildId);
+
+  return guildState.offlineNotice?.pendingReturn &&
+    guildState.offlineNotice.channelId === channel.id
+    ? guildState
+    : null;
+}
+
+async function deliverBotPayload(channel, payload, sendPayload, options = {}) {
+  const { prependPendingReturn = true } = options;
+  let pendingReturnState = null;
+  let didPrependPendingReturn = false;
+
+  const sent = await messageGuard.send(channel, () => {
+    pendingReturnState = prependPendingReturn
+      ? getPendingReturnStateForChannel(channel)
+      : null;
+    let preparedPayload = payload;
+
+    if (pendingReturnState && typeof payload.content === "string") {
+      const returnLine = pickFromPoolBag("offline:returnLines", OFFLINE_RETURN_LINES);
+      const combinedContent = `${returnLine}\n${payload.content}`;
+
+      if (combinedContent.length <= DISCORD_MESSAGE_MAX_LENGTH) {
+        preparedPayload = { ...payload, content: combinedContent };
+        didPrependPendingReturn = true;
+      }
+    }
+
+    return sendPayload(preparedPayload);
+  });
+
+  if (sent && didPrependPendingReturn && pendingReturnState?.offlineNotice?.pendingReturn) {
+    pendingReturnState.offlineNotice.pendingReturn = false;
+    pendingReturnState.offlineNotice.channelId = null;
+    await store.save();
+  }
+
+  return sent;
+}
+
+function sendBotPayload(channel, payload, options) {
+  return deliverBotPayload(channel, payload, (preparedPayload) => channel.send(preparedPayload), options);
+}
+
+function safeReply(message, payload) {
+  return deliverBotPayload(
+    message.channel,
+    payload,
+    (preparedPayload) => message.reply(preparedPayload),
+  );
 }
 
 
@@ -2240,42 +2325,59 @@ async function getOfflineNoticeChannel(guild, guildState) {
     }
   }
 
-  return getMorningChannel(guild);
+  const fallbackChannel = await getMorningChannel(guild);
+
+  if (fallbackChannel && guildState.offlineNotice?.pendingReturn) {
+    guildState.offlineNotice.channelId = fallbackChannel.id;
+  }
+
+  return fallbackChannel;
 
 }
 
 
 
+async function announcePendingReturnMessage(guild) {
+  const guildState = ensureGuildState(guild.id);
+
+  if (!guildState.offlineNotice?.pendingReturn) {
+    return false;
+  }
+
+  const targetChannel = await getOfflineNoticeChannel(guild, guildState);
+
+  if (!targetChannel) {
+    return false;
+  }
+
+  try {
+    const sent = await sendBotPayload(
+      targetChannel,
+      {
+        content: pickFromPoolBag("offline:returnLines", OFFLINE_RETURN_LINES),
+        allowedMentions: { parse: [] },
+      },
+      { prependPendingReturn: false },
+    );
+
+    if (!sent) {
+      return false;
+    }
+  } catch (error) {
+    console.error("Failed to send return notice:", error);
+    return false;
+  }
+
+  guildState.offlineNotice.pendingReturn = false;
+  guildState.offlineNotice.channelId = null;
+  await store.save();
+  return true;
+}
+
 async function announcePendingReturnMessages() {
-
-  let stateChanged = false;
-
   for (const guild of client.guilds.cache.values()) {
-    const guildState = ensureGuildState(guild.id);
-
-    if (!guildState.offlineNotice?.pendingReturn) {
-      continue;
-    }
-
-    const targetChannel = await getOfflineNoticeChannel(guild, guildState);
-
-    if (targetChannel) {
-      try {
-        await safeSend(targetChannel, pickFromPoolBag("offline:returnLines", OFFLINE_RETURN_LINES));
-      } catch (error) {
-        console.error("Failed to send return notice:", error);
-      }
-    }
-
-    guildState.offlineNotice.pendingReturn = false;
-    guildState.offlineNotice.channelId = null;
-    stateChanged = true;
+    await announcePendingReturnMessage(guild);
   }
-
-  if (stateChanged) {
-    await store.save();
-  }
-
 }
 
 
@@ -2339,14 +2441,12 @@ async function buildWeeklyTitleWatchLine(guild, guildState) {
     return null;
   }
 
-  const leaderNames = await Promise.all(
-    leaderUserIds.map((userId) => getUserDisplayLabel(guild, userId)),
-  );
+  const leaderRoster = await formatUserRoster(guild, leaderUserIds, 10);
 
   const title = pickWeeklyOfficeTitle();
   const verb = leaderUserIds.length === 1 ? "is" : "are";
 
-  return `weekly title watch: ${leaderNames.join(", ")} ${verb} currently acting ${title}.`;
+  return `weekly title watch: ${leaderRoster} ${verb} currently serving as ${title}.`;
 }
 
 async function appendWeeklyTitleWatch(guild, guildState, recap) {
@@ -2417,24 +2517,22 @@ async function postNoonRecap(guild) {
   }
 
   const recapMessage = await buildNoonRecapMessage(guild, dailyState);
-  const recapSent = await safeSend(channel, recapMessage);
+  const checkInCount = Object.keys(dailyState.checkIns).length;
+  const previousBest = guildState.records?.best;
+  const isNewBest = checkInCount > 0 && (!previousBest || checkInCount > previousBest.count);
+  const celebration = isNewBest ? buildNewBestCelebration(dailyState) : null;
+  const recapSent = celebration
+    ? await sendBotPayload(channel, {
+        content: `${recapMessage}\n${celebration.content}`,
+        allowedMentions: { parse: [], users: celebration.userIds },
+      })
+    : await safeSend(channel, recapMessage);
 
   if (!recapSent) {
     return false;
   }
 
-  const recordUpdate = updateRecords(guildState, dailyState);
-
-  if (recordUpdate.newBest) {
-    const celebration = buildNewBestCelebration(dailyState);
-
-    if (celebration) {
-      await sendBotPayload(channel, {
-        content: celebration.content,
-        allowedMentions: { parse: [], users: celebration.userIds },
-      });
-    }
-  }
+  updateRecords(guildState, dailyState);
 
   return true;
 }
@@ -2546,17 +2644,18 @@ function buildNewBestCelebration(dailyState) {
     return null;
   }
 
+  const contributorRoster = formatMentionRoster(contributors);
   const templates = [
-    `new all-time gm record: ${count}. applause for the dawn athletes: ${contributors.map((userId) => `<@${userId}>`).join(" ")}` ,
-    `record shattered. ${count} check-ins. the morning goblin salutes ${contributors.map((userId) => `<@${userId}>`).join(" ")}` ,
-    `historic sunrise behavior detected. ${count} people checked in. medals to ${contributors.map((userId) => `<@${userId}>`).join(" ")}` ,
-    `the books have been rewritten: ${count} check-ins. celebratory paperwork for ${contributors.map((userId) => `<@${userId}>`).join(" ")}` ,
-    `brand-new morning record. ${count} legal dawn participants. screaming professionally for ${contributors.map((userId) => `<@${userId}>`).join(" ")}` ,
+    `new all-time gm record: ${count}. applause for the dawn athletes: ${contributorRoster.text}`,
+    `record shattered. ${count} check-ins. the morning goblin salutes ${contributorRoster.text}`,
+    `historic sunrise behavior detected. ${count} people checked in. medals to ${contributorRoster.text}`,
+    `the books have been rewritten: ${count} check-ins. celebratory paperwork for ${contributorRoster.text}`,
+    `brand-new morning record. ${count} legal dawn participants. screaming professionally for ${contributorRoster.text}`,
   ];
 
   return {
     content: pickFromPoolBag("records:newBestCelebrations", templates),
-    userIds: contributors,
+    userIds: contributorRoster.userIds,
   };
 }
 
@@ -2594,7 +2693,8 @@ function buildChampionAnnouncement(entry) {
     return null;
   }
 
-  const winners = entry.winnerUserIds.map((userId) => `<@${userId}>`).join(" ");
+  const winnerRoster = formatMentionRoster(entry.winnerUserIds);
+  const winners = winnerRoster.text;
   const pointsText = formatPointsWord(entry.points);
   const label = formatPeriodLabel(entry.periodType, entry.periodKey);
   const championWord = entry.winnerUserIds.length === 1 ? "champion" : "co-champions";
@@ -2606,7 +2706,7 @@ function buildChampionAnnouncement(entry) {
     case "week":
       templates = [
         `weekly good morning ${championWord} for the ${label}: ${winners} with ${pointsText}.${titleText} the goblin salutes your sustained sunrise paperwork.`,
-        `the ${label} weekly dawn title goes to ${winners} with ${pointsText}.${titleText} an incredible seven-day display of administrative discipline.`,
+        `the weekly dawn title for the ${label} goes to ${winners} with ${pointsText}.${titleText} an incredible seven-day display of administrative discipline.`,
         `weekly gm throne claimed for the ${label}: ${winners}, posting ${pointsText}.${titleText} the blankets have filed an appeal.`,
       ];
       break;
@@ -2615,7 +2715,7 @@ function buildChampionAnnouncement(entry) {
       templates = [
         `monthly good morning ${championWord} for ${label}: ${winners} with ${pointsText}. the goblin is filing this under elite long-term sunrise behavior.`,
         `${label} belongs to ${winners}, our monthly dawn ${championWord}, with ${pointsText}. absurdly consistent morning paperwork.`,
-        `monthly sunrise crown awarded for ${label}: ${winners} on ${pointsText}. the forms themselves are applauding.`,
+        `monthly sunrise crown awarded for ${label}: ${winners} with ${pointsText}. the forms themselves are applauding.`,
       ];
       break;
 
@@ -2636,7 +2736,7 @@ function buildChampionAnnouncement(entry) {
 
   return {
     content: pickFromPoolBag(`champions:${entry.periodType}`, templates),
-    userIds: entry.winnerUserIds,
+    userIds: winnerRoster.userIds,
   };
 
 }
@@ -2806,17 +2906,22 @@ function formatRankLine(label, rankInfo) {
     return `${label}: unranked`;
   }
 
-  const tieNote = rankInfo.tiedCount > 1 ? `, tied with ${rankInfo.tiedCount - 1}` : "";
-  return `${label}: #${rankInfo.rank}/${rankInfo.totalRanked}${tieNote}`;
+  const otherTies = rankInfo.tiedCount - 1;
+  const tieNote = otherTies > 0
+    ? ` (tied with ${otherTies} ${otherTies === 1 ? "other" : "others"})`
+    : "";
+  return `${label}: #${rankInfo.rank} of ${rankInfo.totalRanked}${tieNote}`;
 }
 
 async function postUserStats(message) {
   if (!isRankCheckChannel(message.channel)) {
     const rankChannel = findRankCheckChannel(message.guild);
-    const target = rankChannel ? `<#${rankChannel.id}>` : `#${RANK_CHECK_CHANNEL_NAME}`;
+    const content = rankChannel
+      ? `stats paperwork lives in <#${rankChannel.id}>. please take your little leaderboard goblin business over there.`
+      : `stats are restricted to #${RANK_CHECK_CHANNEL_NAME}, but i cannot find that channel right now. an admin should create it or check \`RANK_CHECK_CHANNEL_NAME\`.`;
 
-    await message.reply({
-      content: `stats paperwork lives in ${target}. please take your little leaderboard goblin business over there.`,
+    await safeReply(message, {
+      content,
       allowedMentions: { repliedUser: false, parse: [] },
     });
     return;
@@ -2836,7 +2941,7 @@ async function postUserStats(message) {
   const yearPoints = pointsState.periods.year.scores[userId] ?? 0;
   const displayName = message.member?.displayName || message.author.username;
 
-  await message.reply({
+  await safeReply(message, {
     content: [
       `gm stats for ${displayName}:`,
       `all-time: ${formatPointsWord(lifetimePoints)}`,
@@ -2853,16 +2958,15 @@ async function postUserStats(message) {
 
 async function formatChampionSummary(guild, entry, resolveLabel = null) {
 
-  if (!entry) {
+  if (!entry || !Array.isArray(entry.winnerUserIds) || entry.winnerUserIds.length === 0) {
     return null;
   }
 
-  const getLabel = resolveLabel ?? createUserDisplayLabelResolver(guild);
-  const winnerNames = await Promise.all(entry.winnerUserIds.map(getLabel));
+  const winnerRoster = await formatUserRoster(guild, entry.winnerUserIds, 5, resolveLabel);
 
   const titleText = entry.officeTitle ? `, ${entry.officeTitle}` : "";
 
-  return `${winnerNames.join(", ")} with ${formatPointsWord(entry.points)}${titleText} (${formatPeriodLabel(entry.periodType, entry.periodKey)})`;
+  return `${winnerRoster} with ${formatPointsWord(entry.points)}${titleText} (${formatPeriodLabel(entry.periodType, entry.periodKey)})`;
 
 }
 
@@ -2901,11 +3005,12 @@ async function postPoints(message) {
 
   for (const [index, summary] of championSummaries.entries()) {
     if (summary) {
-      lines.push(`last ${PERIOD_TYPES[index]} champion: ${summary}`);
+      const labels = ["weekly", "monthly", "yearly"];
+      lines.push(`previous ${labels[index]} champion: ${summary}`);
     }
   }
 
-  await message.reply({
+  await safeReply(message, {
     content: lines.join("\n"),
     allowedMentions: { repliedUser: false, parse: [] },
   });
@@ -2920,7 +3025,7 @@ async function postStreamStatus(message) {
   const todayKey = getZonedParts(new Date(), DEFAULT_TIMEZONE).dateKey;
   const daysSinceLastStream = getDateKeyDifference(tracker.lastStreamDateKey, todayKey);
 
-  await message.reply({
+  await safeReply(message, {
     content: buildStreamGapMessage(daysSinceLastStream ?? 0, tracker.lastStreamDateKey),
     allowedMentions: { repliedUser: false, parse: [] },
   });
@@ -2942,7 +3047,7 @@ async function postStatus(message) {
       : "today's good-morning count: 0. a truly suspicious level of silence.";
 
 
-    await message.reply({
+    await safeReply(message, {
       content,
       allowedMentions: { repliedUser: false },
     });
@@ -2961,7 +3066,7 @@ async function postStatus(message) {
     lines.push(recordsSummary);
   }
 
-  await message.reply({
+  await safeReply(message, {
     content: lines.join("\n"),
     allowedMentions: { repliedUser: false, parse: [] },
   });
@@ -2998,11 +3103,7 @@ function recordCheckIn(guildState, dateKey, userId, entry) {
 async function maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, totalCheckIns, options = {}) {
   const { ignoreQuietList = false, bonusLines = [] } = options;
 
-  try {
-    await message.react(pickFromPoolBag("checkin:reactionEmojis", MORNING_REACTION_EMOJIS));
-  } catch {
-    // Reactions are optional sugar.
-  }
+  await reactToCheckInMessage(message);
 
   if (!ignoreQuietList && guildState.suppressedCheckInReplyUserIds.includes(message.author.id)) {
     return;
@@ -3016,7 +3117,7 @@ async function maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, tota
         ...bonusLines,
       ].join("\n");
 
-  await message.reply({
+  await safeReply(message, {
     content: reply,
     allowedMentions: { repliedUser: false, parse: [] },
   });
@@ -3074,7 +3175,7 @@ async function maybeNudge(message, guildState, dailyState, nowMinutes) {
 
 
 
-  await message.reply({
+  await safeReply(message, {
 
     content: reply,
 
@@ -3220,21 +3321,13 @@ async function wasAlreadyProcessedByBot(sourceMessage, botReplyReferenceIds) {
   return botReplyReferenceIds.has(sourceMessage.id) || (await hasBotReaction(sourceMessage));
 }
 
-async function maybeCelebrateCatchupCheckIn(sourceMessage, guildState, dateKey, totalCheckIns) {
+async function reactToCheckInMessage(sourceMessage) {
   try {
     await sourceMessage.react(pickFromPoolBag("checkin:reactionEmojis", MORNING_REACTION_EMOJIS));
+    return true;
   } catch {
-    // Reactions are optional sugar.
+    return false;
   }
-
-  if (guildState.suppressedCheckInReplyUserIds.includes(sourceMessage.author.id)) {
-    return;
-  }
-
-  await sourceMessage.reply({
-    content: `retro gm filed for ${dateKey}. ${totalCheckIns} backfilled in this sweep.`,
-    allowedMentions: { repliedUser: false, parse: [] },
-  });
 }
 
 async function handleCatchupScan(message, body) {
@@ -3242,7 +3335,7 @@ async function handleCatchupScan(message, body) {
   const channel = await getMorningChannel(message.guild);
 
   if (!channel || !("messages" in channel)) {
-    await message.reply({
+    await safeReply(message, {
       content: "i do not have a valid morning channel to scan. set one first with `" + COMMAND_PREFIX + " here`.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3253,7 +3346,7 @@ async function handleCatchupScan(message, body) {
   const hours = parseCatchupHours(input);
 
   if (hours === null) {
-    await message.reply({
+    await safeReply(message, {
       content: "use `" + COMMAND_PREFIX + " catchup 72` or `" + COMMAND_PREFIX + " catchup 3d`. max window is 168 hours.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3266,7 +3359,7 @@ async function handleCatchupScan(message, body) {
   const recentMessages = await fetchRecentMessagesSince(channel, cutoffTimestamp).catch(() => null);
 
   if (!recentMessages) {
-    await message.reply({
+    await safeReply(message, {
       content: "i could not read recent history from the morning channel. this usually means my channel permissions are being theatrical.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3317,16 +3410,14 @@ async function handleCatchupScan(message, body) {
     const sourceMember = sourceMessage.member ?? (await message.guild.members.fetch(targetUserId).catch(() => null));
 
     if (sourceDateKey === activeDateKey) {
-      const { alreadyCheckedIn, totalCheckIns } = recordCheckIn(
+      recordCheckIn(
         guildState,
         activeDateKey,
         targetUserId,
         buildHistoricalCheckInEntry(sourceMessage, sourceMember, "[automatic catch-up log from attachment-only message]"),
       );
 
-      try {
-        await maybeCelebrateCheckIn(sourceMessage, guildState, alreadyCheckedIn, totalCheckIns);
-      } catch {
+      if (!await reactToCheckInMessage(sourceMessage)) {
         stats.failures += 1;
       }
     } else {
@@ -3337,9 +3428,7 @@ async function handleCatchupScan(message, body) {
         stats.inactivePeriodPoints += 1;
       }
 
-      try {
-        await maybeCelebrateCatchupCheckIn(sourceMessage, guildState, sourceDateKey, stats.logged + 1);
-      } catch {
+      if (!await reactToCheckInMessage(sourceMessage)) {
         stats.failures += 1;
       }
     }
@@ -3353,9 +3442,15 @@ async function handleCatchupScan(message, body) {
   const summary = [
     `catch-up sweep complete for the last ${hours} hour${hours === 1 ? "" : "s"} in <#${channel.id}>.`,
     `${stats.logged} new gm${stats.logged === 1 ? "" : "s"} logged.`,
-    `${stats.alreadyLogged} skipped because they were already logged or already processed by the bot.`,
-    `${stats.outsideUsMorning} skipped because they were outside legal U.S. morning.`,
   ];
+
+  if (stats.alreadyLogged > 0) {
+    summary.push(`${stats.alreadyLogged} skipped because they were already logged or already processed by the bot.`);
+  }
+
+  if (stats.outsideUsMorning > 0) {
+    summary.push(`${stats.outsideUsMorning} skipped because they were outside legal U.S. morning.`);
+  }
 
   if (stats.dates.size > 0) {
     summary.push(`dates backfilled: ${[...stats.dates].join(", ")}.`);
@@ -3368,14 +3463,16 @@ async function handleCatchupScan(message, body) {
   }
 
   if (stats.failures > 0) {
-    summary.push(`${stats.failures} log${stats.failures === 1 ? "" : "s"} were saved but the retro reaction/reply step failed.`);
+    const verb = stats.failures === 1 ? "was" : "were";
+    summary.push(`${stats.failures} log${stats.failures === 1 ? "" : "s"} ${verb} saved, but the retro reaction failed.`);
   }
 
   if (stats.inactivePeriodPoints > 0) {
-    summary.push(`${stats.inactivePeriodPoints} older log${stats.inactivePeriodPoints === 1 ? "" : "s"} were added to lifetime totals but could not safely rewrite an already-closed weekly board.`);
+    const verb = stats.inactivePeriodPoints === 1 ? "was" : "were";
+    summary.push(`${stats.inactivePeriodPoints} older log${stats.inactivePeriodPoints === 1 ? "" : "s"} ${verb} added to lifetime totals but could not safely rewrite an already-closed weekly board.`);
   }
 
-  await message.reply({
+  await safeReply(message, {
     content: summary.join("\n"),
     allowedMentions: { repliedUser: false, parse: [] },
   });
@@ -3389,7 +3486,7 @@ async function handleManualLogAdd(message, body) {
   const tokens = input.match(/\S+/g) ?? [];
 
   if (tokens.length === 0) {
-    await message.reply({
+    await safeReply(message, {
       content: "use `" + COMMAND_PREFIX + " logadd @user #channel 123456789012345678` or paste a full Discord message link.",
 
       allowedMentions: { repliedUser: false, parse: [] },
@@ -3421,7 +3518,7 @@ async function handleManualLogAdd(message, body) {
   const referenceToken = tokens[index] ?? "";
 
   if (!referenceToken) {
-    await message.reply({
+    await safeReply(message, {
       content: "i still need the message id or message link so i know which goblin document to file.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3429,7 +3526,7 @@ async function handleManualLogAdd(message, body) {
   }
 
   if (tokens.length > index + 1) {
-    await message.reply({
+    await safeReply(message, {
       content: "too many tokens. keep it to a user, an optional channel, and one message id or message link.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3441,7 +3538,7 @@ async function handleManualLogAdd(message, body) {
 
   if (linkedMessage) {
     if (linkedMessage.guildId !== message.guild.id) {
-      await message.reply({
+      await safeReply(message, {
         content: "that message link points to a different server. cross-border goblin paperwork denied.",
         allowedMentions: { repliedUser: false, parse: [] },
       });
@@ -3454,7 +3551,7 @@ async function handleManualLogAdd(message, body) {
     messageId = referenceToken;
     targetChannelId ??= message.channelId;
   } else {
-    await message.reply({
+    await safeReply(message, {
       content: "that does not look like a Discord message id or link. the goblin cannot notarize vibes alone.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3464,7 +3561,7 @@ async function handleManualLogAdd(message, body) {
   const sourceMessage = await fetchReferencedMessage(message.guild, targetChannelId, messageId);
 
   if (!sourceMessage) {
-    await message.reply({
+    await safeReply(message, {
       content: "could not fetch that message. either the id is wrong or the goblin does not have channel access.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3472,7 +3569,7 @@ async function handleManualLogAdd(message, body) {
   }
 
   if (sourceMessage.author.bot) {
-    await message.reply({
+    await safeReply(message, {
       content: "i am not manually logging another bot. the paperwork stops here.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3482,7 +3579,7 @@ async function handleManualLogAdd(message, body) {
   const sourceDateKey = getZonedParts(new Date(sourceMessage.createdTimestamp), timeZone).dateKey;
 
   if (sourceDateKey !== todayKey) {
-    await message.reply({
+    await safeReply(message, {
       content: "that message is not from today in this server's timezone, so i am not filing it under today's sunrise crimes.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3492,7 +3589,7 @@ async function handleManualLogAdd(message, body) {
   const inferredUserId = sourceMessage.author.id;
 
   if (targetUserId && targetUserId !== inferredUserId) {
-    await message.reply({
+    await safeReply(message, {
       content: "the user you gave me does not match the author of that message. suspicious paperwork. fix one of them and try again.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3515,7 +3612,7 @@ async function handleManualLogAdd(message, body) {
   const action = alreadyCheckedIn ? "updated" : "added";
   const pointNote = pointsAwarded > 0 ? ` +${pointsAwarded} dawn point awarded.` : "";
 
-  await message.reply({
+  await safeReply(message, {
     content: "manual gm log " + action + " for <@" + targetUserId + "> from " + sourceMessage.url + ". " + totalCheckIns + " logged today." + pointNote,
     allowedMentions: { repliedUser: false, parse: ["users"] },
   });
@@ -3529,7 +3626,7 @@ async function handleManualLogReply(message, body) {
   const tokens = input.match(/\S+/g) ?? [];
 
   if (tokens.length === 0) {
-    await message.reply({
+    await safeReply(message, {
       content: "use `" + COMMAND_PREFIX + " logreply #channel 123456789012345678` or paste a full Discord message link.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3548,7 +3645,7 @@ async function handleManualLogReply(message, body) {
   const referenceToken = tokens[index] ?? "";
 
   if (!referenceToken) {
-    await message.reply({
+    await safeReply(message, {
       content: "i still need the message id or message link so i know where to do the dramatic retroactive paperwork.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3556,7 +3653,7 @@ async function handleManualLogReply(message, body) {
   }
 
   if (tokens.length > index + 1) {
-    await message.reply({
+    await safeReply(message, {
       content: "too many tokens. keep it to an optional channel plus one message id or message link.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3568,7 +3665,7 @@ async function handleManualLogReply(message, body) {
 
   if (linkedMessage) {
     if (linkedMessage.guildId !== message.guild.id) {
-      await message.reply({
+      await safeReply(message, {
         content: "that message link points to a different server. i am not doing international goblin paperwork today.",
         allowedMentions: { repliedUser: false, parse: [] },
       });
@@ -3581,7 +3678,7 @@ async function handleManualLogReply(message, body) {
     messageId = referenceToken;
     targetChannelId ??= message.channelId;
   } else {
-    await message.reply({
+    await safeReply(message, {
       content: "that does not look like a Discord message id or link. the goblin cannot react to a concept.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3591,7 +3688,7 @@ async function handleManualLogReply(message, body) {
   const sourceMessage = await fetchReferencedMessage(message.guild, targetChannelId, messageId);
 
   if (!sourceMessage) {
-    await message.reply({
+    await safeReply(message, {
       content: "could not fetch that message. either the id is wrong or i do not have channel access.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3599,7 +3696,7 @@ async function handleManualLogReply(message, body) {
   }
 
   if (sourceMessage.author.bot) {
-    await message.reply({
+    await safeReply(message, {
       content: "i am not doing a fake retro-gm for another bot. that is spiritually embarrassing.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3609,7 +3706,7 @@ async function handleManualLogReply(message, body) {
   const sourceDateKey = getZonedParts(new Date(sourceMessage.createdTimestamp), timeZone).dateKey;
 
   if (sourceDateKey !== todayKey) {
-    await message.reply({
+    await safeReply(message, {
       content: "that message is not from today in this server's timezone, so i am not filing it into today's dawn ledger.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3633,15 +3730,15 @@ async function handleManualLogReply(message, body) {
       ignoreQuietList: true,
     });
   } catch {
-    await message.reply({
+    await safeReply(message, {
       content: "i logged the gm for <@" + targetUserId + ">, but the reaction/reply part failed. probably channel permissions being dramatic.",
       allowedMentions: { repliedUser: false, parse: ["users"] },
     });
     return;
   }
 
-  await message.reply({
-    content: "retro gm reaction fired for <@" + targetUserId + "> on " + sourceMessage.url + ".",
+  await safeReply(message, {
+    content: "retro gm filed for <@" + targetUserId + "> from " + sourceMessage.url + ". reaction and reply attempted.",
     allowedMentions: { repliedUser: false, parse: ["users"] },
   });
 }
@@ -3674,7 +3771,7 @@ async function handleRejectedCheckIn(message) {
     message,
   );
 
-  await message.reply({
+  await safeReply(message, {
     content: reply,
     allowedMentions: { repliedUser: false, parse: [] },
   });
@@ -3685,7 +3782,7 @@ async function handleOwnerSpeech(message, commandName, body) {
 
   if (!isBotOwner(message.author.id)) {
 
-    await message.reply({
+    await safeReply(message, {
 
       content: "that command is owner-only. very exclusive. velvet rope situation.",
 
@@ -3723,7 +3820,7 @@ async function handleOwnerSpeech(message, commandName, body) {
     const input = body.slice(commandName.length).trim();
 
     if (!input) {
-      await message.reply({
+      await safeReply(message, {
         content: "use it like `" + COMMAND_PREFIX + " streamed 2026-03-19` or `" + COMMAND_PREFIX + " streamed today`.",
         allowedMentions: { repliedUser: false, parse: [] },
       });
@@ -3733,7 +3830,7 @@ async function handleOwnerSpeech(message, commandName, body) {
     const normalizedDateKey = parseStreamDateInput(input);
 
     if (!normalizedDateKey) {
-      await message.reply({
+      await safeReply(message, {
         content: "that date format is cursed. use `YYYY-MM-DD`, `M/D/YYYY`, or `today`.",
         allowedMentions: { repliedUser: false, parse: [] },
       });
@@ -3743,7 +3840,7 @@ async function handleOwnerSpeech(message, commandName, body) {
     const todayKey = getZonedParts(new Date(), DEFAULT_TIMEZONE).dateKey;
 
     if (getDateKeyDifference(normalizedDateKey, todayKey) === null || normalizedDateKey > todayKey) {
-      await message.reply({
+      await safeReply(message, {
         content: "i am not logging a future stream. the goblin is strange, not prophetic.",
         allowedMentions: { repliedUser: false, parse: [] },
       });
@@ -3754,7 +3851,7 @@ async function handleOwnerSpeech(message, commandName, body) {
     tracker.lastStreamDateKey = normalizedDateKey;
     await store.save();
 
-    await message.reply({
+    await safeReply(message, {
       content: `stream tracker updated. the official last-stream date is now ${normalizedDateKey}. drought clock reset.`,
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -3770,8 +3867,8 @@ async function handleOwnerSpeech(message, commandName, body) {
     guildState.points = createPointsState(todayKey);
     await store.save();
 
-    await message.reply({
-      content: "everyone's gm points have been obliterated for this server. fresh season. clean clipboard. no survivors.",
+    await safeReply(message, {
+      content: "gm points and champion history reset for this server. fresh season, clean clipboard, no survivors.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
     return;
@@ -3784,7 +3881,7 @@ async function handleOwnerSpeech(message, commandName, body) {
     const targetChannel = (await getMorningChannel(message.guild)) ?? (message.channel.isTextBased() ? message.channel : null);
 
     if (!targetChannel) {
-      await message.reply({
+      await safeReply(message, {
         content: "i do not have a valid channel for the dramatic departure speech yet. set a morning channel first with `" + COMMAND_PREFIX + " here`.",
         allowedMentions: { repliedUser: false, parse: [] },
       });
@@ -3792,7 +3889,11 @@ async function handleOwnerSpeech(message, commandName, body) {
       return;
     }
 
-    await safeSend(targetChannel, pickFromPoolBag("offline:awayLines", OFFLINE_AWAY_LINES));
+    const sent = await safeSend(targetChannel, pickFromPoolBag("offline:awayLines", OFFLINE_AWAY_LINES));
+
+    if (!sent) {
+      return;
+    }
 
     guildState.offlineNotice.pendingReturn = true;
     guildState.offlineNotice.channelId = targetChannel.id;
@@ -3811,7 +3912,7 @@ async function handleOwnerSpeech(message, commandName, body) {
 
     if (!text) {
 
-      await message.reply({
+      await safeReply(message, {
 
         content: "use it like `" + COMMAND_PREFIX + " say hello goblins`.",
 
@@ -3841,7 +3942,7 @@ async function handleOwnerSpeech(message, commandName, body) {
 
     if (!input) {
 
-      await message.reply({
+      await safeReply(message, {
 
         content: "use `" + COMMAND_PREFIX + " presence watching for Mong Plorps` or `" + COMMAND_PREFIX + " presence reset`.",
 
@@ -3867,7 +3968,7 @@ async function handleOwnerSpeech(message, commandName, body) {
 
       scheduleAutoPresenceRotation();
 
-      await message.reply({
+      await safeReply(message, {
 
         content: "presence reset. the goblin is back on auto-rotation and currently " + describePresence(currentAutoPresence) + ".",
 
@@ -3889,9 +3990,9 @@ async function handleOwnerSpeech(message, commandName, body) {
 
 
 
-    if (!activityType || !name) {
+    if (activityType === null || !name) {
 
-      await message.reply({
+      await safeReply(message, {
 
         content: "use one of: playing, watching, listening, competing. example: `" + COMMAND_PREFIX + " presence watching for Mong Plorps`.",
 
@@ -3917,7 +4018,7 @@ async function handleOwnerSpeech(message, commandName, body) {
 
     await applyBotPresence();
 
-    await message.reply({
+    await safeReply(message, {
 
       content: "presence updated: " + describePresence({ type: rawType.toLowerCase(), name }) + ".",
 
@@ -3939,9 +4040,9 @@ async function handleOwnerSpeech(message, commandName, body) {
 
   if (!targetChannel || !targetChannel.isTextBased()) {
 
-    await message.reply({
+    await safeReply(message, {
 
-      content: "use it like `" + COMMAND_PREFIX + " sayto #general hello goblins` or `" + COMMAND_PREFIX + " sayto <#channel> hello goblins`.",
+      content: "use it like `" + COMMAND_PREFIX + " sayto #general hello goblins`.",
 
       allowedMentions: { repliedUser: false, parse: [] },
 
@@ -3967,7 +4068,7 @@ async function handleOwnerSpeech(message, commandName, body) {
 
   if (!text) {
 
-    await message.reply({
+    await safeReply(message, {
 
       content: "give me a message too, like `" + COMMAND_PREFIX + " sayto #general hello goblins`.",
 
@@ -4034,18 +4135,21 @@ function formatVoicePackList(guildState) {
 
 async function handleVoiceCommand(message, args) {
   const guildState = ensureGuildState(message.guild.id);
-  const requestedPack = args[0]?.toLowerCase();
+  const requestedPackInput = args[0]?.toLowerCase();
 
-  if (!requestedPack) {
-    await message.reply({
+  if (!requestedPackInput) {
+    await safeReply(message, {
       content: `current voice pack: \`${getGuildVoicePackKey(guildState)}\`\navailable voice packs:\n${formatVoicePackList(guildState)}`,
       allowedMentions: { repliedUser: false, parse: [] },
     });
     return;
   }
 
+  const isReset = ["reset", "default"].includes(requestedPackInput);
+  const requestedPack = isReset ? DEFAULT_VOICE_PACK_KEY : requestedPackInput;
+
   if (!hasManageGuild(message.member)) {
-    await message.reply({
+    await safeReply(message, {
       content: "you need `Manage Server` to change the goblin voice season.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -4053,7 +4157,7 @@ async function handleVoiceCommand(message, args) {
   }
 
   if (!morningConfig.voicePacks[requestedPack]) {
-    await message.reply({
+    await safeReply(message, {
       content: `unknown voice pack \`${requestedPack}\`. available packs: ${getAvailableVoicePackKeys().map((key) => `\`${key}\``).join(", ")}.`,
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -4064,8 +4168,10 @@ async function handleVoiceCommand(message, args) {
   conversationState.poolBags.clear();
   await store.save();
 
-  await message.reply({
-    content: `voice pack set to \`${requestedPack}\`. the goblin has changed costumes without consulting HR.`,
+  await safeReply(message, {
+    content: isReset
+      ? `voice pack reset to \`${requestedPack}\`. the default goblin costume has been restored.`
+      : `voice pack set to \`${requestedPack}\`. the goblin has changed costumes without consulting HR.`,
     allowedMentions: { repliedUser: false, parse: [] },
   });
 }
@@ -4078,8 +4184,8 @@ async function handleQuestCommand(message, args) {
 
   if (!subcommand) {
     if (!getMicroQuestsEnabled(guildState)) {
-      await message.reply({
-        content: "today's micro-quest is disabled. the side paperwork is asleep.",
+      await safeReply(message, {
+        content: "micro-quests are disabled. the side paperwork is asleep.",
         allowedMentions: { repliedUser: false, parse: [] },
       });
       return;
@@ -4087,7 +4193,7 @@ async function handleQuestCommand(message, args) {
 
     const { prompt } = ensureDailyMicroQuest(guildState, dailyState);
     await store.save();
-    await message.reply({
+    await safeReply(message, {
       content: formatMicroQuestLine(prompt) ?? "no micro-quest prompt is configured right now.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -4095,7 +4201,7 @@ async function handleQuestCommand(message, args) {
   }
 
   if (!hasManageGuild(message.member)) {
-    await message.reply({
+    await safeReply(message, {
       content: "you need `Manage Server` to adjust the daily micro-quest.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -4106,7 +4212,7 @@ async function handleQuestCommand(message, args) {
     guildState.microQuestsEnabled = true;
     const { prompt } = ensureDailyMicroQuest(guildState, dailyState);
     await store.save();
-    await message.reply({
+    await safeReply(message, {
       content: `micro-quests enabled. ${formatMicroQuestLine(prompt) ?? "no prompt is configured right now."}`,
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -4117,7 +4223,7 @@ async function handleQuestCommand(message, args) {
     guildState.microQuestsEnabled = false;
     dailyState.microQuestPrompt = null;
     await store.save();
-    await message.reply({
+    await safeReply(message, {
       content: "micro-quests disabled. the optional side quest has been gently returned to its drawer.",
       allowedMentions: { repliedUser: false, parse: [] },
     });
@@ -4128,7 +4234,7 @@ async function handleQuestCommand(message, args) {
     guildState.microQuestsEnabled = null;
     const { prompt } = ensureDailyMicroQuest(guildState, dailyState, { reroll: true });
     await store.save();
-    await message.reply({
+    await safeReply(message, {
       content: getMicroQuestsEnabled(guildState)
         ? `micro-quest setting reset to config default. ${formatMicroQuestLine(prompt) ?? "no prompt is configured right now."}`
         : "micro-quest setting reset to config default, which is currently disabled.",
@@ -4139,7 +4245,7 @@ async function handleQuestCommand(message, args) {
 
   if (subcommand === "reroll") {
     if (!getMicroQuestsEnabled(guildState)) {
-      await message.reply({
+      await safeReply(message, {
         content: "micro-quests are disabled right now. use `" + COMMAND_PREFIX + " quest on` before rerolling.",
         allowedMentions: { repliedUser: false, parse: [] },
       });
@@ -4148,14 +4254,14 @@ async function handleQuestCommand(message, args) {
 
     const { prompt } = ensureDailyMicroQuest(guildState, dailyState, { reroll: true });
     await store.save();
-    await message.reply({
+    await safeReply(message, {
       content: `micro-quest rerolled. ${formatMicroQuestLine(prompt) ?? "no prompt is configured right now."}`,
       allowedMentions: { repliedUser: false, parse: [] },
     });
     return;
   }
 
-  await message.reply({
+  await safeReply(message, {
     content: "use `" + COMMAND_PREFIX + " quest`, `" + COMMAND_PREFIX + " quest reroll`, `" + COMMAND_PREFIX + " quest on`, `" + COMMAND_PREFIX + " quest off`, or `" + COMMAND_PREFIX + " quest reset`.",
     allowedMentions: { repliedUser: false, parse: [] },
   });
@@ -4179,53 +4285,49 @@ async function handleCommand(message) {
 
     case "help": {
 
-      await message.reply({
+      const lines = [
+        "Morning Goblin commands",
+        "everyone:",
+        `- \`${COMMAND_PREFIX} status\` — today's gm roster`,
+        `- \`${COMMAND_PREFIX} points\` — scoreboards and recent champions`,
+        `- \`${COMMAND_PREFIX} stats\` — your stats (use in #${RANK_CHECK_CHANNEL_NAME})`,
+        `- \`${COMMAND_PREFIX} stream\` — time since the last recorded stream`,
+        `- \`${COMMAND_PREFIX} fact\` — a random verified morning fact`,
+        `- \`${COMMAND_PREFIX} phrases\` — accepted morning openings`,
+        `- \`${COMMAND_PREFIX} voice\` — current voice pack and available choices`,
+        `- \`${COMMAND_PREFIX} quest\` — today's optional micro-quest`,
+        "- mention me, reply to me, or say `morning goblin` to chat",
+      ];
 
-        content: [
+      if (hasManageGuild(message.member)) {
+        lines.push(
+          "Manage Server:",
+          `- \`${COMMAND_PREFIX} here\` / \`${COMMAND_PREFIX} off\` — set or stop scheduled morning posts`,
+          `- \`${COMMAND_PREFIX} timezone America/Phoenix\` — set the server timezone`,
+          `- \`${COMMAND_PREFIX} test\` — try the scheduled reminder now`,
+          `- \`${COMMAND_PREFIX} quiet @user\` / \`${COMMAND_PREFIX} unquiet @user\` / \`${COMMAND_PREFIX} quietlist\` — manage check-in text replies`,
+          `- \`${COMMAND_PREFIX} voice fresh|chaos|classic|reset\` — change the voice pack`,
+          `- \`${COMMAND_PREFIX} quest on|off|reroll|reset\` — manage micro-quests`,
+          `- \`${COMMAND_PREFIX} reload\` — reload config/morning-config.json`,
+        );
+      }
 
-          "commands:",
+      if (isBotOwner(message.author.id)) {
+        lines.push(
+          "owner:",
+          `- \`${COMMAND_PREFIX} say ...\` / \`${COMMAND_PREFIX} sayto #channel ...\` — speak as the bot`,
+          `- \`${COMMAND_PREFIX} presence watching for Mong Plorps\` / \`${COMMAND_PREFIX} presence reset\` — set or reset the bot status`,
+          `- \`${COMMAND_PREFIX} offline\` — announce an outage and later return`,
+          `- \`${COMMAND_PREFIX} streamed today\` — update the last-stream date`,
+          `- \`${COMMAND_PREFIX} resetpoints\` — wipe scoreboards and champions`,
+          `- \`${COMMAND_PREFIX} logadd ...\` / \`${COMMAND_PREFIX} logreply ...\` — repair a missed gm`,
+          `- \`${COMMAND_PREFIX} catchup 72\` — scan recent morning-channel history`,
+        );
+      }
 
-          `- \`${COMMAND_PREFIX} here\` to make this channel the gm zone`,
+      await safeReply(message, {
 
-          `- \`${COMMAND_PREFIX} off\` to disable the bot in this server`,
-
-          `- \`${COMMAND_PREFIX} status\` to see today's gm roster`,
-
-          `- \`${COMMAND_PREFIX} points\` to see the weekly/monthly/yearly scoreboard`,
-
-          `- \`${COMMAND_PREFIX} stats\` in #${RANK_CHECK_CHANNEL_NAME} to see your all-time gm stats`,
-
-          `- \`${COMMAND_PREFIX} phrases\` to see accepted morning openings`,
-          `- \`${COMMAND_PREFIX} voice\` to see or change the current voice pack`,
-          `- \`${COMMAND_PREFIX} quest\` to see or manage today's optional micro-quest`,
-          `- \`${COMMAND_PREFIX} quiet @user\` to suppress check-in text replies for a user`,
-          `- \`${COMMAND_PREFIX} unquiet @user\` to re-enable check-in text replies for a user`,
-          `- \`${COMMAND_PREFIX} quietlist\` to show the no-reply check-in list`,
-          `- \`${COMMAND_PREFIX} reload\` to reload config/morning-config.json`,
-
-          `- \`${COMMAND_PREFIX} say your message here\` to force the bot to speak here (owner only)`,
-
-          `- \`${COMMAND_PREFIX} sayto #channel your message here\` to make the bot speak in another channel (owner only)`,
-
-          `- \`${COMMAND_PREFIX} offline\` to announce a temporary goblin outage and a later return (owner only)`,
-          `- \`${COMMAND_PREFIX} resetpoints\` to wipe this server's gm scoreboards and champions (owner only)`,
-
-          `- \`${COMMAND_PREFIX} logadd @user #channel 123456789012345678\` to manually file a gm from an existing message (owner only)`,
-
-          `- \`${COMMAND_PREFIX} logreply #channel 123456789012345678\` to retro-react and reply on an existing gm message (owner only)`,
-
-          `- \`${COMMAND_PREFIX} catchup 72\` to scan the morning channel for missed gms from the last few days (owner only)`,
-
-          "- `" + COMMAND_PREFIX + " presence watching for Mong Plorps` to change the bot status (owner only)",
-
-          "- mention the bot, reply to it, or use a wake word like `morning goblin` to make it chatter back",
-          "- `" + COMMAND_PREFIX + " fact` for a random morning fact",
-
-          `- \`${COMMAND_PREFIX} test\` to fire the reminder right now`,
-
-          `- \`${COMMAND_PREFIX} timezone America/New_York\` to set a server timezone`,
-
-        ].join("\n"),
+        content: lines.join("\n"),
 
         allowedMentions: { repliedUser: false, parse: [] },
 
@@ -4269,8 +4371,8 @@ async function handleCommand(message) {
     }
 
     case "phrases": {
-      await message.reply({
-        content: `accepted morning starts: ${morningConfig.acceptedStarts.join(", ")}`,
+      await safeReply(message, {
+        content: `accepted morning starts: ${morningConfig.acceptedStarts.join(", ")}. special filing: two-word M… P… greetings such as \`Mong Plorps\` also count.`,
         allowedMentions: { repliedUser: false, parse: [] },
       });
       return;
@@ -4286,23 +4388,23 @@ async function handleCommand(message) {
     }
     case "quietlist": {
       if (!hasManageGuild(message.member)) {
-        await message.reply({
+        await safeReply(message, {
           content: "you need `Manage Server` for that one, chief.",
           allowedMentions: { repliedUser: false },
         });
         return;
       }
 
-      await message.reply({
+      await safeReply(message, {
         content: formatSuppressedReplyList(message.guild),
-        allowedMentions: { repliedUser: false, parse: ["users"] },
+        allowedMentions: { repliedUser: false, parse: [] },
       });
       return;
     }
     case "quiet":
     case "unquiet": {
       if (!hasManageGuild(message.member)) {
-        await message.reply({
+        await safeReply(message, {
           content: "you need `Manage Server` for that one, chief.",
           allowedMentions: { repliedUser: false },
         });
@@ -4312,7 +4414,7 @@ async function handleCommand(message) {
       const targetUserId = parseTargetUserId(message);
 
       if (!targetUserId) {
-        await message.reply({
+        await safeReply(message, {
           content: "tag a user or paste their user id so i know whose check-in replies to hush.",
           allowedMentions: { repliedUser: false },
         });
@@ -4328,7 +4430,7 @@ async function handleCommand(message) {
           await store.save();
         }
 
-        await message.reply({
+        await safeReply(message, {
           content: alreadySuppressed
             ? `<@${targetUserId}> is already on the no-reply check-in list. the goblin was already holding its tongue.`
             : `<@${targetUserId}> will still get logged and reacted to, but the goblin will stop sending text replies to their check-ins.`,
@@ -4340,14 +4442,14 @@ async function handleCommand(message) {
       if (alreadySuppressed) {
         guildState.suppressedCheckInReplyUserIds = suppressed.filter((userId) => userId !== targetUserId);
         await store.save();
-        await message.reply({
+        await safeReply(message, {
           content: `<@${targetUserId}> has been removed from the no-reply check-in list. the goblin may resume yapping at them.`,
           allowedMentions: { repliedUser: false, parse: ["users"] },
         });
         return;
       }
 
-      await message.reply({
+      await safeReply(message, {
         content: `<@${targetUserId}> was not on the no-reply check-in list in the first place.`,
         allowedMentions: { repliedUser: false, parse: ["users"] },
       });
@@ -4357,7 +4459,7 @@ async function handleCommand(message) {
     case "morningfact": {
       const voiceConfig = getGuildVoiceConfig(guildState);
       const fact = pickFromPoolBag(getVoicePoolBagKey(guildState, "facts:morningFacts"), voiceConfig.morningFacts);
-      await message.reply({
+      await safeReply(message, {
         content: `morning fact: ${fact}`,
         allowedMentions: { repliedUser: false, parse: [] },
       });
@@ -4367,7 +4469,7 @@ async function handleCommand(message) {
 
       if (!hasManageGuild(message.member)) {
 
-        await message.reply({
+        await safeReply(message, {
 
           content: "you need `Manage Server` for that one, chief.",
 
@@ -4383,7 +4485,7 @@ async function handleCommand(message) {
 
       await reloadMorningConfig();
 
-      await message.reply({
+      await safeReply(message, {
 
         content: "config reloaded. the goblin has consumed the new script notes.",
 
@@ -4423,7 +4525,7 @@ async function handleCommand(message) {
 
       if (!hasManageGuild(message.member)) {
 
-        await message.reply({
+        await safeReply(message, {
 
           content: "you need `Manage Server` for that one, chief.",
 
@@ -4439,9 +4541,9 @@ async function handleCommand(message) {
 
       if (!message.channel.isTextBased()) {
 
-        await message.reply({
+        await safeReply(message, {
 
-          content: "pick a normal text-ish channel for the morning nonsense.",
+          content: "pick a text-based channel for the morning nonsense.",
 
           allowedMentions: { repliedUser: false },
 
@@ -4457,9 +4559,9 @@ async function handleCommand(message) {
 
       await store.save();
 
-      await message.reply({
+      await safeReply(message, {
 
-        content: `beautiful. this channel is now the official gm pit. timezone is currently \`${getGuildTimezone(guildState)}\`.`,
+        content: `scheduled morning posts will now use this channel. timezone: \`${getGuildTimezone(guildState)}\`. the tiny desk has been relocated.`,
 
         allowedMentions: { repliedUser: false, parse: [] },
 
@@ -4473,7 +4575,7 @@ async function handleCommand(message) {
 
       if (!hasManageGuild(message.member)) {
 
-        await message.reply({
+        await safeReply(message, {
 
           content: "you need `Manage Server` for that one, chief.",
 
@@ -4493,9 +4595,9 @@ async function handleCommand(message) {
 
       await store.save();
 
-      await message.reply({
+      await safeReply(message, {
 
-        content: "morning surveillance disabled. everyone may now be sleepy in peace.",
+        content: "scheduled reminders, recaps, and callouts are disabled. commands and greetings still work; the clipboard is merely off duty.",
 
         allowedMentions: { repliedUser: false },
 
@@ -4509,7 +4611,7 @@ async function handleCommand(message) {
 
       if (!hasManageGuild(message.member)) {
 
-        await message.reply({
+        await safeReply(message, {
 
           content: "you need `Manage Server` for that one, chief.",
 
@@ -4529,9 +4631,9 @@ async function handleCommand(message) {
 
       if (!candidate || !isValidTimeZoneName(candidate)) {
 
-        await message.reply({
+        await safeReply(message, {
 
-          content: "that timezone looks cursed. try something like `America/Phoenix`.",
+          content: "i could not recognize that timezone. use an IANA name like `America/Phoenix`.",
 
           allowedMentions: { repliedUser: false },
 
@@ -4547,7 +4649,7 @@ async function handleCommand(message) {
 
       await store.save();
 
-      await message.reply({
+      await safeReply(message, {
 
         content: `timezone set to \`${candidate}\`. the rooster will now scream on local time.`,
 
@@ -4563,7 +4665,7 @@ async function handleCommand(message) {
 
       if (!hasManageGuild(message.member)) {
 
-        await message.reply({
+        await safeReply(message, {
 
           content: "you need `Manage Server` for that one, chief.",
 
@@ -4579,7 +4681,7 @@ async function handleCommand(message) {
 
       if (!guildState.morningChannelId) {
 
-        await message.reply({
+        await safeReply(message, {
 
           content: `set a channel first with \`${COMMAND_PREFIX} here\`.`,
 
@@ -4595,13 +4697,13 @@ async function handleCommand(message) {
 
       const sent = await postReminder(message.guild);
 
-      await message.reply({
+      await safeReply(message, {
 
         content: sent
 
           ? "test reminder deployed. the goblin horn has sounded."
 
-          : "i could not post the test reminder. make sure the configured channel still exists and i can talk there.",
+          : "i did not post the test reminder. the channel may already end with a goblin message, or it may be missing or inaccessible.",
 
         allowedMentions: { repliedUser: false },
 
@@ -4613,7 +4715,7 @@ async function handleCommand(message) {
 
     default: {
 
-      await message.reply({
+      await safeReply(message, {
 
         content: `i do not know \`${command}\`, but i do know \`${COMMAND_PREFIX} help\`.`,
 
@@ -4818,16 +4920,12 @@ client.on("messageCreate", async (message) => {
 
   }
 
-  if (message.author.bot) {
-    if (client.user && message.author.id === client.user.id) {
-      markObservedBotMessage(message);
-    }
+  messageGuard.observeMessage(message);
 
+  if (message.author.bot) {
     return;
 
   }
-
-  resetConsecutiveBotMessages(message.channelId);
 
 
 
@@ -4840,10 +4938,19 @@ client.on("messageCreate", async (message) => {
   const dailyState = ensureDailyState(guildState, zonedNow.dateKey);
 
   const nowMinutes = zonedNow.hour * 60 + zonedNow.minute;
+  const shouldDeferPendingReturn = isSilenceRequest(
+    message.content,
+    getGuildVoiceConfig(guildState).conversation.wakeWords,
+    morningConfig.acceptedStarts,
+  );
 
 
 
   try {
+
+    if (guildState.offlineNotice?.pendingReturn) {
+      await getOfflineNoticeChannel(message.guild, guildState);
+    }
 
     if (message.content.startsWith(COMMAND_PREFIX)) {
 
@@ -4853,9 +4960,37 @@ client.on("messageCreate", async (message) => {
 
     }
 
+    const explicitlyInvokesBot =
+      message.mentions.users.has(client.user.id) ||
+      isWakeWordMessage(message.content, guildState);
+
+    if (
+      shouldDeferPendingReturn &&
+      (explicitlyInvokesBot || await isReplyToBot(message))
+    ) {
+      return;
+    }
+
+    const looksLikeGoodMorning = isGoodMorningMessage(message.content);
+    const conversationRemainder = normalizeConversationText(
+      message.content,
+      getGuildVoiceConfig(guildState).conversation.wakeWords,
+    );
+    const hasConversationRemainder =
+      /[\p{L}\p{N}]/u.test(conversationRemainder) &&
+      !isGoodMorningMessage(conversationRemainder);
+
+    if (
+      explicitlyInvokesBot &&
+      (!looksLikeGoodMorning || hasConversationRemainder) &&
+      await maybeHandleConversation(message)
+    ) {
+      return;
+    }
 
 
-    if (isGoodMorningMessage(message.content)) {
+
+    if (looksLikeGoodMorning) {
       if (!isMorningSomewhereInUnitedStates(new Date(message.createdTimestamp))) {
         await handleRejectedCheckIn(message);
         return;
@@ -4865,14 +5000,25 @@ client.on("messageCreate", async (message) => {
       return;
     }
 
+    if (!explicitlyInvokesBot) {
+      if (await maybeHandleConversation(message)) {
+        return;
+      }
+    }
 
     await maybeNudge(message, guildState, dailyState, nowMinutes);
-
-    await maybeHandleConversation(message);
 
   } catch (error) {
 
     console.error("Message handler failed:", error);
+
+  } finally {
+
+    if (!shouldDeferPendingReturn) {
+      await announcePendingReturnMessage(message.guild).catch((error) => {
+        console.error("Pending return retry failed:", error);
+      });
+    }
 
   }
 

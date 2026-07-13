@@ -19,7 +19,7 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 - Occasionally adds a silly weekly office-title watch to noon recaps when someone is leading the weekly board
 - Randomly calls out one non-checker-inner each morning with a playful goblin accusation
 - Talks back when people mention it, reply to it, or use configured wake words like `morning goblin`
-- Suppresses further automatic bot posts after too many bot-only messages in a row until a human speaks again
+- Never posts twice in a row in one channel; every send waits for another sender after the bot's latest post
 - Tracks best and worst completed good-morning days per server
 - Celebrates brand-new best-day records by tagging the people who helped set them
 - Awards one point for each person's first successful GM of the day and keeps weekly/monthly/yearly scoreboards
@@ -30,7 +30,7 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 - Lets the bot owner make it speak in any channel without exposing the command publicly
 - Auto-rotates through a big pool of funny Discord statuses every 6-12 hours when no manual owner override is set
 - Lets the bot owner change the bot's Discord presence from Discord itself
-- Lets the bot owner announce a temporary goblin outage and automatically post a comeback message on the next startup
+- Lets the bot owner announce a temporary goblin outage and queue one comeback once the channel is eligible for another bot message
 - Refuses to start a second copy of the bot if one is already running
 
 ## Requirements
@@ -72,7 +72,7 @@ Windows PowerShell note: if `npm` is blocked by execution-policy weirdness, use 
 
 ## Environment Variables
 
-From [.env.example](C:/Dev/Codex/Discord Morning Bot/.env.example):
+From [.env.example](.env.example):
 
 - `DISCORD_TOKEN`: required bot token
 - `BOT_OWNER_ID`: optional Discord user ID for owner-only commands
@@ -91,7 +91,6 @@ From [.env.example](C:/Dev/Codex/Discord Morning Bot/.env.example):
 - `RANDOM_OFFENDER_HOUR`: defaults to `8`
 - `RANDOM_OFFENDER_MINUTE`: defaults to `0`
 - `RANDOM_OFFENDER_TIMEZONE`: defaults to `America/Phoenix`
-- `MAX_CONSECUTIVE_BOT_MESSAGES`: defaults to `3`
 - `MORNING_WINDOW_END_HOUR`: defaults to `12`
 
 ## Stream tracker
@@ -125,32 +124,34 @@ Use `!gm points` to see the live board and the most recent champions.
 
 ### User commands
 
+- `!gm status`
+  Shows today's check-in count and roster, plus saved best/worst day records when available.
+- `!gm points`
+  Shows the current weekly/monthly/yearly GM scoreboards, lifetime leaders, and recent champions.
 - `!gm stats`
   Shows your all-time GM total, lifetime rank, and current week/month/year points. This command only works in the `rank-check🏆` channel by default.
+- `!gm stream`
+  Shows how long it has been since the last stream date on file.
+- `!gm fact`
+  Posts a random verified morning fact without immediately repeating one.
+- `!gm phrases`
+  Shows the configured accepted morning openings and the special `M… P…` filing rule.
 - `!gm voice`
   Shows the current voice pack and available packs.
 - `!gm quest`
   Shows today's optional micro-quest prompt.
+- `!gm help`
+  Shows public commands plus any admin or owner commands available to the caller.
 
 ### Server/admin commands
 
 These require `Manage Server`:
 
 - `!gm here`
-  Sets the current channel as the morning check-in channel.
+  Sets this channel as the destination for enabled scheduled reminders, recaps, and callouts.
 - `!gm off`
-  Disables the bot in the current server.
-- `!gm status`
-  Shows today's check-in count and roster, plus saved best/worst day records when available.
-- `!gm points`
-  Shows the current weekly/monthly/yearly GM scoreboards, lifetime leaders, and the most recent champions.
-- `!gm stream`
-  Shows how many days it has been since the last stream date on file.
-- `!gm fact`
-  Posts a random morning fact from the configured fact bank without repeating back to back.
-- `!gm phrases`
-  Shows the configured accepted morning openings.
-- `!gm voice fresh|classic|chaos`
+  Stops scheduled reminders, recaps, and callouts. Commands and greeting logging still work.
+- `!gm voice fresh|classic|chaos|reset`
   Changes the server's active voice pack.
 - `!gm quest reroll|on|off|reset`
   Rerolls or toggles the optional daily micro-quest.
@@ -166,8 +167,6 @@ These require `Manage Server`:
   Posts the morning reminder immediately.
 - `!gm timezone America/New_York`
   Sets the server timezone used for reminders and check-ins.
-- `!gm help`
-  Shows the command list.
 
 ### Owner-only commands
 
@@ -182,15 +181,17 @@ These ignore `Manage Server` and instead check `BOT_OWNER_ID`:
 - `!gm presence reset`
   Clears the manual override and returns the goblin to automatic status rotation.
 - `!gm offline`
-  Announces that the goblin is going offline for a bit and queues a one-time comeback announcement for the next startup.
+  Announces that the goblin is going offline and queues one comeback after restart; the comeback waits for the channel's next message from another sender when necessary.
+- `!gm streamed today`
+  Updates the saved last-stream date (`YYYY-MM-DD` is also accepted).
 - `!gm resetpoints`
   Resets this server's weekly/monthly/yearly/lifetime GM scoreboards and champion history back to a fresh season.
 - `!gm logadd @user #channel 123456789012345678`
   Manually files a same-day good-morning check-in from an existing message or Discord message link.
 - `!gm logreply #channel 123456789012345678`
-  Logs a same-day check-in from an existing message and then force-reacts and force-replies on that message like the goblin just processed it live.
+  Logs a same-day check-in from an existing message and attempts the normal reaction/reply flow.
 - `!gm catchup 72`
-  Scans the configured morning channel for the last `X` hours, backfills missed valid GMs, and retro-processes those messages with the normal reaction/reply behavior.
+  Scans recent morning-channel history, backfills missed valid GMs, reacts to each new filing, and posts one aggregate summary.
 
 Supported presence types:
 
@@ -217,7 +218,6 @@ Examples:
 !gm streamed today
 !gm stream
 !gm points
-!gm points
 !gm voice chaos
 !gm voice fresh
 !gm quest
@@ -230,11 +230,12 @@ Catch-up note:
 - it only scans the configured morning channel
 - it skips messages already logged today, already saved by an earlier catch-up run, or already processed by the bot in visible Discord history
 - it still enforces the "morning somewhere in the U.S." rule using the message timestamp
+- it uses reactions rather than per-message text replies so the final summary remains the single bot response
 - older backfills count toward lifetime totals and any still-active week/month/year boards; already-closed weekly boards are not rewritten
 
 ## What Counts As Good Morning
 
-The accepted greetings live in [config/morning-config.json](C:/Dev/Codex/Discord Morning Bot/config/morning-config.json).
+The accepted greetings live in `config/morning-config.json`.
 
 ### `acceptedStarts`
 
@@ -271,7 +272,7 @@ If someone sends a valid-looking morning greeting after that window closes, the 
 
 ## Configuring The Goblin Personality
 
-Most of the bot's personality lives in [config/morning-config.json](C:/Dev/Codex/Discord Morning Bot/config/morning-config.json).
+Most of the bot's personality lives in `config/morning-config.json`.
 
 Main message pools:
 
@@ -307,7 +308,7 @@ After editing the config, either restart the bot or run:
 
 ## Conversation Mode
 
-Conversation settings also live under `conversation` in [config/morning-config.json](C:/Dev/Codex/Discord Morning Bot/config/morning-config.json).
+Conversation settings also live under `conversation` in `config/morning-config.json`.
 
 The goblin replies when:
 
@@ -318,10 +319,12 @@ The goblin replies when:
 Behavior notes:
 
 - Direct mentions usually reply.
-- If someone directly tags the bot with an evening greeting like `good evening` or `good night`, it gives a thumbs-down reaction instead of a text reply.
+- If someone directly tags the bot with an evening greeting like `good evening` or `good night`, it gives a moon reaction instead of a text reply.
 - Wake-word chatter and reply-to-bot chatter still use cooldowns.
 - Plain unrelated messages no longer trigger replies just because they accidentally matched a keyword.
-- Mention replies and generic replies use shuffled pools so they repeat less often.
+- Wake words are removed before topic matching, and topics match whole words or phrases (`tea` no longer matches `team`).
+- Direct requests such as `goblin, please be quiet` are honored without sending another message.
+- Mention, generic, and keyword replies use shuffled pools so they repeat less often.
 
 Useful config keys:
 
@@ -337,7 +340,7 @@ Each keyword rule contains:
 - `triggers`
 - `replies`
 
-So if a message contains something like `coffee`, `sleepy`, `good bot`, `who are you`, or `what do you do`, the goblin can use a more specific response pool.
+So if a bot-directed message contains a phrase like `coffee`, `sleepy`, `good bot`, `who are you`, or `what do you do`, the goblin can use a more specific response pool.
 
 ## Storage
 

@@ -1,6 +1,6 @@
 # Project Memory
 
-Last updated: 2026-06-23
+Last updated: 2026-07-13
 
 ## Purpose
 
@@ -22,6 +22,7 @@ The personality direction is intentional: funny, casual, sarcastic, and a little
 
 - `src/index.js`: main bot logic, commands, scheduling, conversation behavior, record tracking
 - `src/config.js`: config loading, cleaning, fallback defaults
+- `src/message-guard.js`: serialized last-author checks for every outbound Discord message
 - `src/storage.js`: coalescing JSON persistence layer for `data/state.json`
 - `config/morning-config.json`: phrase lists, reply pools, conversation content, facts
 - `data/state.json`: runtime state and per-guild persisted settings
@@ -92,10 +93,12 @@ Between reminder time and end-of-window:
 Current intended behavior:
 
 - direct mentions usually reply
-- direct mentions with evening greetings like `good evening` / `good night` get a thumbs-down reaction instead of a text reply
+- direct mentions with evening greetings like `good evening` / `good night` get a moon reaction instead of a text reply
 - replies to one of the bot's messages may reply
 - configured wake words like `morning goblin` / `goblin` may reply
 - plain unrelated conversation should not trigger replies just because it contains a keyword
+- wake words are removed before keyword matching, and keywords match complete words or phrases instead of arbitrary substrings
+- direct requests for silence are consumed without a reply
 
 Keyword rules should only matter after one of the real trigger paths above.
 
@@ -107,10 +110,10 @@ Conversation pools:
 
 Anti-repeat behavior:
 
-- mention/generic replies use pool-bag rotation instead of pure random choice
+- mention/generic/keyword replies use pool-bag rotation instead of pure random choice
 - direct mentions bypass cooldowns so they feel responsive
 - wake-word / reply-based chatter still respects cooldowns
-- automatic channel posts stop after too many consecutive bot-only messages until a human posts again
+- every outbound message checks the channel's newest message; if the bot wrote it, nothing else is sent until another sender posts
 
 ## Records, Points, and Facts
 
@@ -179,7 +182,7 @@ Command:
 Behavior:
 
 - should rotate through facts without immediate back-to-back repeats
-- current config contains 36 facts
+- current config contains 20 vetted facts; the checked-in voice packs currently inherit that shared bank
 
 ## Freshness Features
 
@@ -229,9 +232,15 @@ Weekly point-period finalization saves `officeTitle` on the champion history ent
 
 ### User commands
 
+- `!gm status`
+- `!gm points`
 - `!gm stats`
+- `!gm stream`
+- `!gm fact`
+- `!gm phrases`
 - `!gm voice`
 - `!gm quest`
+- `!gm help`
 
 ### Admin/server commands
 
@@ -239,19 +248,14 @@ Require `Manage Server`:
 
 - `!gm here`
 - `!gm off`
-- `!gm status`
-- `!gm points`
-- `!gm fact`
 - `!gm voice <pack>`
 - `!gm quest reroll|on|off|reset`
-- `!gm phrases`
 - `!gm reload`
 - `!gm quiet @user`
 - `!gm unquiet @user`
 - `!gm quietlist`
 - `!gm test`
 - `!gm timezone America/New_York`
-- `!gm help`
 
 ### Owner-only commands
 
@@ -262,6 +266,7 @@ Require `BOT_OWNER_ID` match:
 - `!gm presence watching ...`
 - `!gm presence reset`
 - `!gm offline`
+- `!gm streamed <date>`
 - `!gm resetpoints`
 - `!gm logadd @user #channel <messageId>`
 - `!gm logreply #channel <messageId>`
@@ -272,10 +277,11 @@ Presence behavior:
 - manual owner-set presence persists in state
 - when reset, the bot falls back to a rotating built-in pool of 60+ short funny statuses
 - the auto-rotation timer picks a new status every 6-12 hours
-- auto statuses are worded to read naturally in the Discord sidebar even when Discord hides the activity type label
+- activity names are normalized before being sent so Discord does not render doubled verbs such as `Watching watching ...`
+- an offline return flag is only armed when the departure notice sends; a blocked comeback remains pending until the target channel has a newer message from another sender
 - `logadd` lets the owner manually file a same-day check-in from an existing message without triggering public check-in chatter
-- `logreply` uses an existing same-day message to both file the check-in and retroactively do the goblin reaction/reply on that message
-- `catchup` scans the configured morning channel for up to 168 hours of recent history, finds missed valid GMs, skips messages already logged/processed, and retro-processes those messages with the normal reply/quiet-list rules; it accepts hour input like `72` and day shorthand like `3d`
+- `logreply` uses an existing same-day message to file the check-in and attempt the normal goblin reaction/reply on that message
+- `catchup` scans the configured morning channel for up to 168 hours of recent history, finds missed valid GMs, skips messages already logged/processed, reacts to each new filing, and reserves the single text response for its aggregate summary; it accepts hour input like `72` and day shorthand like `3d`
 
 ## Per-Guild State Schema
 
@@ -426,7 +432,7 @@ These are user-driven product decisions that should be preserved.
 
 - The bot ignores DMs entirely because the main message handler exits unless `message.inGuild()` is true.
 - DMing other users as the bot is not implemented.
-- Automated coverage currently focuses on configuration and persistence; Discord integration paths still need manual verification.
+- Automated coverage currently focuses on configuration, outbound-message guarding, and persistence; Discord integration paths still need manual verification.
 - `src/index.js` is large and has accumulated many feature edits; future refactors should probably split it into modules.
 
 ## Good Future Refactors

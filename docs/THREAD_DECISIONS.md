@@ -1,6 +1,6 @@
 # Thread Decisions
 
-Last updated: 2026-04-02
+Last updated: 2026-07-13
 
 This file captures key product decisions from the development thread that are easy to lose over time.
 
@@ -27,13 +27,13 @@ This file captures key product decisions from the development thread that are ea
 - The regular scheduled reminder should be easy to disable without deleting the logic entirely.
 - The old 10:30 census should be replaced by a short noon Pacific recap instead of a wordier mid-morning post.
 - The bot should randomly call out one person who has not said good morning yet each morning.
-- The bot should stop automatic posting after a few bot-only messages in a row until a human talks again.
 - First successful GMs should award points, with weekly/monthly/yearly champions declared automatically instead of manual scorekeeping.
 - The bot should support switchable voice packs so old and new material can rotate without editing JSON live.
 - Retired message pools should stay recoverable and can serve as the `classic` voice pack.
 - Optional daily micro-quests should add small novelty without requiring users to answer them.
 - First visible check-in replies may occasionally append rare shiny lines and award arbitrary bonus points.
 - The bot should celebrate 3-day, 7-day, and comeback streaks without adding extra bot messages.
+- The bot must never post twice in a row in one channel; every kind of send waits for another sender after the bot's latest post.
 - Weekly champions should receive a silly saved office title.
 
 ## Greeting rules

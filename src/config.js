@@ -14,7 +14,7 @@ const FALLBACK_CONFIG = {
     "top of the morning",
   ],
   acceptedPatterns: [
-    "^m[a-z'-]*\\s+p[a-z'-]*$",
+    "^m[a-z'-]*\\s+p[a-z'-]*[!?.,;:]*$",
   ],
   reminderLines: [
     "good morning, assorted goblins. this is your daily reminder to place one (1) `good morning` into the chat so i can mark you down as legally alive.",
@@ -72,7 +72,7 @@ const FALLBACK_CONFIG = {
     keywordRules: [
       {
         triggers: ["help"],
-        replies: ["i enforce the sacred gm ritual and provide occasional goblin commentary when summoned."],
+        replies: ["try `{prefix} help` for commands, settings, and the complete dawn paperwork menu."],
       },
     ],
   },
@@ -112,7 +112,7 @@ const FALLBACK_CONFIG = {
         keywordRules: [
           {
             triggers: ["help"],
-            replies: ["i help by making morning more structured and less normal."],
+            replies: ["try `{prefix} help` for commands, settings, and the louder dawn paperwork menu."],
           },
         ],
       },

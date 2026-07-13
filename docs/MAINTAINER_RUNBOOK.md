@@ -1,6 +1,6 @@
 # Maintainer Runbook
 
-Last updated: 2026-04-02
+Last updated: 2026-07-13
 
 ## First Places To Look
 
@@ -162,6 +162,7 @@ Controlled by `BOT_OWNER_ID`.
 - `sayto`
 - `presence`
 - `offline`
+- `streamed`
 - `resetpoints`
 - `logadd`
 - `logreply`
@@ -189,15 +190,15 @@ Stored per guild in `data/state.json` under `offlineNotice`.
 Behavior:
 
 - `!gm offline` posts a temporary outage notice in the configured morning channel when possible
-- on the next startup, the bot posts one comeback message and clears the flag
+- on the next startup, the bot attempts one comeback message; if the channel still ends with the outage notice, the flag stays pending until a message from another sender makes the channel eligible
 
 ### Manual log add
 
 Owner-only `!gm logadd` can backfill a same-day check-in from an existing message id or message link. It validates that the message is from this guild, is from today in the guild timezone, and matches the named user if one was provided.
 
-Owner-only `!gm logreply` uses that same-day message reference flow too, but also force-reacts and force-replies on the target message so it looks like the goblin processed it live later.
+Owner-only `!gm logreply` uses that same-day message reference flow too, then attempts the normal reaction/reply behavior on the target message.
 
-Owner-only `!gm catchup 72` or `!gm catchup 3d` scans the configured morning channel for recent messages from the requested window, up to 168 hours. It finds valid missed GMs, skips messages already logged today, already saved by a previous catch-up run, or already processed by the bot in visible Discord history, then retro-processes them in timestamp order. Older backfills update lifetime totals and any still-active period boards; already-closed weekly boards are not rewritten.
+Owner-only `!gm catchup 72` or `!gm catchup 3d` scans the configured morning channel for recent messages from the requested window, up to 168 hours. It finds valid missed GMs, skips messages already logged today, already saved by a previous catch-up run, or already processed by the bot in visible Discord history, reacts to each new filing, and posts one aggregate summary. Older backfills update lifetime totals and any still-active period boards; already-closed weekly boards are not rewritten.
 
 ### Records and points
 
