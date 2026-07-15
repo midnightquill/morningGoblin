@@ -9,6 +9,14 @@ import { ActivityType, Client, GatewayIntentBits, PermissionsBitField } from "di
 import { loadMorningConfig, normalizeAcceptedStarts } from "./config.js";
 
 import {
+  getDueChampionPeriodTypes,
+  getPeriodEndDateKey,
+  getPeriodKey,
+  getPeriodKeys,
+  isChampionAnnouncementWindow,
+} from "./champion-periods.js";
+
+import {
   containsPhrase,
   findMatchingKeywordRule,
   isSilenceRequest,
@@ -84,6 +92,8 @@ const LOCK_PATH = path.resolve(process.cwd(), "data", "bot.lock");
 const POINTS_PER_CHECK_IN = 1;
 
 const PERIOD_TYPES = ["week", "month", "year"];
+
+const POINT_PERIOD_SCHEMA_VERSION = 2;
 
 const PERIOD_HISTORY_LIMITS = {
   week: 16,
@@ -1034,83 +1044,12 @@ function formatUtcDateKey(date) {
 
 
 
-function getWeekKey(dateKey) {
-
-  const date = parseDateKey(dateKey);
-
-
-
-  if (!date) {
-
-    return dateKey;
-
-  }
-
-
-
-  const day = date.getUTCDay();
-  date.setUTCDate(date.getUTCDate() - day);
-  return formatUtcDateKey(date);
-
-}
-
-
-
-function getMonthKey(dateKey) {
-
-  return dateKey.slice(0, 7);
-
-}
-
-
-
-function getYearKey(dateKey) {
-
-  return dateKey.slice(0, 4);
-
-}
-
-
-
-function getPeriodKey(periodType, dateKey) {
-
-  switch (periodType) {
-
-    case "week":
-      return getWeekKey(dateKey);
-
-    case "month":
-      return getMonthKey(dateKey);
-
-    case "year":
-      return getYearKey(dateKey);
-
-    default:
-      return dateKey;
-
-  }
-
-}
-
-
-
-function getPeriodKeys(dateKey) {
-
-  return {
-    week: getWeekKey(dateKey),
-    month: getMonthKey(dateKey),
-    year: getYearKey(dateKey),
-  };
-
-}
-
-
-
 function createEmptyPeriodBucket(key) {
 
   return {
     key,
     scores: {},
+    finalized: false,
   };
 
 }
@@ -1124,6 +1063,7 @@ function createPointsState(dateKey) {
 
 
   return {
+    periodSchemaVersion: POINT_PERIOD_SCHEMA_VERSION,
     lifetime: {},
     periods: {
       week: createEmptyPeriodBucket(periodKeys.week),
@@ -1191,9 +1131,46 @@ function ensurePointsState(guildState, dateKey) {
       pointsState.periods[periodType].scores = {};
     }
 
+    if (typeof pointsState.periods[periodType].finalized !== "boolean") {
+      pointsState.periods[periodType].finalized = false;
+    }
+
     if (!Array.isArray(pointsState.history[periodType])) {
       pointsState.history[periodType] = [];
     }
+  }
+
+  if (pointsState.periodSchemaVersion !== POINT_PERIOD_SCHEMA_VERSION) {
+    const weekState = pointsState.periods.week;
+
+    if (weekState.key !== periodKeys.week) {
+      if (weekState.key < periodKeys.week) {
+        const legacySundayUserIds = new Set([
+          ...Object.keys(guildState.catchupLoggedCheckIns?.[weekState.key] ?? {}),
+          ...(guildState.daily?.dateKey === weekState.key
+            ? Object.keys(guildState.daily.checkIns ?? {})
+            : []),
+        ]);
+
+        for (const userId of legacySundayUserIds) {
+          const migratedScore = (weekState.scores[userId] ?? 0) - POINTS_PER_CHECK_IN;
+
+          if (migratedScore > 0) {
+            weekState.scores[userId] = migratedScore;
+          } else {
+            delete weekState.scores[userId];
+          }
+        }
+      }
+
+      weekState.key = periodKeys.week;
+      weekState.finalized = false;
+    }
+
+    // Older versions released rollover announcements on later mornings. Retire
+    // those queued posts instead of ever publishing a weekly/monthly result late.
+    pointsState.pendingAnnouncements = [];
+    pointsState.periodSchemaVersion = POINT_PERIOD_SCHEMA_VERSION;
   }
 
   if (justInitialized && guildState.daily?.dateKey === dateKey) {
@@ -1228,14 +1205,16 @@ function getSortedScoreEntries(scores) {
 
 function finalizePointPeriod(pointsState, periodType, periodState) {
 
-  if (!periodState?.key) {
+  if (!periodState?.key || periodState.finalized) {
     return false;
   }
+
+  periodState.finalized = true;
 
   const entries = getSortedScoreEntries(periodState.scores);
 
   if (entries.length === 0 || entries[0][1] <= 0) {
-    return false;
+    return true;
   }
 
   const topScore = entries[0][1];
@@ -1244,6 +1223,7 @@ function finalizePointPeriod(pointsState, periodType, periodState) {
   const entry = {
     periodType,
     periodKey: periodState.key,
+    announcementDateKey: getPeriodEndDateKey(periodType, periodState.key),
     winnerUserIds,
     points: topScore,
   };
@@ -1252,7 +1232,15 @@ function finalizePointPeriod(pointsState, periodType, periodState) {
     entry.officeTitle = pickWeeklyOfficeTitle();
   }
 
-  pointsState.history[periodType].unshift(entry);
+  const existingHistoryIndex = pointsState.history[periodType].findIndex(
+    (savedEntry) => savedEntry.periodKey === entry.periodKey,
+  );
+
+  if (existingHistoryIndex >= 0) {
+    pointsState.history[periodType][existingHistoryIndex] = entry;
+  } else {
+    pointsState.history[periodType].unshift(entry);
+  }
 
   const historyLimit = PERIOD_HISTORY_LIMITS[periodType] ?? 12;
 
@@ -1260,7 +1248,16 @@ function finalizePointPeriod(pointsState, periodType, periodState) {
     pointsState.history[periodType].length = historyLimit;
   }
 
-  pointsState.pendingAnnouncements.push(entry);
+  const alreadyPending = pointsState.pendingAnnouncements.some(
+    (pendingEntry) =>
+      pendingEntry.periodType === entry.periodType &&
+      pendingEntry.periodKey === entry.periodKey,
+  );
+
+  if (!alreadyPending) {
+    pointsState.pendingAnnouncements.push(entry);
+  }
+
   return true;
 
 }
@@ -1285,6 +1282,22 @@ function advancePointPeriods(guildState, nextDateKey) {
 
   return changed;
 
+}
+
+function finalizeDuePointPeriods(guildState, dateKey) {
+  const pointsState = ensurePointsState(guildState, dateKey);
+  const currentKeys = getPeriodKeys(dateKey);
+  let changed = false;
+
+  for (const periodType of getDueChampionPeriodTypes(dateKey)) {
+    const periodState = pointsState.periods[periodType];
+
+    if (periodState.key === currentKeys[periodType]) {
+      changed = finalizePointPeriod(pointsState, periodType, periodState) || changed;
+    }
+  }
+
+  return changed;
 }
 
 
@@ -2687,13 +2700,13 @@ function formatPeriodLabel(periodType, periodKey) {
 
 
 
-function buildChampionAnnouncement(entry) {
+function buildChampionAnnouncement(entry, winnerLimit = 20) {
 
   if (!entry || !Array.isArray(entry.winnerUserIds) || entry.winnerUserIds.length === 0) {
     return null;
   }
 
-  const winnerRoster = formatMentionRoster(entry.winnerUserIds);
+  const winnerRoster = formatMentionRoster(entry.winnerUserIds, winnerLimit);
   const winners = winnerRoster.text;
   const pointsText = formatPointsWord(entry.points);
   const label = formatPeriodLabel(entry.periodType, entry.periodKey);
@@ -2743,7 +2756,27 @@ function buildChampionAnnouncement(entry) {
 
 
 
-async function maybePostPendingChampionAnnouncements(guild, guildState) {
+function buildChampionAnnouncementBatch(entries) {
+  for (const winnerLimit of [20, 8, 3]) {
+    const announcements = entries
+      .map((entry) => buildChampionAnnouncement(entry, winnerLimit))
+      .filter(Boolean);
+    const content = announcements.map((announcement) => announcement.content).join("\n\n");
+
+    if (content && content.length <= DISCORD_MESSAGE_MAX_LENGTH) {
+      return {
+        content,
+        userIds: [...new Set(announcements.flatMap((announcement) => announcement.userIds))],
+      };
+    }
+  }
+
+  return null;
+}
+
+
+
+async function maybePostPendingChampionAnnouncements(guild, guildState, dateKey) {
 
   const pending = guildState.points?.pendingAnnouncements;
 
@@ -2757,6 +2790,20 @@ async function maybePostPendingChampionAnnouncements(guild, guildState) {
 
 
 
+  const currentPending = pending.filter(
+    (entry) => entry?.announcementDateKey && entry.announcementDateKey >= dateKey,
+  );
+  const due = currentPending.filter((entry) => entry.announcementDateKey === dateKey);
+
+  if (due.length === 0) {
+    if (currentPending.length !== pending.length) {
+      guildState.points.pendingAnnouncements = currentPending;
+      await store.save();
+    }
+
+    return false;
+  }
+
   const channel = await getMorningChannel(guild);
 
 
@@ -2769,27 +2816,28 @@ async function maybePostPendingChampionAnnouncements(guild, guildState) {
 
 
 
-  for (const entry of pending) {
-    const announcement = buildChampionAnnouncement(entry);
+  const announcement = buildChampionAnnouncementBatch(due);
 
-    if (!announcement) {
-      continue;
-    }
-
-    const sent = await sendBotPayload(channel, {
-      content: announcement.content,
-      allowedMentions: { parse: [], users: announcement.userIds },
-    });
-
-    if (!sent) {
-      const unsentIndex = pending.indexOf(entry);
-      guildState.points.pendingAnnouncements = pending.slice(unsentIndex);
-      await store.save();
-      return false;
-    }
+  if (!announcement) {
+    guildState.points.pendingAnnouncements = currentPending.filter(
+      (entry) => entry.announcementDateKey !== dateKey,
+    );
+    await store.save();
+    return false;
   }
 
-  guildState.points.pendingAnnouncements = [];
+  const sent = await sendBotPayload(channel, {
+    content: announcement.content,
+    allowedMentions: { parse: [], users: announcement.userIds },
+  });
+
+  if (!sent) {
+    return false;
+  }
+
+  guildState.points.pendingAnnouncements = currentPending.filter(
+    (entry) => entry.announcementDateKey !== dateKey,
+  );
   await store.save();
   return true;
 
@@ -4761,9 +4809,24 @@ async function schedulerTick() {
 
     const zonedNow = getZonedParts(now, getGuildTimezone(guildState));
 
+    const pointStateNeedsMigration =
+      guildState.points?.periodSchemaVersion !== POINT_PERIOD_SCHEMA_VERSION;
+
     const dailyState = ensureDailyState(guildState, zonedNow.dateKey);
 
+    if (pointStateNeedsMigration) {
+      await store.save();
+    }
+
     const nowMinutes = zonedNow.hour * 60 + zonedNow.minute;
+
+    if (isChampionAnnouncementWindow(zonedNow)) {
+      if (finalizeDuePointPeriods(guildState, zonedNow.dateKey)) {
+        await store.save();
+      }
+
+      await maybePostPendingChampionAnnouncements(guild, guildState, zonedNow.dateKey);
+    }
 
     if (
 
@@ -4786,8 +4849,6 @@ async function schedulerTick() {
         dailyState.reminderSent = true;
 
         await store.save();
-
-        await maybePostPendingChampionAnnouncements(guild, guildState);
 
       }
 
@@ -4822,14 +4883,6 @@ async function schedulerTick() {
         await store.save();
 
       }
-
-    }
-
-
-
-    if (nowMinutes >= MORNING_REMINDER_MINUTES) {
-
-      await maybePostPendingChampionAnnouncements(guild, guildState);
 
     }
 

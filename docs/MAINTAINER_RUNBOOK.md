@@ -22,6 +22,16 @@ Ctrl+C
 npm.cmd start
 ```
 
+### Install or run the Windows watchdog
+
+```powershell
+cd "C:\Dev\morningGoblin"
+npm.cmd run watchdog:install
+npm.cmd run watchdog
+```
+
+The scheduled task checks every three hours and restarts a stopped bot. Check `data/watchdog.log` and `data/bot.stderr.log` when recovery fails.
+
 ### Install dependencies
 
 ```powershell
@@ -210,7 +220,8 @@ Intended behavior:
 - worst day is the lowest completed-day count seen so far
 - each user's first successful GM of the day awards 1 point
 - owner-only `!gm resetpoints` should wipe the current guild's points state back to a fresh season starting today
-- week/month/year champions are finalized on rollover and announced later in the morning channel
+- weeks run Monday through Sunday; week/month/year champions are finalized and announced only near the end of their final local calendar day
+- coincident champion results share one message, and missed boundary announcements are not posted late
 - `!gm points` should show the live scoreboards plus recent champions
 
 ## Security Checklist

@@ -151,8 +151,9 @@ Behavior:
 - points are only awarded on the first successful check-in of the day
 - manual `logadd` and `logreply` award a point if they create a new same-day check-in
 - owner-only `!gm resetpoints` wipes that guild's scoreboards, champion history, and pending champion announcements back to a fresh season starting today
-- weekly/monthly/yearly champions are finalized when the calendar period rolls over in the guild timezone
-- champion announcements are queued and posted in the configured morning channel after reminder time
+- weeks run Monday through Sunday in the guild timezone
+- weekly champions are finalized and announced only near the end of Sunday; monthly champions only near the end of the last calendar day; yearly champions only near the end of December 31
+- champion results due on the same boundary are combined into one post, and a missed boundary announcement is never posted late
 - ties become co-champions
 
 `!gm points` shows the live scoreboards plus the most recent saved champions.

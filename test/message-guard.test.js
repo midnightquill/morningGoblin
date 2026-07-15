@@ -59,6 +59,39 @@ test("serializes concurrent attempts so only the first message is sent", async (
   assert.equal(sends, 1);
 });
 
+test("does not trust a stale history fetch after the bot has just sent", async () => {
+  const guard = new ChannelMessageGuard(() => "bot-1");
+  const channel = createChannel(() => "user-1");
+  let sends = 0;
+
+  const send = () =>
+    guard.send(channel, async () => {
+      sends += 1;
+      return { id: `sent-${sends}` };
+    });
+
+  assert.deepEqual(await send(), { id: "sent-1" });
+  assert.equal(await send(), null);
+  assert.equal(sends, 1);
+});
+
+test("allows another send only after observing a non-bot message", async () => {
+  const guard = new ChannelMessageGuard(() => "bot-1");
+  const channel = createChannel(() => "user-1");
+
+  assert.deepEqual(
+    await guard.send(channel, async () => ({ id: "sent-1" })),
+    { id: "sent-1" },
+  );
+
+  guard.observeMessage({ channelId: channel.id, author: { id: "user-2" } });
+
+  assert.deepEqual(
+    await guard.send(channel, async () => ({ id: "sent-2" })),
+    { id: "sent-2" },
+  );
+});
+
 test("blocks when the latest message cannot be determined", async () => {
   const guard = new ChannelMessageGuard(() => "bot-1");
   const channel = {

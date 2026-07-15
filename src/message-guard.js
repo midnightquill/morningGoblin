@@ -20,6 +20,13 @@ export class ChannelMessageGuard {
   }
 
   async getLatestAuthor(channel) {
+    if (this.lastAuthorByChannel.has(channel?.id)) {
+      return {
+        known: true,
+        authorId: this.lastAuthorByChannel.get(channel.id),
+      };
+    }
+
     if (typeof channel?.messages?.fetch === "function") {
       try {
         const messages = await channel.messages.fetch({ limit: 1 });
@@ -30,13 +37,6 @@ export class ChannelMessageGuard {
       } catch {
         // Fall back to gateway observations below. Unknown state stays blocked.
       }
-    }
-
-    if (this.lastAuthorByChannel.has(channel?.id)) {
-      return {
-        known: true,
-        authorId: this.lastAuthorByChannel.get(channel.id),
-      };
     }
 
     return { known: false, authorId: null };

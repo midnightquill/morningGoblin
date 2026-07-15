@@ -2,5 +2,6 @@
 .env
 data/state.json
 data/bot.lock
+data/*.log
 npm-debug.log*
 morningGoblinBotInfo.txt

@@ -114,7 +114,7 @@ It keeps four scoreboards:
 - current year
 - lifetime total
 
-When a week, month, or year rolls over, the bot automatically declares the champion in the configured morning channel. Ties become co-champions instead of arbitrary tiebreakers.
+Weeks run Monday through Sunday. The bot declares weekly champions only at the end of Sunday in the server timezone, monthly champions only at the end of the month's last day, and yearly champions only at the end of December 31. If boundaries coincide, all due champion results are combined into one message. Ties become co-champions instead of arbitrary tiebreakers.
 
 Weekly champions also receive a randomly selected office title, which is saved with the champion history and shown by `!gm points`.
 
@@ -358,6 +358,24 @@ The bot stores lightweight local state in `data/state.json`, including:
 If you run the bot from a terminal window on your own computer, it only works while that process is alive. If your machine sleeps, reboots, or the terminal closes, the bot goes offline.
 
 The bot now creates a lock file at `data/bot.lock` while running and will refuse to start a second copy. That prevents duplicate reminders and doubled command responses when two processes are launched by accident.
+
+### Automatic watchdog on Windows
+
+Install a Windows Scheduled Task that checks the bot every three hours and restarts it when needed:
+
+```powershell
+npm.cmd run watchdog:install
+```
+
+The task starts one minute after installation, repeats every three hours, and catches up after the computer wakes. The computer still needs to be awake and signed in for the bot to run.
+
+Run a check immediately with:
+
+```powershell
+npm.cmd run watchdog
+```
+
+Watchdog activity is written to `data/watchdog.log`. Bot output and errors from watchdog-started processes are written to `data/bot.stdout.log` and `data/bot.stderr.log`.
 
 ## Security Notes
 
