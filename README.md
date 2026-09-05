@@ -382,13 +382,13 @@ The bot now creates a lock file at `data/bot.lock` while running and will refuse
 
 ### Automatic watchdog on Windows
 
-Install or update a Windows Scheduled Task that checks the bot every minute and restarts it when needed:
+Install or update a Windows Scheduled Task that checks the bot every five minutes and restarts it when needed:
 
 ```powershell
 npm.cmd run watchdog:install
 ```
 
-The task starts one minute after installation, repeats every minute, and catches up after the computer wakes. It verifies the process command, heartbeat, Discord readiness, and scheduler progress, with a startup grace period and exponential recovery backoff. The computer still needs to be awake and signed in for the bot to run.
+The task uses a windowless launcher so health checks do not open a console or steal game focus. It starts one minute after installation, repeats every five minutes, and catches up after the computer wakes. It verifies the process command, heartbeat, Discord readiness, and scheduler progress, with a startup grace period and exponential recovery backoff. The computer still needs to be awake and signed in for the bot to run.
 
 Run a check immediately with:
 

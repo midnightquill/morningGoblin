@@ -30,7 +30,7 @@ npm.cmd run watchdog:install
 npm.cmd run watchdog
 ```
 
-The scheduled task checks every minute. It validates the command behind the lock PID plus a fresh heartbeat, Discord readiness, and scheduler progress. Recovery uses backoff. Check `!gm health`, `data/heartbeat.json`, `data/watchdog.log`, and `data/bot.stderr.log` when recovery fails. Run the installer again after updating from the old three-hour schedule.
+The scheduled task checks every five minutes. It validates the command behind the lock PID plus a fresh heartbeat, Discord readiness, and scheduler progress. Recovery uses backoff. Check `!gm health`, `data/heartbeat.json`, `data/watchdog.log`, and `data/bot.stderr.log` when recovery fails. Run the installer again after updating from the old three-hour schedule.
 
 ### Install dependencies
 
@@ -255,3 +255,7 @@ If a change affects persisted state, also add a note in `docs/PROJECT_MEMORY.md`
 - Follow-ups use blank lines, a bold label, and a quote block inside one message. No extra Discord message or embed permission is required.
 - Run `npm.cmd run check` and `npm.cmd test` before deployment. Integration tests use fake Discord channels and in-memory state and never log in.
 - For a deliberate watchdog-managed restart after checks, run `powershell.exe -NoProfile -File scripts/watchdog.ps1 -ForceRestart`. This verifies the process command before stopping it.
+
+### Windowless watchdog launch
+
+The watchdog runs every five minutes through `wscript.exe //B //Nologo scripts/watchdog-hidden.vbs`. The wrapper launches PowerShell hidden from process creation, waits for completion, and returns its exit code to Task Scheduler. This avoids the console flash from directly scheduling PowerShell. Re-run `npm.cmd run watchdog:install` to apply this launcher to an existing task. The normal `-ForceRestart` command still works for deliberate manual restarts.
