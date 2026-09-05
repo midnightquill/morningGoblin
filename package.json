@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "discord-morning-bot",
   "version": "1.0.0",
   "description": "A funny little Discord bot that nags people to say good morning.",
@@ -8,7 +8,7 @@
     "start": "node src/index.js",
     "watchdog": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/watchdog.ps1",
     "watchdog:install": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-watchdog.ps1",
-    "check": "node --check src/index.js && node --check src/champion-periods.js && node --check src/config.js && node --check src/conversation-text.js && node --check src/message-guard.js && node --check src/storage.js",
+    "check": "node scripts/check.mjs",
     "test": "node --test"
   },
   "engines": {

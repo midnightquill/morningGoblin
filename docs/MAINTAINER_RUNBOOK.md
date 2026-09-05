@@ -1,6 +1,6 @@
 # Maintainer Runbook
 
-Last updated: 2026-07-13
+Last updated: 2026-09-05
 
 ## First Places To Look
 
@@ -30,7 +30,7 @@ npm.cmd run watchdog:install
 npm.cmd run watchdog
 ```
 
-The scheduled task checks every three hours and restarts a stopped bot. Check `data/watchdog.log` and `data/bot.stderr.log` when recovery fails.
+The scheduled task checks every minute. It validates the command behind the lock PID plus a fresh heartbeat, Discord readiness, and scheduler progress. Recovery uses backoff. Check `!gm health`, `data/heartbeat.json`, `data/watchdog.log`, and `data/bot.stderr.log` when recovery fails. Run the installer again after updating from the old three-hour schedule.
 
 ### Install dependencies
 
@@ -240,3 +240,18 @@ When making meaningful feature changes, update at least these if relevant:
 - `docs/MAINTAINER_RUNBOOK.md` for operational gotchas
 
 If a change affects persisted state, also add a note in `docs/PROJECT_MEMORY.md` under state/schema or caveats.
+
+## Reliability upgrade (2026-09-05)
+
+- `src/check-ins.js` owns the durable attendance ledger, first-message preservation, completed-day records, and streak repair. `src/points.js` owns point periods and champion history.
+- `src/catch-up.js` saves before reacting and shares the same check-in path as live messages. Automatic recovery scans post-upgrade history in resumable 500-message batches; manual catch-up reports its 5,000-message cap.
+- `src/commands.js`, `src/dates.js`, `src/member-cache.js`, `src/message-format.js`, `src/health.js`, and `src/work-queue.js` separate command routing, dates, member snapshots, reply layout, health reporting, and per-guild work ordering.
+- `state.backup.json` is the previous committed state. Do not copy a state file over a running bot. Stop the bot first, retain both originals, and validate any restore before restarting. If both files are unusable the bot refuses to start with empty scores.
+- `!gm off` now only clears the scheduled channel. It preserves today's ledger.
+- Old point totals are preserved. Saved check-in counts are explicitly partial for legacy users; the old state did not retain every historical check-in or shiny award.
+- Existing provisional best/worst entries for the active legacy day are recalculated when that day completes. Unknown older incorrect records cannot be reconstructed without older history.
+- Keep the existing seven-point shiny reward and strict no-consecutive-post rule unless the server intentionally changes those product rules.
+- `!gm prefs quiet on|off`, `!gm prefs callouts on|off`, and `!gm prefs vacation 7d|off` are self-service. Vacation suppresses nagging; it does not freeze streaks or award attendance.
+- Follow-ups use blank lines, a bold label, and a quote block inside one message. No extra Discord message or embed permission is required.
+- Run `npm.cmd run check` and `npm.cmd test` before deployment. Integration tests use fake Discord channels and in-memory state and never log in.
+- For a deliberate watchdog-managed restart after checks, run `powershell.exe -NoProfile -File scripts/watchdog.ps1 -ForceRestart`. This verifies the process command before stopping it.

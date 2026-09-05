@@ -68,6 +68,7 @@ test("a failed write does not poison later saves", async () => {
     await store.load();
 
     store.statePath = dataDir;
+    store.state.guilds.pending = { enabled: true };
     await assert.rejects(store.save());
 
     store.statePath = path.join(dataDir, "state.json");
@@ -76,5 +77,39 @@ test("a failed write does not poison later saves", async () => {
 
     const saved = JSON.parse(await readFile(store.statePath, "utf8"));
     assert.deepEqual(saved.guilds.recovered, { enabled: true });
+  });
+});
+
+test("an unchanged save does not prevent the next changed save", async () => {
+  await withTempStore(async (store) => {
+    await store.load();
+    await store.save();
+    store.state.guilds.next = {};
+    await store.save();
+    assert.ok(JSON.parse(await readFile(store.statePath, "utf8")).guilds.next);
+  });
+});
+
+test("corrupt primary recovers the previous committed snapshot", async () => {
+  await withTempStore(async (store, dataDir) => {
+    await store.load();
+    store.state.guilds.saved = { points: 7 };
+    await store.save();
+    store.state.guilds.saved.points = 8;
+    await store.save();
+    await writeFile(store.statePath, '{"guilds":');
+    const recovered = new JsonStore({ dataDir });
+    assert.equal((await recovered.load()).guilds.saved.points, 7);
+    assert.equal(recovered.recoveredFromBackup, true);
+    assert.equal(JSON.parse(await readFile(store.statePath, "utf8")).guilds.saved.points, 7);
+  });
+});
+
+test("invalid state and backup fail without erasing either file", async () => {
+  await withTempStore(async (store) => {
+    await writeFile(store.statePath, '[]');
+    await writeFile(store.backupPath, '{');
+    await assert.rejects(store.load(), /refusing to erase/);
+    assert.equal(await readFile(store.statePath, "utf8"), '[]');
   });
 });

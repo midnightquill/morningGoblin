@@ -1,7 +1,23 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { mkdtemp, writeFile, rm } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 
 import { loadMorningConfig, normalizeAcceptedStarts } from "../src/config.js";
+
+test("malformed reloads reject instead of silently replacing the personality", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "goblin-config-"));
+  const configPath = path.join(dir, "config.json");
+  try {
+    await writeFile(configPath, '{"acceptedStarts":');
+    await assert.rejects(loadMorningConfig({ configPath }));
+    await writeFile(configPath, JSON.stringify({ acceptedPatterns: ["["] }));
+    await assert.rejects(loadMorningConfig({ configPath }));
+    await writeFile(configPath, '\uFEFF{"acceptedStarts":["gm"]}');
+    assert.deepEqual((await loadMorningConfig({ configPath })).acceptedStarts, ["gm"]);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});
 
 test("the checked-in config loads with usable message pools", async () => {
   const config = await loadMorningConfig();

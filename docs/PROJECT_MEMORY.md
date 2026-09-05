@@ -1,6 +1,6 @@
 # Project Memory
 
-Last updated: 2026-07-13
+Last updated: 2026-09-05
 
 ## Purpose
 
@@ -23,7 +23,10 @@ The personality direction is intentional: funny, casual, sarcastic, and a little
 - `src/index.js`: main bot logic, commands, scheduling, conversation behavior, record tracking
 - `src/config.js`: config loading, cleaning, fallback defaults
 - `src/message-guard.js`: serialized last-author checks for every outbound Discord message
-- `src/storage.js`: coalescing JSON persistence layer for `data/state.json`
+- `src/storage.js`: coalescing, atomic JSON persistence with a previous-state backup
+- `src/check-ins.js`, `src/points.js`, `src/catch-up.js`: attendance ledger, points, recovery
+- `src/commands.js`: command routing
+- `src/dates.js`, `src/member-cache.js`, `src/message-format.js`, `src/health.js`, `src/work-queue.js`: shared runtime helpers
 - `config/morning-config.json`: phrase lists, reply pools, conversation content, facts
 - `data/state.json`: runtime state and per-guild persisted settings
 - `assets/`: bot icon assets
@@ -130,7 +133,7 @@ The records live in guild state under `records`.
 
 Important detail:
 
-- records are finalized on day rollover and also refreshed during the scheduled noon recap
+- permanent records are finalized only on day rollover; noon recap totals are provisional
 - a new best day triggers a celebration post during the scheduled noon recap that tags the contributors who set the record
 
 `!gm status` should include current-day roster plus saved best/worst record summary.
@@ -433,7 +436,7 @@ These are user-driven product decisions that should be preserved.
 
 - The bot ignores DMs entirely because the main message handler exits unless `message.inGuild()` is true.
 - DMing other users as the bot is not implemented.
-- Automated coverage currently focuses on configuration, outbound-message guarding, and persistence; Discord integration paths still need manual verification.
+- Automated coverage includes offline Discord-handler integration, scoring, migration, catch-up failures, streak repair, send guarding, configuration, member caching, and backup recovery. Live Discord rendering and connectivity are verified separately.
 - `src/index.js` is large and has accumulated many feature edits; future refactors should probably split it into modules.
 
 ## Good Future Refactors
@@ -445,3 +448,7 @@ High-value cleanup ideas:
 - formalize state migration helpers in `src/storage.js`
 - consider moving records/facts/command docs into smaller structured modules or docs
 - add a hosted deployment guide for Raspberry Pi / systemd if that becomes the chosen permanent host
+
+## September 2026 reliability changes
+
+See `docs/MAINTAINER_RUNBOOK.md` for upgrade and recovery details. All new filings use `checkInLedger.entries.<date>.<userId>` as the duplicate-check authority. Ledger initialization imports known daily/catch-up history without changing point totals. Automatic scans recover post-upgrade history; pre-upgrade reaction evidence is only a migration fallback. Current/best streaks, saved check-in counts, tracked bonuses, and last filing are available in stats. `!gm why`, `!gm prefs`, and admin `!gm health` are new. Follow-up text is visually separated using labeled quote blocks. The watchdog is now heartbeat-based with a one-minute schedule and retry backoff.

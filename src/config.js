@@ -356,15 +356,59 @@ function cleanMorningConfig(parsed) {
   };
 }
 
-export async function loadMorningConfig() {
+export async function loadMorningConfig({ configPath = CONFIG_PATH, allowFallback = false } = {}) {
   try {
-    const raw = await readFile(CONFIG_PATH, "utf8");
-    const parsed = JSON.parse(raw);
+    const raw = await readFile(configPath, "utf8");
+    const parsed = JSON.parse(raw.replace(/^\uFEFF/, ""));
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("Morning config must be a JSON object.");
+    }
+    validateConfigShape(parsed);
 
     return cleanMorningConfig(parsed);
   } catch (error) {
+    if (!allowFallback) throw error;
     console.warn("Using fallback morning config:", error.message);
     return cleanMorningConfig(FALLBACK_CONFIG);
+  }
+}
+
+function validateConfigShape(source, location = "config") {
+  const pools = ["acceptedStarts", "acceptedPatterns", "reminderLines", "checkInReplies", "duplicateReplies",
+    "invalidCheckInReplies", "nudgeReplies", "morningFacts", "rareShinyReplies", "wakeWords", "mentionReplies",
+    "genericReplies", "prompts", "threeDay", "sevenDay", "comeback", "weekly", "triggers", "replies"];
+  for (const key of pools) {
+    if (key in source && (!Array.isArray(source[key]) || source[key].some((item) => typeof item !== "string" || !item.trim()))) {
+      throw new Error(`${location}.${key} must be an array of nonempty strings.`);
+    }
+  }
+  for (const pattern of source.acceptedPatterns ?? []) new RegExp(pattern, "i");
+  for (const key of ["rareShinyReplyChance", "weeklyTitleWatchChance"]) {
+    if (key in source && (!Number.isFinite(source[key]) || source[key] < 0 || source[key] > 1)) throw new Error(`${location}.${key} must be between 0 and 1.`);
+  }
+  for (const key of ["rareShinyPointReward", "channelCooldownSeconds", "userCooldownSeconds"]) {
+    if (key in source && (!Number.isFinite(source[key]) || source[key] < 0)) throw new Error(`${location}.${key} must be a nonnegative number.`);
+  }
+  if ("enabled" in source && typeof source.enabled !== "boolean") throw new Error(`${location}.enabled must be true or false.`);
+  for (const key of ["conversation", "microQuests", "streakCelebrations", "officeTitles"]) {
+    if (key in source) {
+      if (!source[key] || typeof source[key] !== "object" || Array.isArray(source[key])) throw new Error(`${location}.${key} must be an object.`);
+      validateConfigShape(source[key], `${location}.${key}`);
+    }
+  }
+  if ("keywordRules" in source) {
+    if (!Array.isArray(source.keywordRules)) throw new Error(`${location}.keywordRules must be an array.`);
+    source.keywordRules.forEach((rule, i) => {
+      if (!rule || typeof rule !== "object") throw new Error(`${location}.keywordRules[${i}] must be an object.`);
+      validateConfigShape(rule, `${location}.keywordRules[${i}]`);
+    });
+  }
+  if ("voicePacks" in source) {
+    if (!source.voicePacks || typeof source.voicePacks !== "object" || Array.isArray(source.voicePacks)) throw new Error(`${location}.voicePacks must be an object.`);
+    for (const [key, pack] of Object.entries(source.voicePacks)) {
+      if (!pack || typeof pack !== "object" || Array.isArray(pack)) throw new Error(`voicePacks.${key} must be an object.`);
+      validateConfigShape(pack, `voicePacks.${key}`);
+    }
   }
 }
 

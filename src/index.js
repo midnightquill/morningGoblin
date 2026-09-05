@@ -3,16 +3,14 @@ import "dotenv/config";
 import { open, readFile, unlink } from "node:fs/promises";
 
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { ActivityType, Client, GatewayIntentBits, PermissionsBitField } from "discord.js";
 
 import { loadMorningConfig, normalizeAcceptedStarts } from "./config.js";
 
 import {
-  getDueChampionPeriodTypes,
-  getPeriodEndDateKey,
   getPeriodKey,
-  getPeriodKeys,
   isChampionAnnouncementWindow,
 } from "./champion-periods.js";
 
@@ -26,10 +24,16 @@ import {
 import { ChannelMessageGuard } from "./message-guard.js";
 
 import { JsonStore } from "./storage.js";
-
-const formatterCache = new Map();
-const invalidTimeZones = new Set();
-
+import { isValidTimeZoneName, getZonedParts, parseDateKey, getDateKeyDifference } from "./dates.js";
+import { createPointsRules, PERIOD_TYPES, } from "./points.js";
+import { createCheckInService } from "./check-ins.js";
+import { followupBlock, joinMessageSections, fitMessage } from "./message-format.js";
+import { KeyedWorkQueue } from "./work-queue.js";
+import { MemberSnapshotCache } from "./member-cache.js";
+import { scanCheckIns } from "./catch-up.js";
+import { BotHealth } from "./health.js";
+import { createCommandHandler } from "./commands.js";
+import { getUserPreferences, updatePreference, isCalloutSuppressed, suppressCheckInReply } from "./preferences.js";
 
 const FALLBACK_TIMEZONE = "America/Phoenix";
 
@@ -83,23 +87,9 @@ const FOLLOWUP_GRACE_MINUTES = 180;
 const CATCHUP_DEFAULT_HOURS = 12;
 const CATCHUP_MIN_HOURS = 1;
 const CATCHUP_MAX_HOURS = 168;
-const CATCHUP_FETCH_PAGE_SIZE = 100;
-const CATCHUP_FETCH_MAX_MESSAGES = 5000;
 const DISCORD_MESSAGE_MAX_LENGTH = 2000;
 
 const LOCK_PATH = path.resolve(process.cwd(), "data", "bot.lock");
-
-const POINTS_PER_CHECK_IN = 1;
-
-const PERIOD_TYPES = ["week", "month", "year"];
-
-const POINT_PERIOD_SCHEMA_VERSION = 2;
-
-const PERIOD_HISTORY_LIMITS = {
-  week: 16,
-  month: 18,
-  year: 10,
-};
 
 const DEFAULT_LAST_STREAM_DATE_KEY = "2025-04-26";
 
@@ -254,9 +244,6 @@ const UNITED_STATES_TIMEZONES = [
   "Pacific/Honolulu",
 ];
 
-
-
-
 const client = new Client({
 
   intents: [
@@ -273,9 +260,13 @@ const client = new Client({
 
 });
 
-
-
 const store = new JsonStore();
+const health = new BotHealth(store.dataDir);
+const guildWork = new KeyedWorkQueue();
+const memberSnapshots = new MemberSnapshotCache();
+const pointRules = createPointsRules({ pickWeeklyOfficeTitle });
+const { createPointsState, ensurePointsState, getSortedScoreEntries, finalizeDuePointPeriods, awardPoint } = pointRules;
+const { ensureLedger, ensureDailyState, recordCheckIn, getCheckInStats } = createCheckInService(pointRules);
 
 const conversationState = {
 
@@ -288,8 +279,6 @@ const conversationState = {
 };
 const messageGuard = new ChannelMessageGuard(() => client.user?.id ?? null);
 
-
-
 let morningConfig;
 
 let acceptedStarts;
@@ -300,8 +289,44 @@ let lockHandle = null;
 let currentAutoPresence = null;
 let autoPresenceTimeout = null;
 let schedulerTickPromise = null;
-
-
+let schedulerInterval;
+let heartbeatInterval;
+let shuttingDown = false;
+let shutdownPromise;
+const handleCommand = createCommandHandler({ getMorningConfig: () => morningConfig,
+  COMMAND_PREFIX,
+  RANK_CHECK_CHANNEL_NAME,
+  ensureGuildState,
+  hasManageGuild,
+  isBotOwner,
+  safeReply,
+  getUserPreferences,
+  updatePreference,
+  suppressCheckInReply,
+  getGuildTimezone,
+  getZonedParts,
+  getCheckInStats,
+  isGoodMorningMessage,
+  isMorningSomewhereInUnitedStates,
+  store,
+  health,
+  client,
+  postStatus,
+  postPoints,
+  postUserStats,
+  postStreamStatus,
+  handleVoiceCommand,
+  handleQuestCommand,
+  formatSuppressedReplyList,
+  parseTargetUserId,
+  getGuildVoiceConfig,
+  pickFromPoolBag,
+  getVoicePoolBagKey,
+  reloadMorningConfig,
+  conversationState,
+  handleOwnerSpeech,
+  isValidTimeZoneName,
+  postReminder });
 
 function readNumber(name, fallback, min, max) {
 
@@ -309,15 +334,11 @@ function readNumber(name, fallback, min, max) {
 
   const parsed = Number.parseInt(raw ?? "", 10);
 
-
-
   if (Number.isNaN(parsed)) {
 
     return fallback;
 
   }
-
-
 
   return Math.min(Math.max(parsed, min), max);
 
@@ -327,15 +348,11 @@ function readBoolean(name, fallback) {
 
   const raw = process.env[name]?.trim().toLowerCase();
 
-
-
   if (!raw) {
 
     return fallback;
 
   }
-
-
 
   if (["1", "true", "yes", "on"].includes(raw)) {
 
@@ -343,21 +360,15 @@ function readBoolean(name, fallback) {
 
   }
 
-
-
   if (["0", "false", "no", "off"].includes(raw)) {
 
     return false;
 
   }
 
-
-
   return fallback;
 
 }
-
-
 
 function resolveDefaultTimeZone(candidate) {
 
@@ -371,55 +382,15 @@ function resolveTimeZoneWithFallback(candidate, fallback) {
 
 }
 
-
-
-function isValidTimeZoneName(timeZone) {
-
-  if (!timeZone) {
-
-    return false;
-
-  }
-
-  if (formatterCache.has(timeZone)) {
-    return true;
-  }
-
-  if (invalidTimeZones.has(timeZone)) {
-    return false;
-  }
-
-
-  try {
-
-    getFormatter(timeZone).format(new Date());
-
-    return true;
-
-  } catch {
-
-    invalidTimeZones.add(timeZone);
-    return false;
-
-  }
-
-}
-
-
-
 function pickRandom(items) {
 
   return items[Math.floor(Math.random() * items.length)];
 
 }
 
-
-
 function shuffle(items) {
 
   const copy = [...items];
-
-
 
   for (let index = copy.length - 1; index > 0; index -= 1) {
 
@@ -433,13 +404,9 @@ function shuffle(items) {
 
   }
 
-
-
   return copy;
 
 }
-
-
 
 function pickFromPoolBag(poolKey, items) {
 
@@ -449,19 +416,13 @@ function pickFromPoolBag(poolKey, items) {
 
   }
 
-
-
   let bag = conversationState.poolBags.get(poolKey) ?? [];
-
-
 
   if (bag.length === 0) {
 
     bag = shuffle(items);
 
   }
-
-
 
   const nextChoice = bag.pop();
 
@@ -471,9 +432,6 @@ function pickFromPoolBag(poolKey, items) {
 
 }
 
-
-
-
 async function isPidRunning(pid) {
 
   if (!Number.isInteger(pid) || pid <= 0) {
@@ -481,8 +439,6 @@ async function isPidRunning(pid) {
     return false;
 
   }
-
-
 
   try {
 
@@ -498,8 +454,6 @@ async function isPidRunning(pid) {
 
 }
 
-
-
 async function writeLockFile(handle) {
 
   await handle.truncate(0);
@@ -507,8 +461,6 @@ async function writeLockFile(handle) {
   await handle.writeFile(`${process.pid}\n`);
 
 }
-
-
 
 async function acquireInstanceLock() {
 
@@ -530,21 +482,15 @@ async function acquireInstanceLock() {
 
   }
 
-
-
   const existingPidRaw = await readFile(LOCK_PATH, "utf8").catch(() => "");
 
   const existingPid = Number.parseInt(existingPidRaw.trim(), 10);
-
-
 
   if (await isPidRunning(existingPid)) {
 
     throw new Error(`Morning Goblin is already running (PID ${existingPid}). Close the other bot window before starting a new one.`);
 
   }
-
-
 
   await unlink(LOCK_PATH).catch(() => {});
 
@@ -554,8 +500,6 @@ async function acquireInstanceLock() {
 
 }
 
-
-
 async function releaseInstanceLock() {
 
   if (!lockHandle) {
@@ -564,13 +508,9 @@ async function releaseInstanceLock() {
 
   }
 
-
-
   const handleToClose = lockHandle;
 
   lockHandle = null;
-
-
 
   await handleToClose.close().catch(() => {});
 
@@ -578,37 +518,9 @@ async function releaseInstanceLock() {
 
 }
 
-
-
-function createDailyState(dateKey) {
-
-  return {
-
-    dateKey,
-
-    reminderSent: false,
-
-    recapSent: false,
-
-    randomOffenderSent: false,
-
-    microQuestPrompt: null,
-
-    checkIns: {},
-
-    nudgedUsers: {},
-
-  };
-
-}
-
-
-
 function ensureGuildState(guildId) {
 
   const guilds = store.state.guilds;
-
-
 
   if (!guilds[guildId]) {
 
@@ -635,8 +547,6 @@ function ensureGuildState(guildId) {
     };
 
   }
-
-
 
   if (!Array.isArray(guilds[guildId].suppressedCheckInReplyUserIds)) {
     guilds[guildId].suppressedCheckInReplyUserIds = [];
@@ -710,8 +620,6 @@ function ensureGuildState(guildId) {
   return guilds[guildId];
 }
 
-
-
 function getGuildTimezone(guildState) {
 
   return isValidTimeZoneName(guildState.timezone) ? guildState.timezone : DEFAULT_TIMEZONE;
@@ -784,70 +692,7 @@ function ensureDailyMicroQuest(guildState, dailyState, options = {}) {
 }
 
 function formatMicroQuestLine(prompt) {
-  return prompt ? `micro-quest: ${prompt}` : null;
-}
-
-function getPreviousDateKey(dateKey) {
-  const date = parseDateKey(dateKey);
-
-  if (!date) {
-    return null;
-  }
-
-  date.setUTCDate(date.getUTCDate() - 1);
-  return formatUtcDateKey(date);
-}
-
-function ensureStreakState(guildState) {
-  if (!guildState.streaks || typeof guildState.streaks !== "object") {
-    guildState.streaks = { users: {} };
-  }
-
-  if (!guildState.streaks.users || typeof guildState.streaks.users !== "object") {
-    guildState.streaks.users = {};
-  }
-
-  return guildState.streaks;
-}
-
-function updateUserStreak(guildState, userId, dateKey) {
-  const streaks = ensureStreakState(guildState);
-  const previous = streaks.users[userId] ?? { current: 0, best: 0, lastDateKey: null };
-
-  if (previous.lastDateKey === dateKey) {
-    return { type: null, current: previous.current ?? 0, best: previous.best ?? 0 };
-  }
-
-  const previousDateKey = getPreviousDateKey(dateKey);
-  const continued = previous.lastDateKey === previousDateKey;
-  const gapDays = previous.lastDateKey ? getDateKeyDifference(previous.lastDateKey, dateKey) : null;
-  const comeback = Boolean(previous.lastDateKey && !continued && gapDays !== null && gapDays > 1);
-  const current = continued ? (previous.current ?? 0) + 1 : 1;
-  const best = Math.max(previous.best ?? 0, current);
-
-  streaks.users[userId] = {
-    current,
-    best,
-    lastDateKey: dateKey,
-  };
-
-  let type = null;
-
-  if (current === 7) {
-    type = "sevenDay";
-  } else if (current === 3) {
-    type = "threeDay";
-  } else if (comeback) {
-    type = "comeback";
-  }
-
-  return {
-    type,
-    current,
-    best,
-    previous: previous.current ?? 0,
-    gapDays,
-  };
+  return prompt ? followupBlock("🧭 Optional micro-quest", prompt) : null;
 }
 
 function buildStreakCelebrationLine(streakEvent, message) {
@@ -902,11 +747,12 @@ function buildCheckInBonusLines(message, guildState, dailyState, streakEvent) {
 
   if (shinyReward) {
     awardPoint(guildState, message.author.id, dailyState.dateKey, shinyReward.points);
-    lines.push(shinyReward.line);
+    dailyState.checkIns[message.author.id].bonusPoints = shinyReward.points;
+    lines.push(followupBlock("✨ Shiny discovery · +" + shinyReward.points + " points", shinyReward.line));
   }
 
   if (streakLine) {
-    lines.push(streakLine);
+    lines.push(followupBlock(streakEvent.type === "comeback" ? "↩️ Welcome back" : "🔥 " + streakEvent.current + "-day streak", streakLine));
   }
 
   if (questLine) {
@@ -936,398 +782,11 @@ function getTopScoreUserIds(scores) {
   return topUserIds.sort((left, right) => left.localeCompare(right));
 }
 
-
-
-function getFormatter(timeZone) {
-
-  if (!formatterCache.has(timeZone)) {
-
-    formatterCache.set(
-
-      timeZone,
-
-      new Intl.DateTimeFormat("en-CA", {
-
-        timeZone,
-
-        year: "numeric",
-
-        month: "2-digit",
-
-        day: "2-digit",
-
-        hour: "2-digit",
-
-        minute: "2-digit",
-
-        hourCycle: "h23",
-
-      }),
-
-    );
-
-  }
-
-
-
-  return formatterCache.get(timeZone);
-
-}
-
-
-
-function getZonedParts(date, timeZone) {
-
-  const parts = getFormatter(timeZone).formatToParts(date);
-  const values = {};
-
-  for (const part of parts) {
-    if (part.type !== "literal") {
-      values[part.type] = part.value;
-    }
-  }
-
-
-
-  return {
-
-    dateKey: `${values.year}-${values.month}-${values.day}`,
-
-    hour: Number.parseInt(values.hour, 10),
-
-    minute: Number.parseInt(values.minute, 10),
-
-  };
-
-}
-
-
-
-function parseDateKey(dateKey) {
-
-  const match = dateKey.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-
-
-
-  if (!match) {
-
-    return null;
-
-  }
-
-
-
-  const year = Number.parseInt(match[1], 10);
-  const month = Number.parseInt(match[2], 10) - 1;
-  const day = Number.parseInt(match[3], 10);
-  const date = new Date(Date.UTC(year, month, day));
-
-  if (
-    date.getUTCFullYear() !== year ||
-    date.getUTCMonth() !== month ||
-    date.getUTCDate() !== day
-  ) {
-    return null;
-  }
-
-  return date;
-
-}
-
-
-
-function formatUtcDateKey(date) {
-
-  return date.toISOString().slice(0, 10);
-
-}
-
-
-
-function createEmptyPeriodBucket(key) {
-
-  return {
-    key,
-    scores: {},
-    finalized: false,
-  };
-
-}
-
-
-
-function createPointsState(dateKey) {
-
-  const periodKeys = getPeriodKeys(dateKey);
-
-
-
-  return {
-    periodSchemaVersion: POINT_PERIOD_SCHEMA_VERSION,
-    lifetime: {},
-    periods: {
-      week: createEmptyPeriodBucket(periodKeys.week),
-      month: createEmptyPeriodBucket(periodKeys.month),
-      year: createEmptyPeriodBucket(periodKeys.year),
-    },
-    history: {
-      week: [],
-      month: [],
-      year: [],
-    },
-    pendingAnnouncements: [],
-  };
-
-}
-
-
-
-function ensurePointsState(guildState, dateKey) {
-
-  const periodKeys = getPeriodKeys(dateKey);
-  let justInitialized = false;
-
-
-
-  if (!guildState.points || typeof guildState.points !== "object") {
-
-    guildState.points = createPointsState(dateKey);
-    justInitialized = true;
-
-  }
-
-
-
-  const pointsState = guildState.points;
-
-
-
-  if (!pointsState.lifetime || typeof pointsState.lifetime !== "object") {
-    pointsState.lifetime = {};
-  }
-
-  if (!pointsState.periods || typeof pointsState.periods !== "object") {
-    pointsState.periods = {};
-  }
-
-  if (!pointsState.history || typeof pointsState.history !== "object") {
-    pointsState.history = {};
-  }
-
-  if (!Array.isArray(pointsState.pendingAnnouncements)) {
-    pointsState.pendingAnnouncements = [];
-  }
-
-  for (const periodType of PERIOD_TYPES) {
-    if (!pointsState.periods[periodType] || typeof pointsState.periods[periodType] !== "object") {
-      pointsState.periods[periodType] = createEmptyPeriodBucket(periodKeys[periodType]);
-    }
-
-    if (!pointsState.periods[periodType].key) {
-      pointsState.periods[periodType].key = periodKeys[periodType];
-    }
-
-    if (!pointsState.periods[periodType].scores || typeof pointsState.periods[periodType].scores !== "object") {
-      pointsState.periods[periodType].scores = {};
-    }
-
-    if (typeof pointsState.periods[periodType].finalized !== "boolean") {
-      pointsState.periods[periodType].finalized = false;
-    }
-
-    if (!Array.isArray(pointsState.history[periodType])) {
-      pointsState.history[periodType] = [];
-    }
-  }
-
-  if (pointsState.periodSchemaVersion !== POINT_PERIOD_SCHEMA_VERSION) {
-    const weekState = pointsState.periods.week;
-
-    if (weekState.key !== periodKeys.week) {
-      if (weekState.key < periodKeys.week) {
-        const legacySundayUserIds = new Set([
-          ...Object.keys(guildState.catchupLoggedCheckIns?.[weekState.key] ?? {}),
-          ...(guildState.daily?.dateKey === weekState.key
-            ? Object.keys(guildState.daily.checkIns ?? {})
-            : []),
-        ]);
-
-        for (const userId of legacySundayUserIds) {
-          const migratedScore = (weekState.scores[userId] ?? 0) - POINTS_PER_CHECK_IN;
-
-          if (migratedScore > 0) {
-            weekState.scores[userId] = migratedScore;
-          } else {
-            delete weekState.scores[userId];
-          }
-        }
-      }
-
-      weekState.key = periodKeys.week;
-      weekState.finalized = false;
-    }
-
-    // Older versions released rollover announcements on later mornings. Retire
-    // those queued posts instead of ever publishing a weekly/monthly result late.
-    pointsState.pendingAnnouncements = [];
-    pointsState.periodSchemaVersion = POINT_PERIOD_SCHEMA_VERSION;
-  }
-
-  if (justInitialized && guildState.daily?.dateKey === dateKey) {
-    for (const userId of Object.keys(guildState.daily.checkIns ?? {})) {
-      pointsState.lifetime[userId] = (pointsState.lifetime[userId] ?? 0) + POINTS_PER_CHECK_IN;
-
-      for (const periodType of PERIOD_TYPES) {
-        pointsState.periods[periodType].scores[userId] = (pointsState.periods[periodType].scores[userId] ?? 0) + POINTS_PER_CHECK_IN;
-      }
-    }
-  }
-
-  return pointsState;
-
-}
-
-
-
-function getSortedScoreEntries(scores) {
-
-  return Object.entries(scores ?? {}).sort((left, right) => {
-    if (right[1] !== left[1]) {
-      return right[1] - left[1];
-    }
-
-    return left[0].localeCompare(right[0]);
-  });
-
-}
-
-
-
-function finalizePointPeriod(pointsState, periodType, periodState) {
-
-  if (!periodState?.key || periodState.finalized) {
-    return false;
-  }
-
-  periodState.finalized = true;
-
-  const entries = getSortedScoreEntries(periodState.scores);
-
-  if (entries.length === 0 || entries[0][1] <= 0) {
-    return true;
-  }
-
-  const topScore = entries[0][1];
-  const winnerUserIds = entries.filter(([, score]) => score === topScore).map(([userId]) => userId);
-
-  const entry = {
-    periodType,
-    periodKey: periodState.key,
-    announcementDateKey: getPeriodEndDateKey(periodType, periodState.key),
-    winnerUserIds,
-    points: topScore,
-  };
-
-  if (periodType === "week") {
-    entry.officeTitle = pickWeeklyOfficeTitle();
-  }
-
-  const existingHistoryIndex = pointsState.history[periodType].findIndex(
-    (savedEntry) => savedEntry.periodKey === entry.periodKey,
-  );
-
-  if (existingHistoryIndex >= 0) {
-    pointsState.history[periodType][existingHistoryIndex] = entry;
-  } else {
-    pointsState.history[periodType].unshift(entry);
-  }
-
-  const historyLimit = PERIOD_HISTORY_LIMITS[periodType] ?? 12;
-
-  if (pointsState.history[periodType].length > historyLimit) {
-    pointsState.history[periodType].length = historyLimit;
-  }
-
-  const alreadyPending = pointsState.pendingAnnouncements.some(
-    (pendingEntry) =>
-      pendingEntry.periodType === entry.periodType &&
-      pendingEntry.periodKey === entry.periodKey,
-  );
-
-  if (!alreadyPending) {
-    pointsState.pendingAnnouncements.push(entry);
-  }
-
-  return true;
-
-}
-
-
-
-function advancePointPeriods(guildState, nextDateKey) {
-
-  const pointsState = ensurePointsState(guildState, nextDateKey);
-  const nextKeys = getPeriodKeys(nextDateKey);
-  let changed = false;
-
-  for (const periodType of PERIOD_TYPES) {
-    const periodState = pointsState.periods[periodType];
-
-    if (periodState.key !== nextKeys[periodType]) {
-      finalizePointPeriod(pointsState, periodType, periodState);
-      pointsState.periods[periodType] = createEmptyPeriodBucket(nextKeys[periodType]);
-      changed = true;
-    }
-  }
-
-  return changed;
-
-}
-
-function finalizeDuePointPeriods(guildState, dateKey) {
-  const pointsState = ensurePointsState(guildState, dateKey);
-  const currentKeys = getPeriodKeys(dateKey);
-  let changed = false;
-
-  for (const periodType of getDueChampionPeriodTypes(dateKey)) {
-    const periodState = pointsState.periods[periodType];
-
-    if (periodState.key === currentKeys[periodType]) {
-      changed = finalizePointPeriod(pointsState, periodType, periodState) || changed;
-    }
-  }
-
-  return changed;
-}
-
-
-
-function awardPoint(guildState, userId, dateKey, amount = POINTS_PER_CHECK_IN) {
-
-  const pointsState = ensurePointsState(guildState, dateKey);
-  const currentKeys = getPeriodKeys(dateKey);
-
-  pointsState.lifetime[userId] = (pointsState.lifetime[userId] ?? 0) + amount;
-
-  for (const periodType of PERIOD_TYPES) {
-    if (pointsState.periods[periodType].key !== currentKeys[periodType]) {
-      pointsState.periods[periodType] = createEmptyPeriodBucket(currentKeys[periodType]);
-    }
-
-    pointsState.periods[periodType].scores[userId] = (pointsState.periods[periodType].scores[userId] ?? 0) + amount;
-  }
-
-}
-
-
-
 function formatPointsWord(points) {
 
   return `${points} point${points === 1 ? "" : "s"}`;
 
 }
-
-
 
 function ensureStreamTracker() {
 
@@ -1342,23 +801,6 @@ function ensureStreamTracker() {
   return store.state.streamTracker;
 
 }
-
-
-
-function getDateKeyDifference(fromDateKey, toDateKey) {
-
-  const fromDate = parseDateKey(fromDateKey);
-  const toDate = parseDateKey(toDateKey);
-
-  if (!fromDate || !toDate) {
-    return null;
-  }
-
-  return Math.max(0, Math.round((toDate.getTime() - fromDate.getTime()) / 86400000));
-
-}
-
-
 
 function parseStreamDateInput(input) {
 
@@ -1392,8 +834,6 @@ function parseStreamDateInput(input) {
 
 }
 
-
-
 function buildStreamGapMessage(daysSinceLastStream, lastStreamDateKey) {
 
   if (daysSinceLastStream === 0) {
@@ -1416,65 +856,11 @@ function buildStreamGapMessage(daysSinceLastStream, lastStreamDateKey) {
 
 }
 
-
-
-function finalizeCompletedDailyState(guildState, dailyState, nextDateKey) {
-
-  if (!dailyState || !dailyState.dateKey) {
-
-    return { changed: false, newBest: false, userIds: [], count: 0 };
-
-  }
-
-
-
-  const recordUpdate = updateRecords(guildState, dailyState);
-  const pointsChanged = advancePointPeriods(guildState, nextDateKey);
-
-  return {
-    ...recordUpdate,
-    changed: recordUpdate.changed || pointsChanged,
-  };
-
-}
-
-
-
-function ensureDailyState(guildState, dateKey) {
-
-  ensurePointsState(guildState, dateKey);
-
-  if (!guildState.daily) {
-
-    guildState.daily = createDailyState(dateKey);
-
-    return guildState.daily;
-
-  }
-
-
-
-  if (guildState.daily.dateKey !== dateKey) {
-
-    finalizeCompletedDailyState(guildState, guildState.daily, dateKey);
-
-    guildState.daily = createDailyState(dateKey);
-
-  }
-
-
-
-  return guildState.daily;
-
-}
-
 function isBoundaryCharacter(char) {
 
   return !char || !/[\p{L}\p{N}]/u.test(char);
 
 }
-
-
 
 function matchesAcceptedStart(content, acceptedStart) {
 
@@ -1484,23 +870,17 @@ function matchesAcceptedStart(content, acceptedStart) {
 
   }
 
-
-
   const nextChar = content.charAt(acceptedStart.length);
 
   return isBoundaryCharacter(nextChar);
 
 }
 
-
-
 function matchesAcceptedPattern(content) {
 
   return acceptedPatterns.some((pattern) => pattern.test(content));
 
 }
-
-
 
 function isGoodMorningMessage(content) {
   const normalized = content.trim().toLowerCase();
@@ -1524,14 +904,11 @@ function isMorningSomewhereInUnitedStates(date = new Date()) {
   return UNITED_STATES_TIMEZONES.some((timeZone) => isMorningInTimeZone(date, timeZone));
 }
 
-
 function hasManageGuild(member) {
 
   return Boolean(member) && member.permissions.has(PermissionsBitField.Flags.ManageGuild);
 
 }
-
-
 
 function isBotOwner(userId) {
 
@@ -1539,13 +916,9 @@ function isBotOwner(userId) {
 
 }
 
-
-
 function parsePresenceType(rawType) {
 
   const normalized = rawType?.trim().toLowerCase();
-
-
 
   switch (normalized) {
 
@@ -1573,21 +946,15 @@ function parsePresenceType(rawType) {
 
 }
 
-
-
 function getSavedBotPresence() {
 
   const savedPresence = store.state.botPresence;
-
-
 
   if (!savedPresence?.name || parsePresenceType(savedPresence.type) === null) {
 
     return null;
 
   }
-
-
 
   return {
 
@@ -1599,21 +966,15 @@ function getSavedBotPresence() {
 
 }
 
-
-
 function getNextAutoPresence() {
 
   const nextPresence = pickFromPoolBag("presence:autoRotation", AUTO_PRESENCE_OPTIONS);
-
-
 
   if (!nextPresence?.name || parsePresenceType(nextPresence.type) === null) {
 
     return DEFAULT_PRESENCE;
 
   }
-
-
 
   return {
 
@@ -1625,15 +986,11 @@ function getNextAutoPresence() {
 
 }
 
-
-
 function getRandomAutoPresenceDelayMs() {
 
   return AUTO_PRESENCE_MIN_DELAY_MS + Math.floor(Math.random() * (AUTO_PRESENCE_MAX_DELAY_MS - AUTO_PRESENCE_MIN_DELAY_MS + 1));
 
 }
-
-
 
 function describePresence(presence) {
 
@@ -1663,13 +1020,9 @@ function getDiscordActivityName(presence) {
   return prefix ? presence.name.slice(prefix.length) : presence.name;
 }
 
-
-
 function getBotPresence() {
 
   const savedPresence = getSavedBotPresence();
-
-
 
   if (savedPresence) {
 
@@ -1677,21 +1030,15 @@ function getBotPresence() {
 
   }
 
-
-
   if (!currentAutoPresence) {
 
     currentAutoPresence = getNextAutoPresence();
 
   }
 
-
-
   return currentAutoPresence;
 
 }
-
-
 
 function scheduleAutoPresenceRotation() {
 
@@ -1701,11 +1048,7 @@ function scheduleAutoPresenceRotation() {
 
   }
 
-
-
   const delayMs = getRandomAutoPresenceDelayMs();
-
-
 
   autoPresenceTimeout = setTimeout(() => {
 
@@ -1717,8 +1060,6 @@ function scheduleAutoPresenceRotation() {
 
   }, delayMs);
 
-
-
   if (typeof autoPresenceTimeout?.unref === "function") {
 
     autoPresenceTimeout.unref();
@@ -1726,8 +1067,6 @@ function scheduleAutoPresenceRotation() {
   }
 
 }
-
-
 
 function initializeAutoPresenceRotation() {
 
@@ -1737,19 +1076,13 @@ function initializeAutoPresenceRotation() {
 
   }
 
-
-
   scheduleAutoPresenceRotation();
 
 }
 
-
-
 async function rotateAutoPresence() {
 
   currentAutoPresence = getNextAutoPresence();
-
-
 
   if (!getSavedBotPresence()) {
 
@@ -1757,13 +1090,9 @@ async function rotateAutoPresence() {
 
   }
 
-
-
   scheduleAutoPresenceRotation();
 
 }
-
-
 
 async function applyBotPresence() {
 
@@ -1773,13 +1102,9 @@ async function applyBotPresence() {
 
   }
 
-
-
   const presence = getBotPresence();
 
   const activityType = parsePresenceType(presence.type) ?? ActivityType.Watching;
-
-
 
   client.user.setPresence({
 
@@ -1819,15 +1144,11 @@ function formatRoster(names) {
 
   const limit = 20;
 
-
-
   if (names.length <= limit) {
 
     return names.join(", ");
 
   }
-
-
 
   const shown = names.slice(0, limit).join(", ");
 
@@ -1855,8 +1176,6 @@ async function formatUserRoster(guild, userIds, limit = 20, resolveLabel = null)
   return overflow > 0 ? `${names.join(", ")}, and ${overflow} more` : names.join(", ");
 }
 
-
-
 function formatBotText(template, message) {
 
   return template
@@ -1869,95 +1188,41 @@ function formatBotText(template, message) {
 
 }
 
-
-
 function cleanMessageContent(content) {
 
   return content.replace(/<@!?\d+>/g, " ").trim();
 
 }
 
-function getCatchupLoggedCheckInsForDate(guildState, dateKey) {
-  if (!guildState.catchupLoggedCheckIns || typeof guildState.catchupLoggedCheckIns !== "object") {
-    guildState.catchupLoggedCheckIns = {};
-  }
-
-  if (!guildState.catchupLoggedCheckIns[dateKey] || typeof guildState.catchupLoggedCheckIns[dateKey] !== "object") {
-    guildState.catchupLoggedCheckIns[dateKey] = {};
-  }
-
-  return guildState.catchupLoggedCheckIns[dateKey];
-}
-
-function wasCatchupLogged(guildState, dateKey, userId) {
-  return Boolean(guildState.catchupLoggedCheckIns?.[dateKey]?.[userId]);
-}
-
-function markCatchupLogged(guildState, dateKey, userId, sourceMessage) {
-  const dateLogs = getCatchupLoggedCheckInsForDate(guildState, dateKey);
-  dateLogs[userId] = {
-    messageId: sourceMessage.id,
-    channelId: sourceMessage.channelId,
-    timestamp: sourceMessage.createdTimestamp,
-  };
-}
-
-function awardHistoricalCatchupPoint(guildState, userId, dateKey, activeDateKey) {
-  const pointsState = ensurePointsState(guildState, activeDateKey);
-  const pointKeys = getPeriodKeys(dateKey);
-
-  pointsState.lifetime[userId] = (pointsState.lifetime[userId] ?? 0) + POINTS_PER_CHECK_IN;
-
-  for (const periodType of PERIOD_TYPES) {
-    const periodState = pointsState.periods[periodType];
-
-    if (periodState.key === pointKeys[periodType]) {
-      periodState.scores[userId] = (periodState.scores[userId] ?? 0) + POINTS_PER_CHECK_IN;
-    }
-  }
-}
-
 function isEveningGreetingMessage(content) {
 
   const normalized = cleanMessageContent(content).toLowerCase();
-
-
 
   if (!normalized) {
 
     return false;
 
   }
-
-
 
   return EVENING_GREETING_PATTERNS.some((pattern) => pattern.test(normalized));
 
 }
 
-
-
 function isWakeWordMessage(content, guildState) {
 
   const normalized = cleanMessageContent(content).toLowerCase();
-
-
 
   if (!normalized) {
 
     return false;
 
   }
-
-
 
   return getGuildVoiceConfig(guildState).conversation.wakeWords.some((wakeWord) =>
     containsPhrase(normalized, wakeWord),
   );
 
 }
-
-
 
 function getMatchingKeywordReply(message, guildState) {
   const conversationConfig = getGuildVoiceConfig(guildState).conversation;
@@ -1979,8 +1244,6 @@ function getMatchingKeywordReply(message, guildState) {
 
 }
 
-
-
 function getMentionReply(message, guildState) {
 
   return formatBotText(
@@ -1995,8 +1258,6 @@ function getMentionReply(message, guildState) {
   );
 
 }
-
-
 
 function getGenericReply(message, guildState) {
 
@@ -2013,8 +1274,6 @@ function getGenericReply(message, guildState) {
 
 }
 
-
-
 function isConversationCoolingDown(message, guildState) {
 
   const now = Date.now();
@@ -2029,15 +1288,11 @@ function isConversationCoolingDown(message, guildState) {
 
   const lastUserReply = conversationState.userLastReply.get(message.author.id) ?? 0;
 
-
-
   if (channelCooldownMs > 0 && now - lastChannelReply < channelCooldownMs) {
 
     return true;
 
   }
-
-
 
   if (userCooldownMs > 0 && now - lastUserReply < userCooldownMs) {
 
@@ -2045,13 +1300,9 @@ function isConversationCoolingDown(message, guildState) {
 
   }
 
-
-
   return false;
 
 }
-
-
 
 function markConversationReply(message) {
 
@@ -2063,8 +1314,6 @@ function markConversationReply(message) {
 
 }
 
-
-
 async function isReplyToBot(message) {
 
   if (!message.reference?.messageId) {
@@ -2072,8 +1321,6 @@ async function isReplyToBot(message) {
     return false;
 
   }
-
-
 
   try {
 
@@ -2088,8 +1335,6 @@ async function isReplyToBot(message) {
   }
 
 }
-
-
 
 async function getConversationReply(message) {
   const guildState = ensureGuildState(message.guild.id);
@@ -2123,8 +1368,6 @@ async function getConversationReply(message) {
   return null;
 }
 
-
-
 async function maybeHandleConversation(message) {
 
   if (message.mentions.users.has(client.user.id) && isEveningGreetingMessage(message.content)) {
@@ -2153,15 +1396,11 @@ async function maybeHandleConversation(message) {
 
   const reply = await getConversationReply(message);
 
-
-
   if (!reply) {
 
     return false;
 
   }
-
-
 
   const sent = await safeSend(message.channel, reply);
 
@@ -2173,40 +1412,31 @@ async function maybeHandleConversation(message) {
 
 }
 
-
-
 async function reloadMorningConfig() {
-
-  morningConfig = await loadMorningConfig();
-
-  acceptedStarts = normalizeAcceptedStarts(morningConfig.acceptedStarts);
-
-  acceptedPatterns = morningConfig.acceptedPatterns.map((pattern) => new RegExp(pattern, "i"));
-
-  let stateChanged = false;
-
+  const candidate = await loadMorningConfig();
+  const nextStarts = normalizeAcceptedStarts(candidate.acceptedStarts);
+  const nextPatterns = candidate.acceptedPatterns.map((pattern) => new RegExp(pattern, "i"));
+  const changedGuilds = [];
   for (const guildState of Object.values(store.state.guilds ?? {})) {
-    const previousVoicePackKey = guildState.voicePackKey;
-    validateGuildVoicePack(guildState);
-
-    if (guildState.voicePackKey !== previousVoicePackKey) {
-      stateChanged = true;
+    if (!candidate.voicePacks[guildState.voicePackKey]) {
+      changedGuilds.push([guildState, guildState.voicePackKey]);
+      guildState.voicePackKey = DEFAULT_VOICE_PACK_KEY;
     }
   }
-
-  if (stateChanged) {
-    await store.save();
+  try {
+    if (changedGuilds.length) await store.save();
+  } catch (error) {
+    for (const [guildState, previousKey] of changedGuilds) guildState.voicePackKey = previousKey;
+    throw error;
   }
-
+  morningConfig = candidate;
+  acceptedStarts = nextStarts;
+  acceptedPatterns = nextPatterns;
 }
-
-
 
 async function getMorningChannel(guild) {
 
   const guildState = ensureGuildState(guild.id);
-
-
 
   if (!guildState.morningChannelId) {
 
@@ -2214,21 +1444,15 @@ async function getMorningChannel(guild) {
 
   }
 
-
-
   try {
 
     const channel = await guild.channels.fetch(guildState.morningChannelId);
-
-
 
     if (!channel || !isChannelInGuild(channel, guild) || !channel.isTextBased()) {
 
       return null;
 
     }
-
-
 
     return channel;
 
@@ -2270,11 +1494,11 @@ async function deliverBotPayload(channel, payload, sendPayload, options = {}) {
     pendingReturnState = prependPendingReturn
       ? getPendingReturnStateForChannel(channel)
       : null;
-    let preparedPayload = payload;
+    let preparedPayload = { ...payload, ...(typeof payload.content === "string" ? { content: fitMessage(payload.content) } : {}) };
 
     if (pendingReturnState && typeof payload.content === "string") {
       const returnLine = pickFromPoolBag("offline:returnLines", OFFLINE_RETURN_LINES);
-      const combinedContent = `${returnLine}\n${payload.content}`;
+      const combinedContent = joinMessageSections(followupBlock("☀️ Back on duty", returnLine), preparedPayload.content);
 
       if (combinedContent.length <= DISCORD_MESSAGE_MAX_LENGTH) {
         preparedPayload = { ...payload, content: combinedContent };
@@ -2306,8 +1530,6 @@ function safeReply(message, payload) {
   );
 }
 
-
-
 async function safeSend(channel, content) {
 
   return sendBotPayload(channel, {
@@ -2319,8 +1541,6 @@ async function safeSend(channel, content) {
   });
 
 }
-
-
 
 async function getOfflineNoticeChannel(guild, guildState) {
 
@@ -2347,8 +1567,6 @@ async function getOfflineNoticeChannel(guild, guildState) {
   return fallbackChannel;
 
 }
-
-
 
 async function announcePendingReturnMessage(guild) {
   const guildState = ensureGuildState(guild.id);
@@ -2393,8 +1611,6 @@ async function announcePendingReturnMessages() {
   }
 }
 
-
-
 async function postReminder(guild) {
   const guildState = ensureGuildState(guild.id);
   const timeZone = getGuildTimezone(guildState);
@@ -2402,8 +1618,6 @@ async function postReminder(guild) {
   const voiceConfig = getGuildVoiceConfig(guildState);
 
   const channel = await getMorningChannel(guild);
-
-
 
   if (!channel) {
 
@@ -2419,30 +1633,15 @@ async function postReminder(guild) {
 
   const questLine = formatMicroQuestLine(quest.prompt);
   const reminderLine = pickRandom(voiceConfig.reminderLines);
-  const content = questLine ? `${reminderLine}\n${questLine}` : reminderLine;
+  const content = joinMessageSections(reminderLine, questLine);
 
   return Boolean(await safeSend(channel, content));
 
 }
 
-
-
 async function getHumanMemberCount(guild) {
-
-  try {
-
-    await guild.members.fetch();
-
-  } catch {
-
-    return null;
-
-  }
-
-
-
-  return guild.members.cache.filter((member) => !member.user.bot).size;
-
+  const members = await memberSnapshots.get(guild);
+  return members?.length ?? null;
 }
 
 async function buildWeeklyTitleWatchLine(guild, guildState) {
@@ -2471,17 +1670,13 @@ async function appendWeeklyTitleWatch(guild, guildState, recap) {
   }
 
   const weeklyTitleLine = await buildWeeklyTitleWatchLine(guild, guildState);
-  return weeklyTitleLine ? `${recap}\n${weeklyTitleLine}` : recap;
+  return joinMessageSections(recap, weeklyTitleLine ? followupBlock("🏆 Weekly title watch", weeklyTitleLine) : null);
 }
-
-
 
 async function buildNoonRecapMessage(guild, dailyState) {
   const guildState = ensureGuildState(guild.id);
 
   const checkInCount = Object.keys(dailyState.checkIns).length;
-
-
 
   if (checkInCount === 0) {
 
@@ -2489,11 +1684,7 @@ async function buildNoonRecapMessage(guild, dailyState) {
 
   }
 
-
-
   const totalHumans = await getHumanMemberCount(guild);
-
-
 
   if (!totalHumans) {
 
@@ -2505,8 +1696,6 @@ async function buildNoonRecapMessage(guild, dailyState) {
 
   }
 
-
-
   return appendWeeklyTitleWatch(
     guild,
     guildState,
@@ -2516,8 +1705,6 @@ async function buildNoonRecapMessage(guild, dailyState) {
   );
 
 }
-
-
 
 async function postNoonRecap(guild) {
   const guildState = ensureGuildState(guild.id);
@@ -2529,6 +1716,7 @@ async function postNoonRecap(guild) {
     return false;
   }
 
+  if (!await messageGuard.canSend(channel)) return false;
   const recapMessage = await buildNoonRecapMessage(guild, dailyState);
   const checkInCount = Object.keys(dailyState.checkIns).length;
   const previousBest = guildState.records?.best;
@@ -2536,7 +1724,7 @@ async function postNoonRecap(guild) {
   const celebration = isNewBest ? buildNewBestCelebration(dailyState) : null;
   const recapSent = celebration
     ? await sendBotPayload(channel, {
-        content: `${recapMessage}\n${celebration.content}`,
+        content: joinMessageSections(recapMessage, followupBlock("🎉 New GM record", celebration.content)),
         allowedMentions: { parse: [], users: celebration.userIds },
       })
     : await safeSend(channel, recapMessage);
@@ -2545,21 +1733,15 @@ async function postNoonRecap(guild) {
     return false;
   }
 
-  updateRecords(guildState, dailyState);
+  // Permanent best/worst records are finalized on day rollover.
 
   return true;
 }
 
 async function getUncheckedHumanMembers(guild, dailyState) {
-  try {
-    await guild.members.fetch();
-  } catch {
-    return null;
-  }
-
-  return [...guild.members.cache.values()].filter(
-    (member) => !member.user.bot && !dailyState.checkIns[member.id],
-  );
+  const members = await memberSnapshots.get(guild);
+  const guildState = ensureGuildState(guild.id);
+  return members?.filter((member) => !dailyState.checkIns[member.id] && !isCalloutSuppressed(guildState, member.id)) ?? null;
 }
 
 async function postRandomOffenderCallout(guild) {
@@ -2572,6 +1754,7 @@ async function postRandomOffenderCallout(guild) {
     return { handled: false };
   }
 
+  if (!await messageGuard.canSend(channel)) return { handled: false };
   const uncheckedMembers = await getUncheckedHumanMembers(guild, dailyState);
 
   if (!uncheckedMembers) {
@@ -2582,7 +1765,9 @@ async function postRandomOffenderCallout(guild) {
     return { handled: true, sent: false };
   }
 
-  const selectedMember = pickRandom(uncheckedMembers);
+  const eligible = uncheckedMembers.filter((member) => !dailyState.checkIns[member.id]);
+  if (!eligible.length) return { handled: true, sent: false };
+  const selectedMember = pickRandom(eligible);
   const line = pickFromPoolBag("offender:lines", RANDOM_OFFENDER_LINES)
     .replace("{user}", `<@${selectedMember.id}>`);
   const sent = await sendBotPayload(channel, {
@@ -2596,8 +1781,6 @@ async function postRandomOffenderCallout(guild) {
 
   return { handled: true, sent: true };
 }
-
-
 
 function getOrderedCheckInEntries(dailyState) {
   return Object.entries(dailyState.checkIns).sort((left, right) => left[1].timestamp - right[1].timestamp);
@@ -2627,28 +1810,6 @@ function buildRecordsSummary(guildState) {
   return parts.length > 0 ? parts.join(" | ") : null;
 }
 
-function updateRecords(guildState, dailyState) {
-  const count = Object.keys(dailyState.checkIns).length;
-  const userIds = getCheckInUserIds(dailyState);
-  const dateKey = dailyState.dateKey;
-  const records = guildState.records;
-  let newBest = false;
-  let changed = false;
-
-  if (!records.best || count > records.best.count) {
-    records.best = { count, dateKey, userIds };
-    newBest = count > 0;
-    changed = true;
-  }
-
-  if (!records.worst || count < records.worst.count) {
-    records.worst = { count, dateKey };
-    changed = true;
-  }
-
-  return { changed, newBest, userIds, count };
-}
-
 function buildNewBestCelebration(dailyState) {
   const count = Object.keys(dailyState.checkIns).length;
   const contributors = getCheckInUserIds(dailyState);
@@ -2671,8 +1832,6 @@ function buildNewBestCelebration(dailyState) {
     userIds: contributorRoster.userIds,
   };
 }
-
-
 
 function formatPeriodLabel(periodType, periodKey) {
 
@@ -2697,8 +1856,6 @@ function formatPeriodLabel(periodType, periodKey) {
   }
 
 }
-
-
 
 function buildChampionAnnouncement(entry, winnerLimit = 20) {
 
@@ -2754,8 +1911,6 @@ function buildChampionAnnouncement(entry, winnerLimit = 20) {
 
 }
 
-
-
 function buildChampionAnnouncementBatch(entries) {
   for (const winnerLimit of [20, 8, 3]) {
     const announcements = entries
@@ -2774,21 +1929,15 @@ function buildChampionAnnouncementBatch(entries) {
   return null;
 }
 
-
-
 async function maybePostPendingChampionAnnouncements(guild, guildState, dateKey) {
 
   const pending = guildState.points?.pendingAnnouncements;
-
-
 
   if (!Array.isArray(pending) || pending.length === 0) {
 
     return false;
 
   }
-
-
 
   const currentPending = pending.filter(
     (entry) => entry?.announcementDateKey && entry.announcementDateKey >= dateKey,
@@ -2806,15 +1955,11 @@ async function maybePostPendingChampionAnnouncements(guild, guildState, dateKey)
 
   const channel = await getMorningChannel(guild);
 
-
-
   if (!channel) {
 
     return false;
 
   }
-
-
 
   const announcement = buildChampionAnnouncementBatch(due);
 
@@ -2843,13 +1988,9 @@ async function maybePostPendingChampionAnnouncements(guild, guildState, dateKey)
 
 }
 
-
-
 async function getUserDisplayLabel(guild, userId) {
 
   const cachedMember = guild.members.cache.get(userId);
-
-
 
   if (cachedMember) {
     return cachedMember.displayName;
@@ -2873,21 +2014,15 @@ function createUserDisplayLabelResolver(guild) {
   };
 }
 
-
-
 async function formatScoreboard(guild, scores, limit = 5, resolveLabel = null) {
 
   const entries = getSortedScoreEntries(scores).slice(0, limit);
-
-
 
   if (entries.length === 0) {
 
     return "nobody yet";
 
   }
-
-
 
   const getLabel = resolveLabel ?? createUserDisplayLabelResolver(guild);
   const formatted = await Promise.all(
@@ -2982,6 +2117,7 @@ async function postUserStats(message) {
 
   const pointsState = ensurePointsState(guildState, todayKey);
   const userId = message.author.id;
+  const attendance = getCheckInStats(guildState, userId, todayKey);
   const lifetimePoints = pointsState.lifetime[userId] ?? 0;
   const lifetimeRank = getScoreRank(pointsState.lifetime, userId);
   const weekPoints = pointsState.periods.week.scores[userId] ?? 0;
@@ -2993,6 +2129,11 @@ async function postUserStats(message) {
     content: [
       `gm stats for ${displayName}:`,
       `all-time: ${formatPointsWord(lifetimePoints)}`,
+      `saved check-ins: ${attendance.checkIns} | tracked shiny bonuses: ${attendance.bonusPoints}`,
+      `streak: ${attendance.current} days | best: ${attendance.best} days`,
+      `last accepted GM: ${attendance.lastDateKey ?? "none saved"}`,
+      attendance.current < 7 ? `next milestone: ${attendance.current < 3 ? 3 : 7} days` : "7-day milestone reached. keep the paperwork flowing.",
+      attendance.partialHistory ? "Older history was points-only; saved check-in and bonus counts are partial." : "",
       formatRankLine("all-time rank", lifetimeRank),
       `this week: ${formatPointsWord(weekPoints)}`,
       `this month: ${formatPointsWord(monthPoints)}`,
@@ -3001,8 +2142,6 @@ async function postUserStats(message) {
     allowedMentions: { repliedUser: false, parse: [] },
   });
 }
-
-
 
 async function formatChampionSummary(guild, entry, resolveLabel = null) {
 
@@ -3017,8 +2156,6 @@ async function formatChampionSummary(guild, entry, resolveLabel = null) {
   return `${winnerRoster} with ${formatPointsWord(entry.points)}${titleText} (${formatPeriodLabel(entry.periodType, entry.periodKey)})`;
 
 }
-
-
 
 async function postPoints(message) {
 
@@ -3065,8 +2202,6 @@ async function postPoints(message) {
 
 }
 
-
-
 async function postStreamStatus(message) {
 
   const tracker = ensureStreamTracker();
@@ -3080,8 +2215,6 @@ async function postStreamStatus(message) {
 
 }
 
-
-
 async function postStatus(message) {
   const guildState = ensureGuildState(message.guild.id);
   const timeZone = getGuildTimezone(guildState);
@@ -3093,7 +2226,6 @@ async function postStatus(message) {
     const content = recordsSummary
       ? `today's good-morning count: 0. a truly suspicious level of silence.\n${recordsSummary}`
       : "today's good-morning count: 0. a truly suspicious level of silence.";
-
 
     await safeReply(message, {
       content,
@@ -3120,40 +2252,12 @@ async function postStatus(message) {
   });
 }
 
-
-
-function recordCheckIn(guildState, dateKey, userId, entry) {
-
-  const dailyState = ensureDailyState(guildState, dateKey);
-  const alreadyCheckedIn = Boolean(dailyState.checkIns[userId]);
-
-  dailyState.checkIns[userId] = entry;
-  delete dailyState.nudgedUsers[userId];
-
-  const streakEvent = alreadyCheckedIn ? null : updateUserStreak(guildState, userId, dateKey);
-
-  if (!alreadyCheckedIn) {
-    awardPoint(guildState, userId, dateKey);
-  }
-
-  return {
-    dailyState,
-    alreadyCheckedIn,
-    totalCheckIns: Object.keys(dailyState.checkIns).length,
-    pointsAwarded: alreadyCheckedIn ? 0 : POINTS_PER_CHECK_IN,
-    streakEvent,
-  };
-
-}
-
-
-
 async function maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, totalCheckIns, options = {}) {
   const { ignoreQuietList = false, bonusLines = [] } = options;
 
   await reactToCheckInMessage(message);
 
-  if (!ignoreQuietList && guildState.suppressedCheckInReplyUserIds.includes(message.author.id)) {
+  if (!ignoreQuietList && suppressCheckInReply(guildState, message.author.id)) {
     return;
   }
 
@@ -3163,7 +2267,7 @@ async function maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, tota
     : [
         `${pickFromPoolBag(getVoicePoolBagKey(guildState, "checkin:checkInReplies"), voiceConfig.checkInReplies)} (${totalCheckIns} logged today.)`,
         ...bonusLines,
-      ].join("\n");
+      ].join("\n\n");
 
   await safeReply(message, {
     content: reply,
@@ -3171,13 +2275,10 @@ async function maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, tota
   });
 }
 
-
-
 async function maybeNudge(message, guildState, dailyState, nowMinutes) {
 
+  if (isCalloutSuppressed(guildState, message.author.id)) return;
   const endMinutes = MORNING_WINDOW_END_HOUR * 60 + 59;
-
-
 
   if (nowMinutes < MORNING_REMINDER_MINUTES || nowMinutes > endMinutes) {
 
@@ -3185,15 +2286,11 @@ async function maybeNudge(message, guildState, dailyState, nowMinutes) {
 
   }
 
-
-
   if (!guildState.morningChannelId) {
 
     return;
 
   }
-
-
 
   if (message.content.trim().length === 0) {
 
@@ -3201,29 +2298,19 @@ async function maybeNudge(message, guildState, dailyState, nowMinutes) {
 
   }
 
-
-
   if (dailyState.checkIns[message.author.id] || dailyState.nudgedUsers[message.author.id]) {
 
     return;
 
   }
 
-
-
-  dailyState.nudgedUsers[message.author.id] = true;
-
-  await store.save();
-
-
+  if (!await messageGuard.canSend(message.channel)) return;
 
   const channelMention = `<#${guildState.morningChannelId}>`;
 
   const reply = pickRandom(getGuildVoiceConfig(guildState).nudgeReplies).replace("{channel}", channelMention);
 
-
-
-  await safeReply(message, {
+  const sent = await safeReply(message, {
 
     content: reply,
 
@@ -3231,9 +2318,8 @@ async function maybeNudge(message, guildState, dailyState, nowMinutes) {
 
   });
 
+  if (sent) { dailyState.nudgedUsers[message.author.id] = true; await store.save(); }
 }
-
-
 
 function parseMessageLink(input) {
   const match = input.match(/^https?:\/\/(?:canary\.)?discord\.com\/channels\/(\d{17,20})\/(\d{17,20})\/(\d{17,20})$/i);
@@ -3266,6 +2352,7 @@ async function fetchReferencedMessage(guild, channelId, messageId) {
 function buildHistoricalCheckInEntry(sourceMessage, sourceMember, fallbackText) {
   return {
     displayName: sourceMember?.displayName || sourceMessage.author.username,
+    messageId: sourceMessage.id,
     timestamp: sourceMessage.createdTimestamp,
     channelId: sourceMessage.channelId,
     message: sourceMessage.content || fallbackText,
@@ -3296,79 +2383,6 @@ function parseCatchupHours(input) {
   return hours;
 }
 
-async function fetchRecentMessagesSince(channel, cutoffTimestamp) {
-  if (!("messages" in channel)) {
-    return [];
-  }
-
-  const collected = [];
-  let before = null;
-
-  while (collected.length < CATCHUP_FETCH_MAX_MESSAGES) {
-    const page = await channel.messages.fetch({
-      limit: Math.min(CATCHUP_FETCH_PAGE_SIZE, CATCHUP_FETCH_MAX_MESSAGES - collected.length),
-      ...(before ? { before } : {}),
-    });
-
-    if (page.size === 0) {
-      break;
-    }
-
-    const pageMessages = [...page.values()];
-    collected.push(...pageMessages);
-
-    const oldestMessage = pageMessages[pageMessages.length - 1];
-
-    if (!oldestMessage || oldestMessage.createdTimestamp < cutoffTimestamp || page.size < CATCHUP_FETCH_PAGE_SIZE) {
-      break;
-    }
-
-    before = oldestMessage.id;
-  }
-
-  return collected.filter((sourceMessage) => sourceMessage.createdTimestamp >= cutoffTimestamp);
-}
-
-function collectBotReplyReferenceIds(messages) {
-  const referencedMessageIds = new Set();
-
-  for (const sourceMessage of messages) {
-    if (sourceMessage.author.id === client.user.id && sourceMessage.reference?.messageId) {
-      referencedMessageIds.add(sourceMessage.reference.messageId);
-    }
-  }
-
-  return referencedMessageIds;
-}
-
-async function hasBotReaction(sourceMessage) {
-  if (!client.user || sourceMessage.reactions.cache.size === 0) {
-    return false;
-  }
-
-  for (const reaction of sourceMessage.reactions.cache.values()) {
-    if (reaction.me || reaction.users.cache.has(client.user.id)) {
-      return true;
-    }
-
-    try {
-      const users = await reaction.users.fetch();
-
-      if (users.has(client.user.id)) {
-        return true;
-      }
-    } catch {
-      // Missing reaction permissions should not block the rest of the catch-up scan.
-    }
-  }
-
-  return false;
-}
-
-async function wasAlreadyProcessedByBot(sourceMessage, botReplyReferenceIds) {
-  return botReplyReferenceIds.has(sourceMessage.id) || (await hasBotReaction(sourceMessage));
-}
-
 async function reactToCheckInMessage(sourceMessage) {
   try {
     await sourceMessage.react(pickFromPoolBag("checkin:reactionEmojis", MORNING_REACTION_EMOJIS));
@@ -3381,149 +2395,39 @@ async function reactToCheckInMessage(sourceMessage) {
 async function handleCatchupScan(message, body) {
   const guildState = ensureGuildState(message.guild.id);
   const channel = await getMorningChannel(message.guild);
-
-  if (!channel || !("messages" in channel)) {
-    await safeReply(message, {
-      content: "i do not have a valid morning channel to scan. set one first with `" + COMMAND_PREFIX + " here`.",
-      allowedMentions: { repliedUser: false, parse: [] },
-    });
+  if (!channel?.messages) {
+    await safeReply(message, { content: "Set a readable morning channel with `" + COMMAND_PREFIX + " here` first.", allowedMentions: { parse: [], repliedUser: false } });
     return;
   }
-
-  const input = body.slice("catchup".length).trim();
-  const hours = parseCatchupHours(input);
-
+  const hours = parseCatchupHours(body.slice("catchup".length).trim());
   if (hours === null) {
-    await safeReply(message, {
-      content: "use `" + COMMAND_PREFIX + " catchup 72` or `" + COMMAND_PREFIX + " catchup 3d`. max window is 168 hours.",
-      allowedMentions: { repliedUser: false, parse: [] },
-    });
+    await safeReply(message, { content: "Use `" + COMMAND_PREFIX + " catchup 72` or `" + COMMAND_PREFIX + " catchup 3d` (maximum 168 hours).", allowedMentions: { parse: [], repliedUser: false } });
     return;
   }
+  const stats = await runCatchupScan(message.guild, channel, Date.now() - hours * 3_600_000);
+  const summary = [
+    "**📋 Catch-up complete**",
+    stats.logged + " new GMs saved; " + stats.alreadyLogged + " already filed. Streaks repaired from saved history.",
+    stats.outsideUsMorning ? stats.outsideUsMorning + " outside the U.S. morning window." : null,
+    stats.failures ? stats.failures + " reactions failed; the check-ins are safely saved." : null,
+    stats.truncated ? "⚠️ Reached the 5,000-message limit. This window was only partially scanned; use a narrower window for a targeted repair." : null,
+    stats.legacyImported ? stats.legacyImported + " older filings recovered from Discord evidence without awarding points again." : null,
+    "Inspected " + stats.scanned + " messages. Closed champion results are preserved.",
+  ];
+  await safeReply(message, { content: summary.filter(Boolean).join("\n"), allowedMentions: { parse: [], repliedUser: false } });
+}
 
+async function runCatchupScan(guild, channel, cutoffTimestamp, options = {}) {
+  const guildState = ensureGuildState(guild.id);
   const timeZone = getGuildTimezone(guildState);
   const activeDateKey = getZonedParts(new Date(), timeZone).dateKey;
-  const cutoffTimestamp = Date.now() - (hours * 60 * 60 * 1000);
-  const recentMessages = await fetchRecentMessagesSince(channel, cutoffTimestamp).catch(() => null);
-
-  if (!recentMessages) {
-    await safeReply(message, {
-      content: "i could not read recent history from the morning channel. this usually means my channel permissions are being theatrical.",
-      allowedMentions: { repliedUser: false, parse: [] },
-    });
-    return;
-  }
-
-  const orderedMessages = recentMessages.sort((left, right) => left.createdTimestamp - right.createdTimestamp);
-  const botReplyReferenceIds = collectBotReplyReferenceIds(orderedMessages);
-
-  const stats = {
-    scanned: orderedMessages.length,
-    validMorningMessages: 0,
-    logged: 0,
-    alreadyLogged: 0,
-    outsideUsMorning: 0,
-    dates: new Set(),
-    inactivePeriodPoints: 0,
-    failures: 0,
-  };
-
-  for (const sourceMessage of orderedMessages) {
-    if (sourceMessage.author.bot || !isGoodMorningMessage(sourceMessage.content)) {
-      continue;
-    }
-
-    stats.validMorningMessages += 1;
-
-    const sourceDate = new Date(sourceMessage.createdTimestamp);
-    const sourceDateKey = getZonedParts(sourceDate, timeZone).dateKey;
-
-    if (!isMorningSomewhereInUnitedStates(sourceDate)) {
-      stats.outsideUsMorning += 1;
-      continue;
-    }
-
-    const targetUserId = sourceMessage.author.id;
-
-    const dailyState = sourceDateKey === activeDateKey ? ensureDailyState(guildState, activeDateKey) : null;
-    const alreadyInDailyState = Boolean(dailyState?.checkIns[targetUserId]);
-    const alreadyInCatchupState = wasCatchupLogged(guildState, sourceDateKey, targetUserId);
-    const alreadyProcessedByBot = await wasAlreadyProcessedByBot(sourceMessage, botReplyReferenceIds);
-
-    if (alreadyInDailyState || alreadyInCatchupState || alreadyProcessedByBot) {
-      stats.alreadyLogged += 1;
-      continue;
-    }
-
-    const sourceMember = sourceMessage.member ?? (await message.guild.members.fetch(targetUserId).catch(() => null));
-
-    if (sourceDateKey === activeDateKey) {
-      recordCheckIn(
-        guildState,
-        activeDateKey,
-        targetUserId,
-        buildHistoricalCheckInEntry(sourceMessage, sourceMember, "[automatic catch-up log from attachment-only message]"),
-      );
-
-      if (!await reactToCheckInMessage(sourceMessage)) {
-        stats.failures += 1;
-      }
-    } else {
-      awardHistoricalCatchupPoint(guildState, targetUserId, sourceDateKey, activeDateKey);
-      markCatchupLogged(guildState, sourceDateKey, targetUserId, sourceMessage);
-
-      if (getPeriodKeys(sourceDateKey).week !== guildState.points.periods.week.key) {
-        stats.inactivePeriodPoints += 1;
-      }
-
-      if (!await reactToCheckInMessage(sourceMessage)) {
-        stats.failures += 1;
-      }
-    }
-
-    stats.logged += 1;
-    stats.dates.add(sourceDateKey);
-  }
-
+  const stats = await scanCheckIns({ guildState, channel, cutoffTimestamp, activeDateKey,
+    toDateKey: (timestamp) => getZonedParts(new Date(timestamp), timeZone).dateKey,
+    isGoodMorningMessage, isMorningSomewhereInUnitedStates, recordCheckIn, ensureLedger,
+    save: () => store.save(), react: reactToCheckInMessage, botUserId: client.user.id, ...options });
+  guildState.lastCatchup = { at: new Date().toISOString(), scanned: stats.scanned, logged: stats.logged, truncated: stats.truncated };
   await store.save();
-
-  const summary = [
-    `catch-up sweep complete for the last ${hours} hour${hours === 1 ? "" : "s"} in <#${channel.id}>.`,
-    `${stats.logged} new gm${stats.logged === 1 ? "" : "s"} logged.`,
-  ];
-
-  if (stats.alreadyLogged > 0) {
-    summary.push(`${stats.alreadyLogged} skipped because they were already logged or already processed by the bot.`);
-  }
-
-  if (stats.outsideUsMorning > 0) {
-    summary.push(`${stats.outsideUsMorning} skipped because they were outside legal U.S. morning.`);
-  }
-
-  if (stats.dates.size > 0) {
-    summary.push(`dates backfilled: ${[...stats.dates].join(", ")}.`);
-  }
-
-  if (stats.validMorningMessages === 0) {
-    summary.push("i did not find any valid-looking morning messages in that scan window.");
-  } else {
-    summary.push(`${stats.validMorningMessages} valid-looking gm message${stats.validMorningMessages === 1 ? "" : "s"} inspected out of ${stats.scanned} recent messages.`);
-  }
-
-  if (stats.failures > 0) {
-    const verb = stats.failures === 1 ? "was" : "were";
-    summary.push(`${stats.failures} log${stats.failures === 1 ? "" : "s"} ${verb} saved, but the retro reaction failed.`);
-  }
-
-  if (stats.inactivePeriodPoints > 0) {
-    const verb = stats.inactivePeriodPoints === 1 ? "was" : "were";
-    summary.push(`${stats.inactivePeriodPoints} older log${stats.inactivePeriodPoints === 1 ? "" : "s"} ${verb} added to lifetime totals but could not safely rewrite an already-closed weekly board.`);
-  }
-
-  await safeReply(message, {
-    content: summary.join("\n"),
-    allowedMentions: { repliedUser: false, parse: [] },
-  });
+  return stats;
 }
 
 async function handleManualLogAdd(message, body) {
@@ -3657,7 +2561,7 @@ async function handleManualLogAdd(message, body) {
 
   await store.save();
 
-  const action = alreadyCheckedIn ? "updated" : "added";
+  const action = alreadyCheckedIn ? "already filed" : "added";
   const pointNote = pointsAwarded > 0 ? ` +${pointsAwarded} dawn point awarded.` : "";
 
   await safeReply(message, {
@@ -3795,15 +2699,17 @@ async function handleCheckIn(message) {
   const timeZone = getGuildTimezone(guildState);
   const zonedNow = getZonedParts(new Date(), timeZone);
 
-  const { dailyState, alreadyCheckedIn, totalCheckIns, streakEvent } = recordCheckIn(guildState, zonedNow.dateKey, message.author.id, {
+  const sourceDateKey = getZonedParts(new Date(message.createdTimestamp), timeZone).dateKey;
+  const { dailyState, alreadyCheckedIn, totalCheckIns, streakEvent } = recordCheckIn(guildState, sourceDateKey, message.author.id, {
     displayName: message.member?.displayName || message.author.username,
-    timestamp: Date.now(),
+    messageId: message.id,
+    timestamp: message.createdTimestamp,
     channelId: message.channelId,
     message: message.content,
-  });
+  }, { activeDateKey: zonedNow.dateKey });
 
-  const suppressTextReply = guildState.suppressedCheckInReplyUserIds.includes(message.author.id);
-  const bonusLines = alreadyCheckedIn || suppressTextReply
+  const suppressTextReply = suppressCheckInReply(guildState, message.author.id);
+  const bonusLines = alreadyCheckedIn || suppressTextReply || sourceDateKey !== dailyState.dateKey
     ? []
     : buildCheckInBonusLines(message, guildState, dailyState, streakEvent);
 
@@ -3825,7 +2731,6 @@ async function handleRejectedCheckIn(message) {
   });
 }
 
-
 async function handleOwnerSpeech(message, commandName, body) {
 
   if (!isBotOwner(message.author.id)) {
@@ -3841,8 +2746,6 @@ async function handleOwnerSpeech(message, commandName, body) {
     return;
 
   }
-
-
 
   if (commandName === "logadd") {
 
@@ -3913,6 +2816,7 @@ async function handleOwnerSpeech(message, commandName, body) {
     const todayKey = getZonedParts(new Date(), getGuildTimezone(guildState)).dateKey;
 
     guildState.points = createPointsState(todayKey);
+    guildState.pointsResetAt = Date.now();
     await store.save();
 
     await safeReply(message, {
@@ -3950,13 +2854,9 @@ async function handleOwnerSpeech(message, commandName, body) {
 
   }
 
-
-
   if (commandName === "say") {
 
     const text = body.slice(commandName.length).trim();
-
-
 
     if (!text) {
 
@@ -3972,21 +2872,15 @@ async function handleOwnerSpeech(message, commandName, body) {
 
     }
 
-
-
     await safeSend(message.channel, text);
 
     return;
 
   }
 
-
-
   if (commandName === "presence") {
 
     const input = body.slice(commandName.length).trim();
-
-
 
     if (!input) {
 
@@ -4001,8 +2895,6 @@ async function handleOwnerSpeech(message, commandName, body) {
       return;
 
     }
-
-
 
     if (["reset", "default"].includes(input.toLowerCase())) {
 
@@ -4028,15 +2920,11 @@ async function handleOwnerSpeech(message, commandName, body) {
 
     }
 
-
-
     const [rawType, ...nameParts] = input.split(/\s+/);
 
     const activityType = parsePresenceType(rawType);
 
     const name = nameParts.join(" ").trim();
-
-
 
     if (activityType === null || !name) {
 
@@ -4051,8 +2939,6 @@ async function handleOwnerSpeech(message, commandName, body) {
       return;
 
     }
-
-
 
     store.state.botPresence = {
 
@@ -4078,13 +2964,9 @@ async function handleOwnerSpeech(message, commandName, body) {
 
   }
 
-
-
   const sayToInput = body.slice(commandName.length).trim();
   const targetToken = sayToInput.match(/^\S+/)?.[0] ?? "";
   const targetChannel = await resolveSayToChannel(message, targetToken);
-
-
 
   if (!targetChannel || !targetChannel.isTextBased()) {
 
@@ -4100,8 +2982,6 @@ async function handleOwnerSpeech(message, commandName, body) {
 
   }
 
-
-
   const text = body
 
     .slice(commandName.length)
@@ -4111,8 +2991,6 @@ async function handleOwnerSpeech(message, commandName, body) {
     .slice(targetToken.length)
 
     .trim();
-
-
 
   if (!text) {
 
@@ -4127,8 +3005,6 @@ async function handleOwnerSpeech(message, commandName, body) {
     return;
 
   }
-
-
 
   await safeSend(targetChannel, text);
 
@@ -4315,608 +3191,74 @@ async function handleQuestCommand(message, args) {
   });
 }
 
-
-
-async function handleCommand(message) {
-
-  const body = message.content.slice(COMMAND_PREFIX.length).trim();
-
-  const [command = "help", ...args] = body.split(/\s+/);
-
-  const guildState = ensureGuildState(message.guild.id);
-
-
-
-  switch (command.toLowerCase()) {
-
-    case "":
-
-    case "help": {
-
-      const lines = [
-        "Morning Goblin commands",
-        "everyone:",
-        `- \`${COMMAND_PREFIX} status\` — today's gm roster`,
-        `- \`${COMMAND_PREFIX} points\` — scoreboards and recent champions`,
-        `- \`${COMMAND_PREFIX} stats\` — your stats (use in #${RANK_CHECK_CHANNEL_NAME})`,
-        `- \`${COMMAND_PREFIX} stream\` — time since the last recorded stream`,
-        `- \`${COMMAND_PREFIX} fact\` — a random verified morning fact`,
-        `- \`${COMMAND_PREFIX} phrases\` — accepted morning openings`,
-        `- \`${COMMAND_PREFIX} voice\` — current voice pack and available choices`,
-        `- \`${COMMAND_PREFIX} quest\` — today's optional micro-quest`,
-        "- mention me, reply to me, or say `morning goblin` to chat",
+async function schedulerTick() {
+  if (!client.isReady() || shuttingDown) return;
+  for (const guild of client.guilds.cache.values()) {
+    await guildWork.run(guild.id, async () => {
+      if (shuttingDown) return;
+      const guildState = ensureGuildState(guild.id);
+      const now = new Date();
+      const zonedNow = getZonedParts(now, getGuildTimezone(guildState));
+      const dailyState = ensureDailyState(guildState, zonedNow.dateKey);
+      await store.save();
+      if (!guildState.morningChannelId) return;
+      await maybeRecoverCheckIns(guild);
+      if (isChampionAnnouncementWindow(zonedNow)) {
+        if (finalizeDuePointPeriods(guildState, zonedNow.dateKey)) await store.save();
+        const sent = await maybePostPendingChampionAnnouncements(guild, guildState, zonedNow.dateKey);
+        if (sent) health.scheduledResult("champions", "sent");
+      }
+      const tasks = [
+        { name: "reminder", flag: "reminderSent", enabled: ENABLE_MORNING_REMINDER, zone: getGuildTimezone(guildState), start: MORNING_REMINDER_MINUTES, grace: REMINDER_GRACE_MINUTES, run: () => postReminder(guild) },
+        { name: "offender", flag: "randomOffenderSent", enabled: ENABLE_RANDOM_OFFENDER, zone: RANDOM_OFFENDER_TIMEZONE, start: RANDOM_OFFENDER_MINUTES, grace: REMINDER_GRACE_MINUTES, run: () => postRandomOffenderCallout(guild) },
+        { name: "recap", flag: "recapSent", enabled: ENABLE_NOON_RECAP, zone: NOON_RECAP_TIMEZONE, start: NOON_RECAP_MINUTES, grace: FOLLOWUP_GRACE_MINUTES, run: () => postNoonRecap(guild) },
       ];
-
-      if (hasManageGuild(message.member)) {
-        lines.push(
-          "Manage Server:",
-          `- \`${COMMAND_PREFIX} here\` / \`${COMMAND_PREFIX} off\` — set or stop scheduled morning posts`,
-          `- \`${COMMAND_PREFIX} timezone America/Phoenix\` — set the server timezone`,
-          `- \`${COMMAND_PREFIX} test\` — try the scheduled reminder now`,
-          `- \`${COMMAND_PREFIX} quiet @user\` / \`${COMMAND_PREFIX} unquiet @user\` / \`${COMMAND_PREFIX} quietlist\` — manage check-in text replies`,
-          `- \`${COMMAND_PREFIX} voice fresh|chaos|classic|reset\` — change the voice pack`,
-          `- \`${COMMAND_PREFIX} quest on|off|reroll|reset\` — manage micro-quests`,
-          `- \`${COMMAND_PREFIX} reload\` — reload config/morning-config.json`,
-        );
-      }
-
-      if (isBotOwner(message.author.id)) {
-        lines.push(
-          "owner:",
-          `- \`${COMMAND_PREFIX} say ...\` / \`${COMMAND_PREFIX} sayto #channel ...\` — speak as the bot`,
-          `- \`${COMMAND_PREFIX} presence watching for Mong Plorps\` / \`${COMMAND_PREFIX} presence reset\` — set or reset the bot status`,
-          `- \`${COMMAND_PREFIX} offline\` — announce an outage and later return`,
-          `- \`${COMMAND_PREFIX} streamed today\` — update the last-stream date`,
-          `- \`${COMMAND_PREFIX} resetpoints\` — wipe scoreboards and champions`,
-          `- \`${COMMAND_PREFIX} logadd ...\` / \`${COMMAND_PREFIX} logreply ...\` — repair a missed gm`,
-          `- \`${COMMAND_PREFIX} catchup 72\` — scan recent morning-channel history`,
-        );
-      }
-
-      await safeReply(message, {
-
-        content: lines.join("\n"),
-
-        allowedMentions: { repliedUser: false, parse: [] },
-
-      });
-
-      return;
-
-    }
-
-    case "status": {
-
-      await postStatus(message);
-
-      return;
-
-    }
-
-    case "points": {
-
-      await postPoints(message);
-
-      return;
-
-    }
-
-    case "stats": {
-
-      await postUserStats(message);
-
-      return;
-
-    }
-
-    case "stream":
-    case "laststream": {
-
-      await postStreamStatus(message);
-
-      return;
-
-    }
-
-    case "phrases": {
-      await safeReply(message, {
-        content: `accepted morning starts: ${morningConfig.acceptedStarts.join(", ")}. special filing: two-word M… P… greetings such as \`Mong Plorps\` also count.`,
-        allowedMentions: { repliedUser: false, parse: [] },
-      });
-      return;
-    }
-    case "voice": {
-      await handleVoiceCommand(message, args);
-      return;
-    }
-    case "quest":
-    case "microquest": {
-      await handleQuestCommand(message, args);
-      return;
-    }
-    case "quietlist": {
-      if (!hasManageGuild(message.member)) {
-        await safeReply(message, {
-          content: "you need `Manage Server` for that one, chief.",
-          allowedMentions: { repliedUser: false },
-        });
-        return;
-      }
-
-      await safeReply(message, {
-        content: formatSuppressedReplyList(message.guild),
-        allowedMentions: { repliedUser: false, parse: [] },
-      });
-      return;
-    }
-    case "quiet":
-    case "unquiet": {
-      if (!hasManageGuild(message.member)) {
-        await safeReply(message, {
-          content: "you need `Manage Server` for that one, chief.",
-          allowedMentions: { repliedUser: false },
-        });
-        return;
-      }
-
-      const targetUserId = parseTargetUserId(message);
-
-      if (!targetUserId) {
-        await safeReply(message, {
-          content: "tag a user or paste their user id so i know whose check-in replies to hush.",
-          allowedMentions: { repliedUser: false },
-        });
-        return;
-      }
-
-      const suppressed = guildState.suppressedCheckInReplyUserIds;
-      const alreadySuppressed = suppressed.includes(targetUserId);
-
-      if (command.toLowerCase() === "quiet") {
-        if (!alreadySuppressed) {
-          suppressed.push(targetUserId);
-          await store.save();
+      for (const task of tasks) {
+        const local = getZonedParts(now, task.zone);
+        const minutes = local.hour * 60 + local.minute;
+        if (!task.enabled || dailyState[task.flag] || minutes < task.start || minutes > task.start + task.grace) continue;
+        try {
+          const result = await task.run();
+          const sent = typeof result === "object" ? result.sent : result;
+          const handled = typeof result === "object" ? result.handled : result;
+          health.scheduledResult(task.name, sent ? "sent" : "skipped");
+          if (handled) { dailyState[task.flag] = true; await store.save(); }
+        } catch (error) {
+          health.scheduledResult(task.name, "failed");
+          health.error(task.name + " failed", error);
         }
-
-        await safeReply(message, {
-          content: alreadySuppressed
-            ? `<@${targetUserId}> is already on the no-reply check-in list. the goblin was already holding its tongue.`
-            : `<@${targetUserId}> will still get logged and reacted to, but the goblin will stop sending text replies to their check-ins.`,
-          allowedMentions: { repliedUser: false, parse: ["users"] },
-        });
-        return;
       }
-
-      if (alreadySuppressed) {
-        guildState.suppressedCheckInReplyUserIds = suppressed.filter((userId) => userId !== targetUserId);
-        await store.save();
-        await safeReply(message, {
-          content: `<@${targetUserId}> has been removed from the no-reply check-in list. the goblin may resume yapping at them.`,
-          allowedMentions: { repliedUser: false, parse: ["users"] },
-        });
-        return;
-      }
-
-      await safeReply(message, {
-        content: `<@${targetUserId}> was not on the no-reply check-in list in the first place.`,
-        allowedMentions: { repliedUser: false, parse: ["users"] },
-      });
-      return;
-    }
-    case "fact":
-    case "morningfact": {
-      const voiceConfig = getGuildVoiceConfig(guildState);
-      const fact = pickFromPoolBag(getVoicePoolBagKey(guildState, "facts:morningFacts"), voiceConfig.morningFacts);
-      await safeReply(message, {
-        content: `morning fact: ${fact}`,
-        allowedMentions: { repliedUser: false, parse: [] },
-      });
-      return;
-    }
-    case "reload": {
-
-      if (!hasManageGuild(message.member)) {
-
-        await safeReply(message, {
-
-          content: "you need `Manage Server` for that one, chief.",
-
-          allowedMentions: { repliedUser: false },
-
-        });
-
-        return;
-
-      }
-
-
-
-      await reloadMorningConfig();
-
-      await safeReply(message, {
-
-        content: "config reloaded. the goblin has consumed the new script notes.",
-
-        allowedMentions: { repliedUser: false },
-
-      });
-
-      return;
-
-    }
-
-    case "say":
-
-    case "presence":
-
-    case "sayto":
-
-    case "logadd":
-
-    case "logreply":
-
-    case "catchup":
-
-    case "streamed":
-
-    case "resetpoints":
-
-    case "offline": {
-
-      await handleOwnerSpeech(message, command.toLowerCase(), body);
-
-      return;
-
-    }
-
-    case "here": {
-
-      if (!hasManageGuild(message.member)) {
-
-        await safeReply(message, {
-
-          content: "you need `Manage Server` for that one, chief.",
-
-          allowedMentions: { repliedUser: false },
-
-        });
-
-        return;
-
-      }
-
-
-
-      if (!message.channel.isTextBased()) {
-
-        await safeReply(message, {
-
-          content: "pick a text-based channel for the morning nonsense.",
-
-          allowedMentions: { repliedUser: false },
-
-        });
-
-        return;
-
-      }
-
-
-
-      guildState.morningChannelId = message.channelId;
-
-      await store.save();
-
-      await safeReply(message, {
-
-        content: `scheduled morning posts will now use this channel. timezone: \`${getGuildTimezone(guildState)}\`. the tiny desk has been relocated.`,
-
-        allowedMentions: { repliedUser: false, parse: [] },
-
-      });
-
-      return;
-
-    }
-
-    case "off": {
-
-      if (!hasManageGuild(message.member)) {
-
-        await safeReply(message, {
-
-          content: "you need `Manage Server` for that one, chief.",
-
-          allowedMentions: { repliedUser: false },
-
-        });
-
-        return;
-
-      }
-
-
-
-      guildState.morningChannelId = null;
-
-      guildState.daily = null;
-
-      await store.save();
-
-      await safeReply(message, {
-
-        content: "scheduled reminders, recaps, and callouts are disabled. commands and greetings still work; the clipboard is merely off duty.",
-
-        allowedMentions: { repliedUser: false },
-
-      });
-
-      return;
-
-    }
-
-    case "timezone": {
-
-      if (!hasManageGuild(message.member)) {
-
-        await safeReply(message, {
-
-          content: "you need `Manage Server` for that one, chief.",
-
-          allowedMentions: { repliedUser: false },
-
-        });
-
-        return;
-
-      }
-
-
-
-      const candidate = args.join(" ").trim();
-
-
-
-      if (!candidate || !isValidTimeZoneName(candidate)) {
-
-        await safeReply(message, {
-
-          content: "i could not recognize that timezone. use an IANA name like `America/Phoenix`.",
-
-          allowedMentions: { repliedUser: false },
-
-        });
-
-        return;
-
-      }
-
-
-
-      guildState.timezone = candidate;
-
-      await store.save();
-
-      await safeReply(message, {
-
-        content: `timezone set to \`${candidate}\`. the rooster will now scream on local time.`,
-
-        allowedMentions: { repliedUser: false, parse: [] },
-
-      });
-
-      return;
-
-    }
-
-    case "test": {
-
-      if (!hasManageGuild(message.member)) {
-
-        await safeReply(message, {
-
-          content: "you need `Manage Server` for that one, chief.",
-
-          allowedMentions: { repliedUser: false },
-
-        });
-
-        return;
-
-      }
-
-
-
-      if (!guildState.morningChannelId) {
-
-        await safeReply(message, {
-
-          content: `set a channel first with \`${COMMAND_PREFIX} here\`.`,
-
-          allowedMentions: { repliedUser: false, parse: [] },
-
-        });
-
-        return;
-
-      }
-
-
-
-      const sent = await postReminder(message.guild);
-
-      await safeReply(message, {
-
-        content: sent
-
-          ? "test reminder deployed. the goblin horn has sounded."
-
-          : "i did not post the test reminder. the channel may already end with a goblin message, or it may be missing or inaccessible.",
-
-        allowedMentions: { repliedUser: false },
-
-      });
-
-      return;
-
-    }
-
-    default: {
-
-      await safeReply(message, {
-
-        content: `i do not know \`${command}\`, but i do know \`${COMMAND_PREFIX} help\`.`,
-
-        allowedMentions: { repliedUser: false, parse: [] },
-
-      });
-
-    }
-
+    }).catch((error) => health.error("Guild scheduler failed", error));
   }
-
+  health.lastSchedulerAt = new Date().toISOString();
 }
 
-
-
-async function schedulerTick() {
-
-  if (!client.isReady()) {
-
-    return;
-
+async function maybeRecoverCheckIns(guild) {
+  const guildState = ensureGuildState(guild.id);
+  const ledger = ensureLedger(guildState, getZonedParts(new Date(), getGuildTimezone(guildState)).dateKey);
+  if (guildState.recovery?.channelId && guildState.recovery.channelId !== guildState.morningChannelId) guildState.recovery = null;
+  guildState.recovery ??= { channelId: guildState.morningChannelId, lastCompletedAt: ledger.startedAt };
+  const recovery = guildState.recovery;
+  if (Date.now() < (recovery.nextAttemptAt ?? 0)) return;
+  recovery.nextAttemptAt = Date.now() + 5 * 60_000;
+  const channel = await getMorningChannel(guild);
+  if (!channel?.messages) return;
+  if (!recovery.windowEndAt) {
+    recovery.windowEndAt = new Date().toISOString();
+    const requested = Math.max(Date.parse(ledger.startedAt), Date.parse(recovery.lastCompletedAt) - 60_000);
+    recovery.cutoffTimestamp = Math.max(requested, Date.now() - 168 * 3_600_000);
+    recovery.clipped = recovery.cutoffTimestamp > requested;
   }
-
-
-
-  const now = new Date();
-  const recapNow = getZonedParts(now, NOON_RECAP_TIMEZONE);
-  const recapMinutesNow = recapNow.hour * 60 + recapNow.minute;
-  const offenderNow = getZonedParts(now, RANDOM_OFFENDER_TIMEZONE);
-  const offenderMinutesNow = offenderNow.hour * 60 + offenderNow.minute;
-
-  for (const guild of client.guilds.cache.values()) {
-
-    const guildState = ensureGuildState(guild.id);
-
-
-
-    if (!guildState.morningChannelId) {
-
-      continue;
-
-    }
-
-    const zonedNow = getZonedParts(now, getGuildTimezone(guildState));
-
-    const pointStateNeedsMigration =
-      guildState.points?.periodSchemaVersion !== POINT_PERIOD_SCHEMA_VERSION;
-
-    const dailyState = ensureDailyState(guildState, zonedNow.dateKey);
-
-    if (pointStateNeedsMigration) {
-      await store.save();
-    }
-
-    const nowMinutes = zonedNow.hour * 60 + zonedNow.minute;
-
-    if (isChampionAnnouncementWindow(zonedNow)) {
-      if (finalizeDuePointPeriods(guildState, zonedNow.dateKey)) {
-        await store.save();
-      }
-
-      await maybePostPendingChampionAnnouncements(guild, guildState, zonedNow.dateKey);
-    }
-
-    if (
-
-      ENABLE_MORNING_REMINDER &&
-
-      !dailyState.reminderSent &&
-
-      nowMinutes >= MORNING_REMINDER_MINUTES &&
-
-      nowMinutes <= MORNING_REMINDER_MINUTES + REMINDER_GRACE_MINUTES
-
-    ) {
-
-      const sent = await postReminder(guild);
-
-
-
-      if (sent) {
-
-        dailyState.reminderSent = true;
-
-        await store.save();
-
-      }
-
-
-
-      continue;
-
-    }
-
-
-
-    if (
-
-      ENABLE_RANDOM_OFFENDER &&
-
-      !dailyState.randomOffenderSent &&
-
-      offenderMinutesNow >= RANDOM_OFFENDER_MINUTES &&
-
-      offenderMinutesNow <= RANDOM_OFFENDER_MINUTES + REMINDER_GRACE_MINUTES
-
-    ) {
-
-      const result = await postRandomOffenderCallout(guild);
-
-
-
-      if (result.handled) {
-
-        dailyState.randomOffenderSent = true;
-
-        await store.save();
-
-      }
-
-    }
-
-
-
-    if (
-
-
-      ENABLE_NOON_RECAP &&
-
-      !dailyState.recapSent &&
-
-      recapMinutesNow >= NOON_RECAP_MINUTES &&
-
-      recapMinutesNow <= NOON_RECAP_MINUTES + FOLLOWUP_GRACE_MINUTES
-
-    ) {
-
-      const sent = await postNoonRecap(guild);
-
-
-
-      if (sent) {
-
-        dailyState.recapSent = true;
-
-        await store.save();
-
-      }
-
-    }
-
+  try {
+    const stats = await runCatchupScan(guild, channel, recovery.cutoffTimestamp, { before: recovery.before, maxMessages: 500 });
+    recovery.before = stats.truncated ? stats.before : null;
+    if (stats.truncated) recovery.nextAttemptAt = Date.now() + 30_000;
+    else { recovery.lastCompletedAt = recovery.windowEndAt; recovery.windowEndAt = null; }
+    await store.save();
+  } catch (error) {
+    health.error("Automatic GM recovery failed", error);
+    await store.save();
   }
-
 }
 
 function runSchedulerTick() {
@@ -4929,43 +3271,28 @@ function runSchedulerTick() {
   return schedulerTickPromise;
 }
 
-
-
-client.once("clientReady", async () => {
-
-  initializeAutoPresenceRotation();
-
-  await applyBotPresence();
-
-
-
-  console.log(`Logged in as ${client.user.tag}`);
-
-  console.log(`Loaded ${morningConfig.conversation.mentionReplies.length} mention replies.`);
-
-  console.log(`Loaded ${AUTO_PRESENCE_OPTIONS.length} rotating statuses.`);
-
-  await announcePendingReturnMessages();
-
-  await runSchedulerTick();
-
-
-
-  setInterval(() => {
-
-    runSchedulerTick().catch((error) => {
-
-      console.error("Scheduler tick failed:", error);
-
-    });
-
-  }, 30000);
-
+client.once("clientReady", () => {
+  schedulerInterval = setInterval(() => runSchedulerTick().catch((error) => health.error("Scheduler failed", error)), 30_000);
+  (async () => {
+    initializeAutoPresenceRotation();
+    await applyBotPresence();
+    console.log("Morning Goblin is ready.");
+    await announcePendingReturnMessages();
+    await runSchedulerTick();
+    await health.write(client, store);
+  })().catch((error) => health.error("Ready initialization failed", error));
 });
 
+client.on("guildMemberAdd", (member) => memberSnapshots.invalidate(member.guild.id));
+client.on("guildMemberRemove", (member) => memberSnapshots.invalidate(member.guild.id));
+client.on("guildDelete", (guild) => memberSnapshots.invalidate(guild.id));
+client.on("messageDelete", (message) => messageGuard.invalidate(message.channelId));
+client.on("shardResume", () => messageGuard.invalidate());
+client.on("shardReady", () => messageGuard.invalidate());
+client.on("shardError", (error) => health.error("Discord connection error", error));
+client.on("error", (error) => health.error("Discord client error", error));
 
-
-client.on("messageCreate", async (message) => {
+async function handleGuildMessage(message) {
 
   if (!message.inGuild()) {
 
@@ -4973,14 +3300,10 @@ client.on("messageCreate", async (message) => {
 
   }
 
-  messageGuard.observeMessage(message);
-
   if (message.author.bot) {
     return;
 
   }
-
-
 
   const guildState = ensureGuildState(message.guild.id);
 
@@ -4996,8 +3319,6 @@ client.on("messageCreate", async (message) => {
     getGuildVoiceConfig(guildState).conversation.wakeWords,
     morningConfig.acceptedStarts,
   );
-
-
 
   try {
 
@@ -5041,8 +3362,6 @@ client.on("messageCreate", async (message) => {
       return;
     }
 
-
-
     if (looksLikeGoodMorning) {
       if (!isMorningSomewhereInUnitedStates(new Date(message.createdTimestamp))) {
         await handleRejectedCheckIn(message);
@@ -5063,9 +3382,10 @@ client.on("messageCreate", async (message) => {
 
   } catch (error) {
 
-    console.error("Message handler failed:", error);
+    health.error("Message handler failed", error);
 
   } finally {
+    await store.save();
 
     if (!shouldDeferPendingReturn) {
       await announcePendingReturnMessage(message.guild).catch((error) => {
@@ -5075,86 +3395,69 @@ client.on("messageCreate", async (message) => {
 
   }
 
-});
-
-
-
-client.on("guildCreate", async (guild) => {
-
-  ensureGuildState(guild.id);
-
-  await store.save();
-
-});
-
-
-
-async function start() {
-
-  if (!process.env.DISCORD_TOKEN) {
-
-    throw new Error("Missing DISCORD_TOKEN. Copy .env.example to .env and fill it in.");
-
-  }
-
-
-
-  await acquireInstanceLock();
-
-  await reloadMorningConfig();
-
-  await store.load();
-
-  await client.login(process.env.DISCORD_TOKEN);
-
 }
 
-
-
-const cleanupAndExit = async (code = 0) => {
-
-  await releaseInstanceLock();
-
-  process.exit(code);
-
-};
-
-
-
-process.once("SIGINT", () => {
-
-  cleanupAndExit(0).catch((error) => {
-
-    console.error("Failed to release Morning Goblin lock during shutdown:", error);
-
-    process.exit(1);
-
-  });
-
+client.on("messageCreate", (message) => {
+  if (!message.inGuild() || shuttingDown) return;
+  messageGuard.observeMessage(message);
+  health.lastMessageAt = new Date().toISOString();
+  if (message.author.bot) return;
+  guildWork.run(message.guild.id, () => handleGuildMessage(message)).catch((error) => health.error("Message work failed", error));
 });
 
-
-
-process.once("SIGTERM", () => {
-
-  cleanupAndExit(0).catch((error) => {
-
-    console.error("Failed to release Morning Goblin lock during shutdown:", error);
-
-    process.exit(1);
-
-  });
-
+client.on("guildCreate", (guild) => {
+  guildWork.run(guild.id, async () => { ensureGuildState(guild.id); await store.save(); })
+    .catch((error) => health.error("Guild initialization failed", error));
 });
 
+async function start() {
+  if (!process.env.DISCORD_TOKEN) throw new Error("Missing DISCORD_TOKEN. Copy .env.example to .env and fill it in.");
+  await store.ensureDataDirectory();
+  await acquireInstanceLock();
+  await store.load();
+  await reloadMorningConfig();
+  for (const guildId of Object.keys(store.state.guilds)) {
+    const guildState = ensureGuildState(guildId);
+    ensureLedger(guildState, getZonedParts(new Date(), getGuildTimezone(guildState)).dateKey);
+  }
+  await store.save();
+  heartbeatInterval = setInterval(() => health.write(client, store).catch((error) => console.error("Heartbeat failed:", error)), 30_000);
+  await health.write(client, store);
+  await client.login(process.env.DISCORD_TOKEN);
+}
 
+async function cleanupAndExit(code = 0) {
+  if (shutdownPromise) return shutdownPromise;
+  shuttingDown = true;
+  clearInterval(schedulerInterval);
+  clearInterval(heartbeatInterval);
+  clearTimeout(autoPresenceTimeout);
+  shutdownPromise = (async () => {
+    const deadline = setTimeout(() => process.exit(1), 20_000);
+    await guildWork.drain();
+    await schedulerTickPromise?.catch(() => {});
+    await store.save();
+    await client.destroy();
+    await health.pending?.catch(() => {});
+    await health.write(client, store, { shuttingDown: true });
+    await releaseInstanceLock();
+    clearTimeout(deadline);
+    process.exit(code);
+  })();
+  return shutdownPromise;
+}
 
-start().catch(async (error) => {
+for (const signal of ["SIGINT", "SIGTERM"]) {
+  process.once(signal, () => cleanupAndExit().catch((error) => { console.error("Shutdown failed:", error); process.exit(1); }));
+}
 
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) start().catch(async (error) => {
   console.error(error);
-
+  clearInterval(heartbeatInterval);
+  await client.destroy();
   await releaseInstanceLock();
-
   process.exitCode = 1;
-
 });
+
+// Import-safe entry point for offline integration tests and maintenance tools.
+export { client, store, health, messageGuard, reloadMorningConfig, handleGuildMessage, schedulerTick, handleCheckIn, ensureGuildState };

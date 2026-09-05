@@ -1,7 +1,13 @@
 ﻿node_modules/
 .env
 data/state.json
+data/state.backup.json
+data/heartbeat.json
+data/watchdog-recovery.json
+data/*.tmp
+data/backups/
 data/bot.lock
 data/*.log
+data/*.log.1
 npm-debug.log*
 morningGoblinBotInfo.txt

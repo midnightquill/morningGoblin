@@ -14,6 +14,9 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 - Adds optional daily micro-quests to reminders and first check-in replies
 - Occasionally appends rare shiny check-in replies that award bonus points
 - Tracks per-user check-in streaks and celebrates 3-day, 7-day, and comeback moments
+- Shows streaks, comebacks, shiny discoveries, and quests in separate labeled quote blocks inside a single reply
+- Recovers missed morning-channel check-ins automatically with a durable ledger and resumable history scans
+- Lets members choose quiet replies, opt out of callouts, or pause nudges and callouts during a vacation
 - Nudges people once per day if they start chatting before saying good morning
 - Posts a short noon recap of the current day's check-in totals
 - Occasionally adds a silly weekly office-title watch to noon recaps when someone is leading the weekly board
@@ -124,12 +127,17 @@ Use `!gm points` to see the live board and the most recent champions.
 
 ### User commands
 
+- `!gm prefs`
+  Shows your preferences. Use `!gm prefs quiet on|off`, `!gm prefs callouts on|off`, or `!gm prefs vacation 7d|off` (1–30 days). Vacation pauses nudges and callouts; greetings still count and streaks still follow actual attendance. An admin's quiet-list setting takes precedence over a user's quiet preference.
+- `!gm why [greeting]`
+  Explains today's filing, server date/timezone, and whether the U.S. morning window is open. Add a greeting to check its rules, or reply to an existing message with `!gm why` to inspect that message's timestamp.
+
 - `!gm status`
   Shows today's check-in count and roster, plus saved best/worst day records when available.
 - `!gm points`
   Shows the current weekly/monthly/yearly GM scoreboards, lifetime leaders, and recent champions.
 - `!gm stats`
-  Shows your all-time GM total, lifetime rank, and current week/month/year points. This command only works in the `rank-check🏆` channel by default.
+  Shows points, saved check-in count, tracked shiny bonuses, current/best streak, last accepted GM, and the next milestone. Historical check-in and bonus counts are labeled partial where older state only retained point totals. This command only works in the `rank-check🏆` channel by default.
 - `!gm stream`
   Shows how long it has been since the last stream date on file.
 - `!gm fact`
@@ -147,6 +155,9 @@ Use `!gm points` to see the live board and the most recent champions.
 
 These require `Manage Server`:
 
+- `!gm health`
+  Shows Discord readiness, the last scheduler tick/save, storage errors, scheduled-send counters, and catch-up progress. The bot owner can also use this command.
+
 - `!gm here`
   Sets this channel as the destination for enabled scheduled reminders, recaps, and callouts.
 - `!gm off`
@@ -156,7 +167,7 @@ These require `Manage Server`:
 - `!gm quest reroll|on|off|reset`
   Rerolls or toggles the optional daily micro-quest.
 - `!gm reload`
-  Reloads `config/morning-config.json` without restarting.
+  Validates and reloads `config/morning-config.json` without restarting. Invalid JSON, patterns, or supported settings are rejected; the previous working config remains active.
 - `!gm quiet @user`
   Keeps logging that user's check-ins and reacting with emoji, but suppresses the bot's text reply for them.
 - `!gm unquiet @user`
@@ -232,6 +243,10 @@ Catch-up note:
 - it still enforces the "morning somewhere in the U.S." rule using the message timestamp
 - it uses reactions rather than per-message text replies so the final summary remains the single bot response
 - older backfills count toward lifetime totals and any still-active week/month/year boards; already-closed weekly boards are not rewritten
+- New filings are saved before reactions. Repeated or overlapping scans cannot award a second point for the same server/date/user.
+- The automatic scan checks every five minutes, recovers up to seven days of post-upgrade history, and resumes large windows in 500-message batches. Manual scans inspect at most 5,000 messages and explicitly report a partial scan.
+- Older reactions/replies are used only to import pre-upgrade history without awarding points again. Older history is incomplete; existing lifetime totals are preserved.
+- Historical recovery repairs streaks from saved attendance. A season reset does not let catch-up re-award points for messages sent before that reset.
 
 ## What Counts As Good Morning
 
@@ -352,6 +367,12 @@ The bot stores lightweight local state in `data/state.json`, including:
 - micro-quest toggle and today's selected prompt
 - per-user check-in streaks
 - saved owner-set presence
+- a durable per-date/user check-in ledger and completed-day counts
+- recovery cursors and user preferences
+
+Writes use a flushed temporary file followed by replacement. `data/state.backup.json` retains the previous committed snapshot; a corrupt primary file can recover from that backup. If neither copy is usable, startup refuses to erase scores. Keep both files private. Normal shutdown drains accepted work and saves before releasing the instance lock.
+
+Duplicate GMs preserve the first filing and timestamp. Turning scheduled posts off preserves today's check-ins. Permanent best/worst day records are finalized at rollover; noon totals are provisional.
 
 ## Running It Reliably
 
@@ -361,13 +382,13 @@ The bot now creates a lock file at `data/bot.lock` while running and will refuse
 
 ### Automatic watchdog on Windows
 
-Install a Windows Scheduled Task that checks the bot every three hours and restarts it when needed:
+Install or update a Windows Scheduled Task that checks the bot every minute and restarts it when needed:
 
 ```powershell
 npm.cmd run watchdog:install
 ```
 
-The task starts one minute after installation, repeats every three hours, and catches up after the computer wakes. The computer still needs to be awake and signed in for the bot to run.
+The task starts one minute after installation, repeats every minute, and catches up after the computer wakes. It verifies the process command, heartbeat, Discord readiness, and scheduler progress, with a startup grace period and exponential recovery backoff. The computer still needs to be awake and signed in for the bot to run.
 
 Run a check immediately with:
 
@@ -375,7 +396,7 @@ Run a check immediately with:
 npm.cmd run watchdog
 ```
 
-Watchdog activity is written to `data/watchdog.log`. Bot output and errors from watchdog-started processes are written to `data/bot.stdout.log` and `data/bot.stderr.log`.
+Watchdog activity is written to `data/watchdog.log`; current health is in `data/heartbeat.json`. Bot output and errors are written to `data/bot.stdout.log` and `data/bot.stderr.log`, with the previous run retained as `.log.1`. Use `scripts/watchdog.ps1 -NoRestart` for a read-only health check or `-ForceRestart` for an intentional restart after an update.
 
 ## Security Notes
 

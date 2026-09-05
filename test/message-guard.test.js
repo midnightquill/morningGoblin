@@ -126,3 +126,23 @@ test("still blocks from observed bot state when history lookup fails", async () 
 
   assert.equal(await guard.send(channel, async () => ({ id: "sent-1" })), null);
 });
+
+test("does not overwrite a newer gateway observation with a stale fetch", async () => {
+  const guard = new ChannelMessageGuard(() => "bot");
+  const channel = { id: "channel", messages: { fetch: async () => {
+    guard.observeMessage({ id: "200", channelId: "channel", author: { id: "bot" } });
+    return { first: () => ({ id: "100", author: { id: "user" } }) };
+  } } };
+  assert.equal(await guard.canSend(channel), false);
+});
+
+test("a human message arriving during send completion remains the latest author", async () => {
+  const guard = new ChannelMessageGuard(() => "bot");
+  const channel = { id: "channel" };
+  guard.observeMessage({ id: "100", channelId: "channel", author: { id: "user" } });
+  await guard.send(channel, async () => {
+    guard.observeMessage({ id: "300", channelId: "channel", author: { id: "user" } });
+    return { id: "200" };
+  });
+  assert.equal(await guard.canSend(channel), true);
+});
