@@ -1,8 +1,14 @@
 # Move Morning Goblin to Northflank
 
-Status: deployment files prepared alongside the audit and personality refresh. The bot still runs on the Windows PC. No cloud deployment or transfer has happened yet.
+Status: migration completed on 2026-10-24. Morning Goblin runs on Northflank; the PC bot is stopped and its Windows watchdog is disabled.
 
-This guide is a checklist for the assisted migration. Complete account/project setup first; keep the cloud bot in setup mode until the final transfer.
+Current deployment: service `morning-goblin`, region US Central (Council Bluffs), one instance on `nf-compute-10` (0.1 shared vCPU / 256 MB). The `goblin-data` volume is 6 GB NVMe, ReadWriteOnce, mounted at `/app/data`. Runtime variables include the existing bot settings and `BOT_MIGRATION_HOLD=false`.
+
+The steps below document the setup and recovery process. Setup mode is for a new migration, not the normal live setting. The service is on the Free plan; the volume form displayed $0.15/GB/month, or $0.90/month for 6 GB before any applicable allowance. The effective invoice was not verified during migration.
+
+The assisted cutover transferred both state files with SHA-256 read-back verification, preserving 2 guilds and 257 saved check-ins. The user ran the cloud health check and confirmed Discord connection, scheduler progress, no runtime/storage errors, and an unchanged fingerprint of scores, history, streaks, preferences, and settings. Both requested Discord maintenance notices were sent. The PC process count was verified as zero and the scheduled watchdog as Disabled.
+
+Private snapshots, transfer/health-check commands, task configuration, verification receipts, and migration progress are retained under `data/backups/northflank-2026-10-24/`, outside Git. Local `data/state.json` is now an old snapshot; the cloud volume is authoritative. Never start the local copy against stale scores while the cloud bot is live.
 
 ## 1. Account and project
 
@@ -56,4 +62,6 @@ For rollback, first stop/pause the cloud service and export its latest state if 
 - `scripts/container-entrypoint.sh`: waits during setup, requires existing state at activation, and uses `exec` so the bot receives shutdown signals.
 - `.gitattributes`: preserves Unix line endings for the shell entrypoint.
 
-All 58 offline tests and JavaScript syntax checks pass. Git's shell validated the entrypoint syntax and confirmed activation refuses missing saved state. Docker is not installed in the current Windows shell, so the image build and setup-mode runtime will be verified by Northflank before cutover. This guide does not claim a completed migration.
+All 58 offline tests and JavaScript syntax checks passed before publication. Git's shell validated the entrypoint syntax and confirmed activation refuses missing saved state. Northflank successfully built commit `2554975` and ran setup mode. The volume mount and write check passed; after activation, the cloud health and saved-data checks all passed. Docker is not installed in the local Windows shell.
+
+CI and CD are enabled. Documentation-only commits can use `[skip ci]` to avoid an unnecessary deployment. Runtime updates deploy from `main`; preserve the persistent volume, the one-instance setting, and the live `BOT_MIGRATION_HOLD=false` runtime variable. Northflank handles container restarts; the Windows watchdog must remain disabled.

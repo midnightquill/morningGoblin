@@ -2,6 +2,8 @@
 
 Last updated: 2026-10-24
 
+The live bot now runs on Northflank. Its cloud volume is the authoritative state. The PC bot is stopped and the Windows **Morning Goblin Watchdog** task is disabled. Use Northflank's service controls for normal restarts; Windows commands below apply to local development or a coordinated rollback. See `docs/NORTHFLANK_SETUP.md` before moving state or restarting the PC copy.
+
 ## First Places To Look
 
 If you need context fast, read these in order:
