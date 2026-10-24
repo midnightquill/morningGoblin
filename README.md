@@ -4,6 +4,8 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 
 The live bot is hosted on Northflank as of 2026-10-24. Its saved state lives on a persistent cloud volume, and the old Windows watchdog is disabled. See [deployment and recovery](docs/NORTHFLANK_SETUP.md) before restarting a local copy.
 
+For development from a phone while the PC is off, see [Codex Cloud setup](docs/CODEX_CLOUD_SETUP.md). The cloud development workspace runs the offline checks without production credentials; publish finished code changes to GitHub to update Northflank.
+
 ## What it does
 
 - Can optionally post a daily morning reminder in one configured channel without using `@everyone`
