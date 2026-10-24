@@ -1,0 +1,12 @@
+# Only runtime source enters the build context; never send secrets or saved state.
+**
+!Dockerfile
+!.dockerignore
+!package.json
+!package-lock.json
+!src/
+!src/**
+!config/
+!config/morning-config.json
+!scripts/
+!scripts/container-entrypoint.sh

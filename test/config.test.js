@@ -14,6 +14,18 @@ test("malformed reloads reject instead of silently replacing the personality", a
     await assert.rejects(loadMorningConfig({ configPath }));
     await writeFile(configPath, JSON.stringify({ acceptedPatterns: ["["] }));
     await assert.rejects(loadMorningConfig({ configPath }));
+    for (const invalid of [
+      { surrealReplies: { chance: 2 } },
+      { surrealReplies: { cooldownMinutes: -1 } },
+      { surrealReplies: { lines: [42] } },
+      { dailyDilemma: { recapChance: -0.1 } },
+      { dailyDilemma: { prompts: ["not a ballot"] } },
+      { dailyDilemma: { prompts: [{ question: "Which?", optionA: "same", optionB: "same" }] } },
+      { dailyDilemma: { prompts: [{ question: "q".repeat(201), optionA: "a", optionB: "b" }] } },
+    ]) {
+      await writeFile(configPath, JSON.stringify(invalid));
+      await assert.rejects(loadMorningConfig({ configPath }));
+    }
     await writeFile(configPath, '\uFEFF{"acceptedStarts":["gm"]}');
     assert.deepEqual((await loadMorningConfig({ configPath })).acceptedStarts, ["gm"]);
   } finally { await rm(dir, { recursive: true, force: true }); }

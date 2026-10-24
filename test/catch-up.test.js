@@ -69,3 +69,16 @@ test("bounded recovery reports truncation and resumes with its oldest-message cu
   assert.equal(second.truncated, false);
   assert.equal(first.messages.length + second.messages.length, 105);
 });
+
+test("a cap smaller than a history page still reports more history to scan", async () => {
+  const messages = Array.from({ length: 200 }, (_, index) => ({ id: String(200 - index), createdTimestamp: 200 - index }));
+  const channel = { messages: { fetch: async ({ before, limit }) => new Map(messages.filter((message) => !before || Number(message.id) < Number(before)).slice(0, limit).map((message) => [message.id, message])) } };
+  for (const maxMessages of [5, 105]) {
+    const first = await fetchRecentMessagesSince(channel, 1, { maxMessages });
+    assert.equal(first.messages.length, maxMessages);
+    assert.equal(first.truncated, true);
+    const second = await fetchRecentMessagesSince(channel, 1, { before: first.before });
+    assert.equal(second.truncated, false);
+    assert.equal(first.messages.length + second.messages.length, 200);
+  }
+});

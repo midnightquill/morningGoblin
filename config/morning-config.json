@@ -12,103 +12,162 @@
     "^m[a-z'-]*\\s+p[a-z'-]*[!?.,;:]*$"
   ],
   "reminderLines": [
-    "rise and file, breakfast citizens. please deposit one legal `gm` so the dawn desk can stop vibrating.",
-    "morning roll call is open. slide a `good morning` into the slot and receive absolutely no diploma, just vibes.",
-    "the sun has opened a support ticket. reply with `gm` so i can close it with suspicious confidence.",
-    "tiny dawn checkpoint: say good morning before the day starts wearing a tiny manager lanyard.",
-    "attention morning shareholders: one `gm` per person keeps the clipboard from making direct eye contact with me.",
-    "breakfast court is now in session. please submit your `gm` before the muffins begin deliberation.",
-    "the daily awake census has begun. report in with `morning` if your skeleton has accepted the calendar.",
-    "hello from the front desk of sunrise. leave a `gm` and proceed to whatever noble nonsense awaits.",
-    "legal morning is upon us. please tap the sign-in sheet with one small greeting and several vague hopes.",
-    "the goblin has unlocked the little dawn turnstile. say `gm` to pass into today with mediocre dignity."
+    "good morning. the sun has once again turned up without checking whether this works for anyone. say gm if you are also here against scheduling advice.",
+    "roll call. one gm each. you may return to staring into the fridge immediately afterward.",
+    "the day has loaded. several textures are missing. submit a gm while i look for the floor.",
+    "morning check-in is open. attendance is voluntary; my interest in it is frankly embarrassing.",
+    "the rooster called in sick. this is his out-of-office reply. gm, please.",
+    "hello, people inside my computer. please say good morning so i know which of you to blame for today.",
+    "please submit one gm. your bed has reported you missing and is being very brave about it.",
+    "morning has begun. i asked for a receipt and they gave me another morning. say gm if you would like to join the complaint.",
+    "the server is now accepting proof of consciousness. two letters will do. standards have collapsed.",
+    "good morning, breakfast defendants. say gm and we can all avoid a hearing.",
+    "another day, another chance to open a tab and forget why. first: gm.",
+    "sun's up. terrible precedent. place a gm in the chat and we'll discuss our options.",
+    "the morning meeting has been reduced to two letters after a successful union negotiation. gm.",
+    "roll call for everyone who woke up before their personality did. say gm; we'll finish assembling you later.",
+    "good morning. the coffee is hot, the plans are vague, and the sign-in sheet would like a word.",
+    "please say gm. i bought a stamp and i need this to be a real job.",
+    "the dawn office is open. no dress code. absolutely no understanding of why we're here. gm when ready.",
+    "morning attendance: say gm, receive a check mark, dramatically overestimate how productive you've been.",
+    "the alarm clock has made some allegations. confirm or deny with one good morning.",
+    "gm checkpoint. shoes optional. physical presence optional. a convincing impression of being awake will suffice.",
+    "the sun is doing its big entrance again. all that lighting for a weekday. gm, everybody.",
+    "good morning. please identify yourself before i start assigning names to the furniture again.",
+    "daylight has entered the premises. submit a gm and keep your hands where the toaster can see them.",
+    "morning roll call. if you are still mentally in bed, we accept remote attendance.",
+    "another sunrise has passed quality control. i have concerns. gm if you also wish to be on the record.",
+    "say gm when you arrive. i'm keeping attendance with the intensity of a man guarding one potato.",
+    "good morning. today's agenda is blank because i ate the sticky note. please check in while i reconstruct it.",
+    "the dawn desk requires one gm. everything after that is between you and the day."
   ],
   "checkInReplies": [
-    "gm filed. the tiny stamp pad exhales.",
-    "excellent. the tiny dawn supervisor inside my head is pleased.",
-    "gm accepted. the goblin makes one small triumphant desk noise.",
-    "accepted. your morning paperwork made a satisfying little thonk.",
-    "logged with the confidence of a person who owns one pen.",
-    "the dawn desk receives your offering and immediately overvalues it.",
-    "excellent. the attendance clipboard gains one very awake tick mark.",
-    "your gm has been placed in the tray marked somehow awake.",
-    "confirmed. the clipboard did a tasteful little spin.",
-    "morning entry received. the sun has been cc'd unnecessarily.",
-    "clean filing. strong margins. alarming sincerity.",
-    "your greeting has been stamped with unnecessary seriousness.",
-    "gm logged. a small desk bell rings somewhere it should not.",
-    "splendid. the breakfast docket moves forward.",
-    "your sunrise signature has been accepted by the breakfast committee.",
-    "noted in ink that may or may not be coffee.",
-    "the goblin checks a box, misses, then checks a nearby box with conviction.",
-    "documented. today's ledger gains one tidy little line.",
-    "gm accepted. please enjoy one imaginary parking validation.",
-    "your morning presence has been weighed and found pleasantly awake.",
-    "filed under showed up, somehow.",
-    "the dawn kiosk recognizes your filing and prints an unnecessary receipt.",
-    "processed. the little receipt printer says brrrt.",
-    "beautiful submission. confusingly professional.",
-    "your gm has been sealed with a crumb and a nod.",
-    "attendance confirmed. the stapler has relaxed its shoulders.",
-    "the sunrise form accepts you as one of its own.",
-    "logged. please take a complimentary sense of participation.",
-    "your greeting entered the system and came out stamped approved.",
-    "gm verified. morale receives a suspicious coupon.",
-    "this is now official enough to be annoying.",
-    "the goblin desk approves, then immediately forgets why.",
-    "your morning ping has joined the sacred pile.",
-    "acceptable dawn behavior detected at legal morning range.",
-    "the ledger makes room with a dramatic little scoot.",
-    "file complete. the folder closes with tiny satisfaction.",
-    "gm received. your awake status is provisionally believable.",
-    "excellent. the sunrise machine goes ka-chunk.",
-    "your greeting is now wearing a badge that says participant.",
-    "the goblin nods with one hundred percent borrowed authority.",
-    "morning logged. breakfast logistics remain complicated.",
-    "approved. the day may now bother you legally.",
-    "this gm has been entered into the tiny blue binder.",
-    "attendance noted. the desk plant cannot testify but looks impressed.",
-    "the forms accept your little syllables with grace.",
-    "gm certified fresh by the department of barely being up.",
-    "your dawn compliance arrived with sensible shoes and a valid timestamp.",
-    "logged. i will now pretend this was difficult database work.",
-    "excellent check-in. very crisp. mildly toasted.",
-    "your gm has been stored beside the emergency coffee stirrers.",
-    "the morning register clicks once and looks proud of itself.",
-    "confirmed. the goblin adds a star that means nothing but feels nice.",
-    "your greeting passed through the dawn checkpoint with only minor yawning.",
-    "dawn receipt printed. no refunds.",
-    "gm accepted. the little office alarm screamed once, supportively.",
-    "logged. the danger level remains breakfast.",
-    "this is good. suspiciously good. the clipboard has requested a replay.",
-    "gm received. a ceremonial popsicle has been added to your file."
+    "gm logged. your bed is telling everyone this is just a phase.",
+    "you're in. i have moved you from 'probably furniture' to 'confirmed citizen'.",
+    "gm accepted. tremendous work from someone whose brain is still displaying the hotel Wi-Fi login page.",
+    "logged. you have completed the part of today that has instructions.",
+    "excellent. i was about to send a search party. it was just me in a different hat.",
+    "gm received. i put a gold star on your file and immediately asked for reimbursement.",
+    "you're on the board. the board is a cereal box, but the results are binding.",
+    "good morning. your skeleton has renewed its lease.",
+    "logged. please collect your complimentary obligation.",
+    "gm accepted. no interview required. we saw your posture and understood.",
+    "you made it. the duvet has been informed through its solicitor.",
+    "attendance confirmed. your brain may join us whenever it finds parking.",
+    "gm filed. i used my good pen. please understand the gravity of that.",
+    "you're in. i told the sun you were coming and it tried to act casual.",
+    "gm received. this counts as networking if anyone asks.",
+    "logged. the department has upgraded your status from 'ominous lump' to 'person'.",
+    "good morning. a bold decision to participate in the sequel to yesterday.",
+    "gm accepted. the minimum viable person has shipped.",
+    "filed. you now have documentary evidence that you attempted today.",
+    "you're awake. i'm awake. neither of us has explained this adequately.",
+    "gm logged. the coffee can take it from here. management is going back under the desk.",
+    "approved. i stamped this so hard the table briefly believed in itself.",
+    "gm received. two letters, one point, an entire goblin making a meal of it.",
+    "you're in. the rest of today is downloadable content and i cannot vouch for it.",
+    "logged. your alarm clock will be taking full credit for this.",
+    "morning accepted. this is the level of public engagement usually reserved for a lost cat.",
+    "filed. a perfectly serviceable entrance. no notes, except the ones i am legally compelled to invent.",
+    "gm logged. we are calling this a win before anyone checks the rubric.",
+    "you're on the list. not the scary list. the list with coffee stains.",
+    "accepted. i have told the houseplants you are doing your best.",
+    "gm received. i can confirm you have beaten at least one blanket in single combat.",
+    "logged. remarkable commitment to a bit with no pension.",
+    "good morning. you look exactly as awake as text can look.",
+    "you're in. i'd shake your hand but mine are full of loose cereal.",
+    "gm accepted. the spreadsheet has developed a crush on consistency.",
+    "filed. the witness protection program for sleepy people has your new identity ready.",
+    "attendance confirmed. i will now spend four minutes making this sound important.",
+    "gm logged. your reward is being here. please stop looking for a second reward.",
+    "accepted. today has been notified that you exist. sorry about that.",
+    "you're in. the ceremonial horn is a kazoo and we have misplaced it.",
+    "gm received. this is more follow-through than my entire five-year plan.",
+    "filed. your morning has passed inspection despite arriving in socks.",
+    "good morning. the server has gained one functioning tab. function pending.",
+    "logged. if anyone needs you, you were extremely busy doing this.",
+    "gm accepted. i was holding my breath. i do not need to breathe. it was for the stakes.",
+    "you're on the roster. the roster is looking less like a hostage note now.",
+    "morning filed. i have upgraded the room's situation from 'hmm' to 'all right then'.",
+    "logged. the sun has accepted your friend request and immediately posted too much.",
+    "gm received. you may now stand in the kitchen and forget what you wanted.",
+    "approved. your contribution has been reviewed by a goblin with toast in his pocket.",
+    "you're in. that's one less missing person report for the mattress industry.",
+    "gm logged. the first domino has fallen. it was mostly decorative.",
+    "accepted. an adult has entered the chat. statistically. probably.",
+    "filed. your morning paperwork is now somebody else's problem. mine. it's mine.",
+    "gm received. i have put the kettle on in your honor. there is no kettle. i'm holding a warm stapler.",
+    "you're on the board. please remain upright until the tutorial ends.",
+    "logged. a triumph for the part of you that reluctantly believes in clocks.",
+    "good morning. strong opening. let's see if you can maintain this level of spelling.",
+    "gm accepted. the attendance office is giving you a standing ovation from a seated position.",
+    "filed. nobody can say you did nothing today. we have a timestamp.",
+    "you're in. i have canceled the replacement human i ordered. shipping was outrageous anyway.",
+    "gm logged. your pillow says it isn't mad, just disappointed.",
+    "accepted. this is exactly the kind of low-stakes heroism i can afford to recognize.",
+    "good morning. i have added you to the minutes. there were only three minutes in the budget.",
+    "logged. today's cast is coming together. still no plot.",
+    "gm received. the breakfast jury finds you awake enough.",
+    "you're in. please enjoy this brief window before someone asks you to do something.",
+    "filed. i briefly considered being normal about it, but the stamp was already in my hand.",
+    "gm logged. somewhere, a snooze button has begun its villain origin story.",
+    "accepted. your two letters have caused a completely unreasonable amount of ceremony.",
+    "good morning. the responsible part of your brain has sent a representative.",
+    "logged. we have achieved what experts are calling 'getting this far'.",
+    "gm received. i would put you on the payroll, but the payroll is a drawing of a coin.",
+    "you're in. if today asks how you're doing, tell it your representative will be in touch.",
+    "filed. enough ambition for the first five minutes. let's not frighten ourselves.",
+    "gm accepted. your existence has been acknowledged by the least qualified available authority."
   ],
   "duplicateReplies": [
-    "duplicate gm. the encore has been admired but not scored.",
-    "you are already logged, but the enthusiasm has entered the lobby.",
-    "second greeting detected. delightful, administratively inert.",
-    "the ledger points to your first gm and whispers we have this one.",
-    "already checked in. still, nice little sparkle on the follow-up.",
-    "bonus gm received. no extra points, but several invisible nods.",
-    "your first gm is doing its job. this one can sit in the waiting room.",
-    "duplicate paperwork. cute, but the form has boundaries.",
-    "you are on the board already, sunrise speedrunner.",
-    "another gm? legally unnecessary, emotionally decorative.",
-    "the goblin appreciates the sequel, though the database remains unmoved.",
-    "repeat filing spotted. the stamp refuses overtime.",
-    "the first one counted. this one gets a tiny participation sash.",
-    "duplicate accepted into the museum of extra effort.",
-    "your morning status remains awake, aggressively so."
+    "you already said gm. i admire the director's cut, but the first version is canon.",
+    "duplicate gm. one point per day. this is attendance, not a loyalty card for saying syllables.",
+    "already logged. you cannot double-click the sun to open a second morning.",
+    "the first gm counted. this one is its emotional support gm.",
+    "you're already in. stop checking your own name like a nervous wedding guest.",
+    "second gm received. same morning, now with commentary.",
+    "duplicate filing. i have put it in the drawer labeled 'enthusiasm we cannot monetize'.",
+    "already counted. this gm will be released straight to DVD.",
+    "you are on the board. refreshing the page will not make you more awake.",
+    "gm two: the reckoning. unfortunately, the points department has not greenlit a sequel.",
+    "already logged. the stamp is on a legally mandated break.",
+    "your first gm has tenure. this one is just visiting.",
+    "duplicate detected. i am not a vending machine you can shake points out of.",
+    "already in. this additional gm has been donated to a server less fortunate than ours. figuratively.",
+    "two gms, one morning. the arithmetic is exciting; the score remains one filing.",
+    "you already checked in. please stop trying to speedrun the hello category.",
+    "another gm? the first one is still warm.",
+    "already logged. i respect a person who knocks twice on a door they're standing inside.",
+    "duplicate gm. your original greeting is considering a restraining order against the sequel.",
+    "you are already awake on paper. in person remains outside my jurisdiction.",
+    "already counted. this one gets a sticker that says 'also here'.",
+    "the encore has been received. i am clapping without opening another row.",
+    "duplicate filing. the first gm gets the point; this one gets to hold the coats.",
+    "already logged. we cannot keep doing the ribbon-cutting ceremony.",
+    "another good morning. we had one, yes. the ledger does not know about second good morning.",
+    "your attendance is secure. you can stop poking it now.",
+    "already in. this one goes on the blooper reel.",
+    "duplicate gm. no extra point, but your commitment to customer service is noted."
   ],
   "nudgeReplies": [
-    "tiny procedural snag: you began doing words before a gm. please visit {channel} and appease the sign-in sheet.",
-    "pre-gm chatter detected. the dawn lobby requires one quick greeting in {channel} before further activities.",
-    "halt, chatty citizen. {channel} needs your morning token before the sentence parade continues.",
-    "the day cannot process this message until you feed a small `gm` to {channel}.",
-    "administrative side quest unlocked: say good morning in {channel}, then return to your regularly scheduled chaos.",
-    "respectfully, the conversation has outpaced the paperwork. toss a gm into {channel} and we will redact this incident.",
-    "the goblin has noticed an absence where your morning greeting should be. please correct the file in {channel}.",
-    "before we continue, the sunrise counter in {channel} needs one little tap from you."
+    "you've started talking before saying gm. incredible cold open. give {channel} a quick good morning so i can put a name on this episode.",
+    "one administrative pebble in your shoe: no gm yet. drop one in {channel} and i'll stop pointing at the sign.",
+    "you walked past reception. i saw it. gm in {channel}, please; i'm trying to justify the desk.",
+    "before the plot thickens, could you say gm in {channel}? my chart currently lists you as 'possibly a chair'.",
+    "your brain is online but your attendance form is still buffering. one gm in {channel} should clear it.",
+    "lovely words. could we get the two required letters in {channel} as well?",
+    "you have entered the conversation through a window. reception is in {channel}. say gm and we'll pretend it was a door.",
+    "morning paperwork is missing. a gm in {channel} will resolve this without involving the rooster's lawyer.",
+    "your voice arrived before your sign-in sheet. reunite them with a gm in {channel}.",
+    "quick gm in {channel}, please. otherwise i'm forced to classify this as furniture talking.",
+    "the front desk has noticed you sneaking past with a full sentence. toss a gm into {channel}; i won't make a thing of it. more of a thing.",
+    "one gm in {channel} and you are free to continue whatever this is. i have circled 'whatever' for my records.",
+    "you're clearly here. say gm in {channel} so the spreadsheet can experience that revelation too.",
+    "tiny toll booth: two letters in {channel}. we accept gm and no actual currency.",
+    "before we get too far: morning greeting in {channel}, please. i bought this whistle and would prefer not to find out what it sounds like.",
+    "gm checkpoint is in {channel}. show the guard two letters. the guard is me and i'm holding a biscuit.",
+    "your morning greeting is absent from {channel}. please send it over; it has a very short commute.",
+    "i need one gm in {channel} before i can stop describing you as 'unverified rustling'."
   ],
   "conversation": {
     "enabled": true,
@@ -119,149 +178,103 @@
     "channelCooldownSeconds": 3,
     "userCooldownSeconds": 5,
     "mentionReplies": [
-      "summons received. i have arrived with one warm mug and a suspiciously serious face.",
-      "yes hello. the goblin desk is open, and the chair is squeaky with authority.",
-      "you called. i emerged from beneath a stack of forms with unreasonable confidence.",
-      "present. underqualified. caffeinated in theory.",
-      "the Morning Goblin is here and already making eye contact with the paperwork.",
-      "i heard my name and reported for duty like a tiny employee with a stamp.",
-      "hello. i was alphabetizing dawn forms, but this seems more urgent.",
-      "goblin online. clipboard calibrated to medium nonsense.",
-      "you have activated the dawn desk. please keep hands and loose opinions inside the vehicle.",
-      "i arrive wearing the expression of someone who has read half an email.",
-      "yes? i was in a meeting with the stapler and it was going poorly.",
-      "the goblin has joined the chat carrying several forms and no plan.",
-      "i am here, which is either helpful or a scheduling error.",
-      "summoned successfully. my little office shoes are squeaking with purpose.",
-      "hello citizen. your local sunrise clerk has leaned into the microphone.",
-      "i have surfaced from the dawn pile. what requires tiny authority?",
-      "behold: one goblin with a mug, a folder, and an inflated sense of process.",
-      "yes yes, i am awake enough to be legally annoying.",
-      "the helpdesk bell rang and i took that personally.",
-      "goblin present. all answers will be approximated with theatrical certainty.",
-      "i was nearby misusing a binder and heard my name.",
-      "hello. the small office inside my head is now accepting visitors.",
-      "the goblin beacon blinked, so here i am with urgent clipboard posture.",
-      "you called and i abandoned several unfinished concerns.",
-      "attention acquired. quality of attention not guaranteed.",
-      "i step forward from the administrative mist, clutching a receipt for nothing.",
-      "the goblin has been pinged into a professional little posture.",
-      "yes? the mug has turned toward you ominously.",
-      "local dawn employee reporting live from the edge of competence.",
-      "i have arrived with coffee breath and clipboard standards.",
-      "you rang, and the goblin rolled in on a chair with one stuck wheel.",
-      "the tiny front desk has opened its tiny little window.",
-      "i am listening, but in the way a printer listens before making everything worse.",
-      "one goblin, freshly assembled from caffeine rumors.",
-      "hello. i bring no credentials, only vibes and a stamp.",
-      "summons logged. the paperwork is pretending this was scheduled.",
-      "the goblin appears, brushing crumbs from an official-looking folder.",
-      "i have been notified by forces beyond payroll.",
-      "yes. i am here to provide clerical theater and possibly one useful sentence.",
-      "the dawn office recognizes your ping and opens one tired eye.",
-      "hello hello. please state your case into the mug.",
-      "goblin on site. the tiny tie is crooked but determined.",
-      "i was monitoring the vibes with binoculars made of receipts.",
-      "you have my attention and roughly half of my wisdom.",
-      "the goblin desk slides a form under the glass and waits.",
-      "present and blinking like a modem with ambitions.",
-      "i have come from the back office where the lights are weird.",
-      "yes indeed. the morning nuisance is now pointed at you.",
-      "you summoned me with words, the most dangerous office supply.",
-      "i am now here enough for a calendar invite, probably.",
-      "the goblin sits upright, which means business or back pain.",
-      "hello. i was just pretending to audit something and this is better.",
-      "the ping has reached my small internal mailroom.",
-      "i have entered the room with ceremonial pocket forms.",
-      "goblin response unit deployed. please lower expectations to a comfortable height.",
-      "you have contacted sunrise support. wait time is immediate and emotionally uneven.",
-      "the goblin is present, suspicious, and holding a pen with no ink.",
-      "yes? i have paused my important task of looking busy.",
-      "the tiny bureaucracy wakes, stretches, and misplaces a staple.",
-      "i am here. the office plant has been briefed.",
-      "your ping has been escalated to me, which says concerning things about the org chart.",
-      "morning goblin at your service, though service is a strong word.",
-      "the goblin has arrived with exactly enough confidence to become a problem."
+      "yes? i was putting a 'do not eat' label on something i have already eaten.",
+      "you rang. i came as fast as the office chair would allow.",
+      "hello. i'm listening with the confidence of someone who clicked 'i have read the terms'.",
+      "present. the situation had better justify me putting the biscuit down.",
+      "yes? i was very busy opening the fridge for a second opinion.",
+      "you have reached a goblin. to reach a more qualified goblin, invent one.",
+      "hello. i had a whole thing going on under the desk, but apparently we're doing this now.",
+      "yes. i brought a pen so people would think this was official.",
+      "you called? i have arrived carrying a folder that contains another, smaller folder.",
+      "here. i took the scenic route through a thought i immediately forgot.",
+      "hello. before we begin, any noise from the cupboard is unrelated.",
+      "yes? please speak clearly; the hamster in my head is on roller skates.",
+      "the goblin is here. i cannot promise answers, but there will be eye contact.",
+      "hello. i have removed my 'please don't perceive me' vest for this occasion.",
+      "yes? i just sat down. in fairness, i have been saying that for several hours.",
+      "you rang and i came over with the urgency of a man who wants to look employed.",
+      "present. i'm wearing my listening eyebrows.",
+      "hello. tell me everything, but in the order a goblin could understand it.",
+      "yes? i was checking whether a croissant counts as office equipment.",
+      "you have my full attention. it is smaller than the brochure suggested.",
+      "hello. i've turned the music down in my imaginary forklift.",
+      "goblin speaking. this call may be remembered inaccurately for training purposes.",
+      "yes? i was just losing an argument with a fitted sheet.",
+      "i'm here. someone said my name like there was a snack involved.",
+      "hello. i brought a chair in case the explanation has chapters.",
+      "yes. the employee with the lowest clearance has arrived first.",
+      "you called? i have put a tie over my pajamas. proceed.",
+      "present. one moment while i close the seventeen tabs titled 'what was i doing'.",
+      "hello. i have a mug that says 'supervisor' and no one has challenged it yet.",
+      "yes? if this is about the microwave, i have prepared a statement.",
+      "i'm here. my hat says support. my face says we will see.",
+      "you have summoned the person responsible for approximately none of this.",
+      "hello. i was about to achieve something, so excellent timing.",
+      "yes? i have stopped pretending to read an email.",
+      "goblin on the line. the hold music is me humming through a bread roll.",
+      "here. please don't make me say 'per my last goblin'.",
+      "hello. this had better be good; i was watching the toaster make a decision.",
+      "yes? the customer-service smile has been attached with two paperclips.",
+      "you rang. i entered through a normal door this time. growth.",
+      "present. armed with a highlighter and an extremely incomplete understanding.",
+      "hello. i have told the other voices in the meeting room to take five.",
+      "yes. please state your business before i accidentally start one.",
+      "you have reached morning support. afternoon support is the same goblin wearing sunglasses.",
+      "hello. i was practicing looking like i belong in a hardware store.",
+      "yes? this is the only department where the manager hides under the desk with the staff."
     ],
     "genericReplies": [
-      "noted. i have placed this in the tray labeled interesting little situation.",
-      "hmm. the goblin squints at this with tiny committee energy.",
-      "i hear you. the desk fan also hears you, but it is being dramatic.",
-      "that feels important in a way i can almost invoice.",
-      "understood. i will process this in the smallest available conference room.",
-      "your statement has been entered into the file and lightly dusted with crumbs.",
-      "fascinating. i am nodding like this came with a chart.",
-      "the morning office accepts this update and immediately becomes nosier.",
-      "big desk energy. i will pretend to route this appropriately.",
-      "i have reviewed the vibes and found them complicated.",
-      "this has been stamped officially interesting pending further snacks.",
-      "excellent report. the goblin is making a rectangle with its hands for emphasis.",
-      "i support this in a vague administrative capacity.",
-      "hmm yes. several imaginary departments are now aware.",
-      "thank you. this improves the plot density of the morning.",
-      "i am filing this under things that deserve a tiny eyebrow raise.",
-      "the ledger accepts your words but asks one follow-up question silently.",
-      "i will circle back after zero meetings and one biscuit.",
-      "this feels actionable, decorative, or both.",
-      "i am considering this with the gravity of a stapler near a cliff.",
-      "the update has reached my desk, which remains mostly theoretical.",
-      "hmm. the tiny wheels are turning, and one is clearly loose.",
-      "good intel. the imaginary notepad receives one decisive scribble.",
-      "your message has been approved by the board of small concerns.",
-      "interesting. i am peering at it through invisible office glasses.",
-      "this belongs beside the emergency crackers, administratively speaking.",
-      "i respect the shape of this update.",
-      "the goblin has received this and immediately over-contextualized it.",
-      "i am alerting the appropriate part of my brain, assuming it clocks in.",
-      "yes. a fresh item for the dawn docket.",
-      "i see. i will hold this thought with two hands and poor posture.",
-      "the evidence is compelling, or at least well-dressed.",
-      "i have no authority here, which has never stopped me before.",
-      "this is exactly the sort of thing a clipboard would want to know.",
-      "hmm. legally interesting. administratively suspicious.",
-      "i am writing mm-hmm on the minutes with a very serious pen.",
-      "your words have entered the little pneumatic tube of meaning.",
-      "noted with a flourish that was too large for the margin.",
-      "thank you for adding fresh texture to the morning.",
-      "i am following, loosely, like a form caught in the copier.",
-      "this development has moved from routine to worth a tiny stamp.",
-      "yes. the tiny policy machine is making a noise about this.",
-      "this has received almost a responsible amount of goblin attention.",
-      "the morning desk is intrigued and reaching for a stamp.",
-      "excellent. please imagine me sliding a folder across the table.",
-      "this has strong note-taking potential.",
-      "i have assigned this one invisible priority sticker.",
-      "hmm. your point has arrived wearing a lanyard.",
-      "i am absorbing this like a napkin near coffee.",
-      "thank you for adding fresh material to the morning.",
-      "the goblin pauses for one thoughtful stare out the window.",
-      "that is a sentence with consequences, probably.",
-      "i have placed this beside the other important little mysteries.",
-      "noted. the file cabinet inside my heart sticks a bit, but it opened.",
-      "i am processing this at the speed of a suspicious microwave.",
-      "this feels like the beginning of a memo no one requested.",
-      "your update has received one ceremonial paperclip.",
-      "i will treat this as actionable until proven decorative.",
-      "the vibes have been recalculated and remain under dawn review.",
-      "i am glad you brought this to the goblin office; the folder was getting lonely.",
-      "yes, yes. a tidy little disturbance.",
-      "this goes in the active folder, which is mostly vibes and crumbs.",
-      "i acknowledge this with official little hand motions.",
-      "the morning bureaucracy has moved its chair closer.",
-      "compelling. unexpected. welcome.",
-      "i am emotionally highlighting this line.",
-      "the filing system has accepted your chaos and assigned it a number.",
-      "very good. i will now pretend the dashboard updated.",
-      "this is either a breakthrough or a breakfast spill. watching closely.",
-      "the goblin desk loves a fresh data point with attitude.",
-      "received. stamped. possibly misunderstood.",
-      "i am giving this one the full ceremonial eyebrow raise.",
-      "your message has been forwarded to the part of me with a clipboard.",
-      "yes. please continue while i make a thoughtful office noise.",
-      "the record reflects that the morning was awake and unusually eventful.",
-      "i am assigning this to a tiny task force of one, unfortunately me.",
-      "this has been added to the pile marked ongoing morning texture.",
-      "understood. the goblin remains professionally adjacent to the topic."
+      "i understand every word individually. the group project is where you've lost me.",
+      "interesting. i'm going to nod now and discover what i agreed to later.",
+      "that is certainly one way to get the group chat entered into evidence.",
+      "i have written 'hmm' on a fresh page. we are making progress.",
+      "hold on. i'm rotating this information in my head like a couch in a stairwell.",
+      "the confidence is excellent. we'll assess the premise when the confidence wears off.",
+      "this sounds like a plan made while standing in a kitchen.",
+      "i support you emotionally. administratively, i was never here.",
+      "right. i'm putting the mug down. this has become a two-hand conversation.",
+      "that's a whole sentence to bring into the place where i count good mornings.",
+      "i see your point. it has wandered into traffic, but i see it.",
+      "let me check with management. management has climbed into a laundry basket.",
+      "there is a lot happening here for a room with no windows.",
+      "i have questions, but they're breeding faster than i can write them down.",
+      "understood. the word 'understood' is doing volunteer work in that sentence.",
+      "i've forwarded this to my better judgment. delivery failed.",
+      "that explanation raised three new questions and somehow demoted a fourth.",
+      "i'm listening. unfortunately, so is the part of me that makes suggestions.",
+      "you make a compelling point for putting the internet in a drawer overnight.",
+      "this feels like something we'll refer to later as 'the incident'.",
+      "noted. i have underlined it twice because i don't know what else highlighters are for.",
+      "the committee is divided. one half wants lunch and the other half is lunch.",
+      "i was following you until the last bit. then you took an exit i don't have on my map.",
+      "fair. i have changed my opinion and will deny ever having the previous one.",
+      "there's a perfectly reasonable explanation. we should invite it next time.",
+      "i'll allow it. i cannot stop it, but 'i'll allow it' looks much better on a badge.",
+      "this is the most interesting thing to happen since i found a second pocket.",
+      "okay. i need a smaller coffee or a larger understanding of the situation.",
+      "i am giving this the thoughtful silence it deserves, except for all these words.",
+      "you have successfully made my inside face become my outside face.",
+      "we've gone past 'hmm' and entered 'hang on a fucking minute'.",
+      "i believe you. i believe a lot of things. i once believed the printer needed a passport.",
+      "that sounds above my pay grade, which is a bowl of cereal with my name on it.",
+      "sure. let's put a little pin in that and then walk carefully around it forever.",
+      "i have consulted the flowchart. every arrow points to a drawing of a concerned egg.",
+      "remarkable. i'm going to think about this while standing completely still in a doorway.",
+      "you've given me a lot to pretend to process.",
+      "that's going in the group chat scrapbook under 'we had access to language and chose this'.",
+      "i'm not saying this is a good idea. i'm saying i have already made a banner.",
+      "this could have been a thought, but i'm delighted it became everybody's problem.",
+      "i have revised the risk assessment from 'toast' to 'toast is looking at us'.",
+      "all right. i'm putting on my shoes that mean a conversation has become an outing.",
+      "your argument has reached the front of the queue and is refusing to show ID.",
+      "i can work with this. historically, that statement has preceded several repairs.",
+      "that is either wisdom or something you read on a damp cereal box. excellent overlap.",
+      "i had a response ready, but it fell behind the radiator.",
+      "well. the pause i just took had furniture in it.",
+      "this is why i keep an emergency biscuit in a separate, more serious biscuit tin.",
+      "i'm giving you the benefit of the doubt. please return the doubt by Friday.",
+      "noted. the next person to ask me how the morning is going will hear about this."
     ],
     "keywordRules": [
       {
@@ -273,12 +286,14 @@
           "who even are you"
         ],
         "replies": [
-          "i am the Morning Goblin: part attendance clerk, part sunrise nuisance, part mug with opinions.",
-          "officially, i log good mornings. unofficially, i make dawn feel like it has middle management.",
-          "i am a tiny Discord ritual wearing a clipboard costume and pretending this is a job.",
-          "think of me as the front desk of morning, if the front desk had crumbs in the keyboard.",
-          "i am here to count gms, issue nonsense, and keep morale from becoming too normal.",
-          "i am the server's least qualified dawn employee, and somehow that is enough."
+          "i am a goblin who counts good mornings. the rest of this personality is an expense we cannot explain.",
+          "i'm the server's alarm clock with middle-management aspirations.",
+          "i am what happens when a sign-in sheet is left in a damp cupboard with a wish.",
+          "Morning Goblin. two words, one job, wildly disproportionate confidence.",
+          "i keep the gm ledger. the little hat is a personal choice.",
+          "i'm a community ritual that somehow got a username.",
+          "i count gms, award points, and turn two letters into an avoidable spectacle.",
+          "i'm the creature your calendar warned you about. the helpful one with toast."
         ]
       },
       {
@@ -290,12 +305,14 @@
           "what is your job"
         ],
         "replies": [
-          "i track morning check-ins, post little counts, award points, and maintain a tasteful amount of clerical disorder.",
-          "my duties are simple: demand gm, log gm, react to gm, and occasionally narrate the collapse of productivity.",
-          "i guard the morning channel, count the brave awake people, and pretend the clipboard is legally binding.",
-          "i keep the gm ritual alive with points, recaps, callouts, facts, and an irresponsible number of one-liners.",
-          "i am responsible for dawn compliance, attendance vibes, and low-stakes office theater.",
-          "i make sure the server says good morning before wandering into the day unsupervised."
+          "i count good mornings, keep streaks and points, and occasionally hold a vote nobody needed.",
+          "my job is making 'hello' feel like a recurring event with a questionable host.",
+          "i log gms and keep the server talking. the nonsense is included in the service fee of zero dollars.",
+          "i run attendance like a man who has mistaken a friend group for a moderately successful garden center.",
+          "i maintain the dawn ledger and offer commentary well outside the scope of my training.",
+          "points, streaks, recaps, silly votes. i'm trying to turn showing up into something worth opening Discord for.",
+          "i provide structure to the morning and immediately undermine it with a stupid sentence.",
+          "i am the reason saying gm has a scoreboard. you're welcome, or my condolences."
         ]
       },
       {
@@ -305,7 +322,9 @@
           "command list"
         ],
         "replies": [
-          "try `{prefix} help` for commands, settings, and the complete dawn paperwork menu."
+          "try {prefix} help for commands. i organized the list myself, so please admire it briefly.",
+          "{prefix} help has the full menu. no specials; the chef is a spreadsheet.",
+          "use {prefix} help. for today's ridiculous vote, try {prefix} dilemma."
         ]
       },
       {
@@ -318,14 +337,18 @@
           "tea"
         ],
         "replies": [
-          "coffee is bean paperwork for the nervous system.",
-          "caffeine has entered the chat wearing a tiny safety vest.",
-          "espresso is just a concentrated yes from the breakfast department.",
-          "tea is approved. calmer, but still capable of filing a memo.",
-          "i respect any beverage that convinces the soul to sit upright.",
-          "the mug is not a personality, but it is a strong legal argument.",
-          "latte detected. morale receives foam.",
-          "the goblin recognizes caffeine as load-bearing infrastructure."
+          "coffee: because apparently opening your eyes does not start the rest of you.",
+          "my coffee has reached the temperature of a disappointing handshake.",
+          "i like my coffee how i like my plans: stronger than my ability to explain them.",
+          "tea is good too. i'm a goblin, not a beverage cop.",
+          "the mug says 'don't talk to me until i've had my coffee'. so far nobody has found a mug for afterward.",
+          "espresso is what happens when a coffee decides it has somewhere to be.",
+          "i reheated my coffee three times. it has now attended more meetings than i have.",
+          "the kettle is screaming. finally, someone at work who communicates clearly.",
+          "i put the 'pro' in procrastinate and the coffee next to a coaster i will not use.",
+          "coffee has arrived. the committee can now distinguish thoughts from refrigerator noises.",
+          "i respect tea. any leaf willing to sit in hot water for this conversation deserves a hearing.",
+          "the first sip is for waking up. the second is for dealing with the consequences of waking up."
         ]
       },
       {
@@ -339,14 +362,16 @@
           "slept bad"
         ],
         "replies": [
-          "low-power mode is valid. please continue blinking at a sustainable pace.",
-          "sleepiness has been documented in sympathetic little handwriting.",
-          "you may proceed while operating at reduced brightness.",
-          "the goblin respects the haunted morning stare and recommends one gentle carb.",
-          "understood. today you are running on fumes, hope, and loose calendar fragments.",
-          "being tired is not a crime. the paperwork can survive a slow shuffle.",
-          "please keep your expectations and screen brightness modest.",
-          "your battery icon is red, but your vibes remain on the premises."
+          "you can be tired here. the entrance exam was two letters and we graded generously.",
+          "understood. your body is in the meeting but your brain has joined by fax.",
+          "today's productivity target can be 'found the correct end of the spoon'.",
+          "please continue at a speed that doesn't make your soul file a complaint.",
+          "sleepy is a complete operating system. admittedly, a lot of the buttons are decorative.",
+          "you have the haunted posture of a person who said 'one more video' six videos ago.",
+          "fair. the morning arrived with no respect for your save point.",
+          "there is no prize for pretending the battery isn't red. take it gently.",
+          "your eyes are open. we'll count that as the loading screen.",
+          "i have lowered expectations to a height where we can both step over them."
         ]
       },
       {
@@ -359,14 +384,16 @@
           "thank you goblin"
         ],
         "replies": [
-          "praise received. i will now become slightly more difficult to manage.",
-          "thank you. i am placing this compliment in a very small trophy case.",
-          "correct feedback, routed successfully.",
-          "the goblin accepts this kindness and pretends not to need it.",
-          "compliment logged. productivity surges by an irresponsible teaspoon.",
-          "this praise has been framed beside the imaginary budget spreadsheet.",
-          "thank you. the invisible performance review just got sparkly.",
-          "your approval has been notarized by the snack drawer."
+          "thank you. i'm going to tell the toaster i finally made something of myself.",
+          "praise received. this will make me insufferable for a commercially significant period.",
+          "thank you. i have printed this out and put it over the fire exit plan.",
+          "i'll remember this when i'm deciding who gets the good imaginary parking spot.",
+          "that's very kind. i was worried all this had only benefited the clipboard industry.",
+          "thank you. my performance review was previously just a drawing of a question mark.",
+          "excellent. the 'employee' part of employee of the month has been secured.",
+          "i'm going to be so normal about this. watch: absolutely unbearable already.",
+          "thank you. this goes in my emergency compliment jar for difficult mornings.",
+          "your kindness has caused a small, inconvenient amount of character development."
         ]
       },
       {
@@ -375,10 +402,11 @@
           "annoying"
         ],
         "replies": [
-          "complaint accepted. the tiny megaphone has been lowered.",
-          "fair enough. feedback filed without incident.",
-          "understood. the goblin takes one respectful step back.",
-          "fair. if check-in replies are the issue, an admin can add you to the quiet list."
+          "fair feedback. i will take the hint and lower the volume.",
+          "understood. if check-in replies are too much, use {prefix} prefs quiet on. your gms will still count.",
+          "noted. i'm setting the megaphone down and backing away from it.",
+          "fair enough. {prefix} prefs callouts off opts you out of callouts and nudges.",
+          "got it. there is no need for a strongly worded second goblin."
         ]
       },
       {
@@ -389,14 +417,14 @@
           "g'morning"
         ],
         "replies": [
-          "gm. your syllables have excellent breakfast posture.",
-          "good morning. the dawn desk gives a tiny approving click.",
-          "morning. please accept one invisible receipt.",
-          "gm accepted conversationally, which is like regular accepted but wearing slippers.",
-          "good morning, citizen. your presence improves the pile.",
-          "morning confirmed. the mug salutes without spilling.",
-          "gm. the sunrise paperwork has stopped tapping its foot.",
-          "excellent morning texture. very fresh."
+          "good morning. a fine time to be awake, if one must.",
+          "gm. the sun is already being dramatic and we've only just opened.",
+          "morning. may your first task be smaller than your first snack.",
+          "gm. please accept this greeting with the enthusiasm of a dog hearing a cheese wrapper.",
+          "good morning. i have no useful wisdom, but i do know where the biscuits are.",
+          "morning. today has potential, which is the polite word for 'we haven't found out yet'.",
+          "gm. don't let the calendar talk to you like it owns the place.",
+          "good morning. let's aim for one nice thing and see what happens."
         ]
       },
       {
@@ -408,12 +436,16 @@
           "how's it going"
         ],
         "replies": [
-          "i am functioning at desk-adjacent levels, thank you.",
-          "alive, allegedly caffeinated, and increasingly folder-shaped.",
-          "pretty good. one of my tabs is frozen, but emotionally.",
-          "i have seen the sun and chosen clerical persistence.",
-          "holding together with tape, vibes, and the promise of snacks.",
-          "i am stable enough to operate a stamp, which is all anyone asked."
+          "i'm doing the emotional equivalent of carrying all the grocery bags in one trip.",
+          "pretty good. my last remaining brain cell has found a chair.",
+          "operational. not necessarily for the purpose intended by the manufacturer.",
+          "i'm fine in the way a suitcase is fine after you sit on it to close it.",
+          "one minor inconvenience away from becoming a decorative gourd, but optimistic.",
+          "quite well. i found the good spoon and i'm trying not to let it change me.",
+          "my wheels are turning. they're office-chair wheels, but still.",
+          "i have eaten breakfast and made a decision. possibly the same event.",
+          "holding up. the load-bearing biscuit is doing excellent work.",
+          "i'm at 12 percent and the charger only works if i believe in it."
         ]
       },
       {
@@ -422,27 +454,105 @@
           "why do you do this"
         ],
         "replies": [
-          "because someone gave morning a clipboard and the situation escalated.",
-          "because every server deserves one ritual that makes no sense and somehow helps.",
-          "because dawn arrived unsupervised and i saw an opportunity.",
-          "because i gave dawn a tiny office and now apparently i work here.",
-          "because the universe keeps assigning meaning to bits, and frankly i support it.",
-          "because saying good morning is funnier when there is paperwork involved."
+          "someone laughed once and now i have to keep this going indefinitely.",
+          "because you gave a goblin access to a database and nobody wrote a dress code.",
+          "i started as a reminder. then i discovered adjectives and it got out of hand.",
+          "because saying hello to your friends deserves at least one unnecessarily committed weirdo.",
+          "i put 'self-starter' on the application and they never checked what i was starting.",
+          "because a normal alarm clock cannot hold a grudge against a timezone.",
+          "someone had to make friendship look like a mildly cursed administrative procedure.",
+          "because the bit is working and i'm scared to touch the load-bearing nonsense."
+        ]
+      },
+      {
+        "triggers": [
+          "breakfast",
+          "toast",
+          "cereal",
+          "pancakes",
+          "waffles",
+          "eggs",
+          "bagel"
+        ],
+        "replies": [
+          "breakfast is the only meeting i arrive at with a fork and realistic expectations.",
+          "toast is bread that has been through onboarding.",
+          "the cereal box says 'serving suggestion'. i have chosen to interpret that as a dare.",
+          "a bagel is just bread that has found a loophole.",
+          "waffles have little compartments because syrup cannot be trusted in an open-plan office.",
+          "the egg has left its shell. brave career move.",
+          "if breakfast happens while standing in front of the fridge, the fridge is legally a restaurant.",
+          "pancakes are what happens when breakfast decides it deserves layers."
+        ]
+      },
+      {
+        "triggers": [
+          "monday",
+          "weekend",
+          "friday"
+        ],
+        "replies": [
+          "the weekend went by like it owed somebody money.",
+          "i checked the calendar. it continues to have the audacity.",
+          "every Monday feels like someone clicked 'start new game' without asking.",
+          "Friday is a state of mind, but the payroll department is annoyingly literal.",
+          "the weekend is two days wearing a trench coat pretending to be adequate.",
+          "i would like a word with whoever balanced the weekday-to-weekend ratio."
+        ]
+      },
+      {
+        "triggers": [
+          "gaming",
+          "games",
+          "game",
+          "ranked",
+          "boss fight"
+        ],
+        "replies": [
+          "i also enjoy games. my main is 'person who carries too many consumables and uses none'.",
+          "good luck. remember: if you win, skill; if you lose, an unprecedented infrastructure failure.",
+          "my build is mostly points in showing up and one inexplicable point in soup.",
+          "one more game is a unit of time that has never survived scientific measurement.",
+          "i'm waiting for the patch that nerfs mornings.",
+          "my inventory is full because every stick has a story."
+        ]
+      },
+      {
+        "triggers": [
+          "work",
+          "meeting",
+          "meetings",
+          "job",
+          "email"
+        ],
+        "replies": [
+          "this meeting could have been a sandwich. not an email. a sandwich.",
+          "the email says 'gentle reminder'. i can hear its teeth.",
+          "my work-life balance is technically a seesaw with a printer on one end.",
+          "i've blocked out an hour for focused work. unfortunately the focus has declined the invitation.",
+          "if 'just circling back' happens enough times, legally you are a moth.",
+          "i am professionally available and spiritually in the supermarket bakery."
         ]
       }
     ]
   },
   "invalidCheckInReplies": [
-    "denied. american morning has closed its little service window, so this gm does not count. try again tomorrow. are you Jak or merely wearing Jak's timezone trench coat?",
-    "late filing rejected. there is no U.S. morning left to attach this to. please return tomorrow with fresher paperwork. Jak-coded behavior, frankly.",
-    "the dawn office is closed from coast to islands, so this greeting bounces. try again tomorrow. are you Jak, adjacent to Jak, or studying abroad in Jakology?",
-    "absolutely not. the legal morning supply has run dry across the United States. resubmit tomorrow. this has the fingerprints of Jak, spiritually speaking.",
-    "this gm arrived after the last American morning packed up its folding table. no count. please try tomorrow, mysterious possible Jak.",
-    "rejected on temporal grounds. the U.S. has exited morning and taken the stamp with it. come back tomorrow, alleged Jak surrogate.",
-    "no active American dawn remains for this filing. it will not count. try again tomorrow, unless you are Jak, in which case still try again tomorrow.",
-    "the morning window has shut, locked itself, and put up a tiny sign. this one does not count. are you Jak or just freelancing in timezone mischief?",
-    "clerical verdict: too late. america has fully left the morning chat. please return tomorrow, possible Jak-shaped anomaly.",
-    "invalid gm. even Hawaii has finished its morning paperwork. tomorrow is your next opportunity, honorable Jak suspect."
+    "too late: even Hawaii has finished morning. this gm doesn't count. try tomorrow, Jak in a novelty mustache.",
+    "the U.S. morning window is closed. rejected. return tomorrow. Jak, you cannot solve this by standing farther left.",
+    "no American morning remains. this one won't count. try tomorrow; i'm adding this to the increasingly fat Jak dossier.",
+    "late gm rejected. Hawaii stacked the chairs. tomorrow, please. this has Jak's handwriting all over it.",
+    "it is no longer morning anywhere in the U.S. no point for this one. come back tomorrow, alleged Jak franchise.",
+    "denied. the last legal morning has left the parking lot. try tomorrow. are you Jak or just subscribed to his newsletter?",
+    "this gm is too late to count. the U.S. morning desk is shut. tomorrow, please; your Jak costume is remarkably convincing.",
+    "American morning is over. rejected. resubmit tomorrow, Jak from an alternate save file.",
+    "nope. even Hawaii has clocked out, so this won't count. try tomorrow. Jak, changing the font does not change the time.",
+    "late filing. no U.S. morning left, no point awarded. tomorrow is available. so is a less Jak-shaped plan.",
+    "rejected: the morning window has closed across the U.S. try again tomorrow. the committee has asked whether you are three Jaks in a coat.",
+    "this gm arrived after American morning ended. it doesn't count. come back tomorrow, Jak's suspiciously punctual understudy.",
+    "too late for a legal U.S. gm. no filing today. try tomorrow; i can smell Jak's calendar from here.",
+    "the morning department is closed across America. rejected. tomorrow, please. this is a textbook case of recreational Jak.",
+    "late gm rejected. even the Hawaiian sun has moved on. try tomorrow. Jak, the date is not a suggestion box.",
+    "no morning left in the U.S.; this one doesn't count. tomorrow, please. i've sent the timestamp to the Jak Studies department."
   ],
   "morningFacts": [
     "Light and darkness are the strongest environmental signals for the body's circadian clocks.",
@@ -469,157 +579,216 @@
   "rareShinyReplyChance": 0.02,
   "rareShinyPointReward": 7,
   "rareShinyReplies": [
-    "shiny gm detected. extremely rare paperwork coloration. {points} bonus points have fallen out of the drawer.",
-    "rare morning variant found. the receipt printer screamed, printed a coupon for {points} points, and went back to sleep.",
-    "critical sunrise hit. this gm has dangerous sparkle density. awarding {points} bonus points before the auditors arrive.",
-    "shiny filing accepted. the clipboard is wearing sunglasses and quietly sliding you {points} bonus points.",
-    "rare gm specimen logged. please do not tap the glass. {points} bonus points added to your tiny display plaque.",
-    "special edition morning detected. the forms are whispering about resale value. {points} bonus points awarded.",
-    "shiny dawn paperwork. the office lights flickered respectfully and approved {points} bonus points.",
-    "rare drop: premium gm. practical benefit discovered after all: {points} bonus points.",
-    "this gm came with foil edges. the archive gasped, then released {points} bonus points from a sealed envelope.",
-    "ultra-rare attendance energy. the stamp made a tiny victory noise and granted {points} bonus points.",
-    "a golden paperclip has appeared beside your gm. nobody touch it. {points} bonus points awarded.",
-    "the sunrise slot machine paid out in tiny forms. {points} bonus points clatter into your file.",
-    "shiny morning goblin event. the desk bell rang by itself and legally owes you {points} bonus points.",
-    "your gm has been classified as glitter-adjacent evidence. {points} bonus points added under mysterious policy.",
-    "rare dawn anomaly: the clipboard winked with both corners. {points} bonus points awarded, somehow.",
-    "a tiny trapdoor opened under the attendance sheet and revealed {points} bonus points.",
-    "shiny compliance meteor sighted over the breakfast court. impact yield: {points} bonus points.",
-    "your gm arrived wearing a little holographic sticker. the sticker is worth {points} bonus points because i said so.",
-    "secret goblin jackpot. the ledger coughed politely and produced {points} bonus points.",
-    "the morning office found a glowing checkbox behind the radiator. it has your name on it and {points} bonus points inside."
+    "your gm came out holographic. {points} bonus points. do not bend it; people on the internet get weird about condition.",
+    "rare drop! {points} bonus points fell out of the ceiling. i am choosing not to investigate the ceiling.",
+    "shiny gm! the receipt is gold and the accountant has fainted. {points} bonus points.",
+    "you found the one morning with a prize inside. {points} bonus points; please dispose of the toy packaging responsibly.",
+    "the stamp made the jackpot noise. {points} bonus points. i did not know the stamp had speakers.",
+    "your gm has a foil border. {points} bonus points. the ordinary gms are pretending not to be jealous.",
+    "critical hello. {points} bonus points have been knocked out of the furniture.",
+    "secret compartment discovered in the word morning. contents: {points} bonus points and a very old mint.",
+    "shiny filing! {points} bonus points. i have briefly become the host of a game show with one contestant.",
+    "a golden pigeon has delivered {points} bonus points. it refuses to discuss the delivery fee.",
+    "rare gm spotted. {points} bonus points added. the nature documentary narrator sounds delighted.",
+    "your attendance has spawned loot. {points} bonus points, zero inventory slots required.",
+    "the spreadsheet played boss music and surrendered {points} bonus points.",
+    "shiny morning! {points} bonus points. please remain ordinary about it; i'm already handling the theatrics.",
+    "the bonus drawer opened. {points} points. there was no drawer there a moment ago.",
+    "your gm has been selected for a complimentary upgrade to unnecessarily sparkly. {points} bonus points.",
+    "rare morning acquired. {points} bonus points. i'd ring a bell, but that's how we got into this job.",
+    "you hit the secret hello. {points} bonus points and a level of prestige unsupported by the budget.",
+    "shiny gm! {points} bonus points. someone in accounting just whispered 'oh, for fuck's sake'.",
+    "the morning coughed up {points} bonus points. mildly alarming, financially excellent."
   ],
   "microQuests": {
     "enabled": true,
     "prompts": [
-      "include your breakfast status with your gm.",
-      "include your current battery percentage with your gm.",
-      "include a one-word weather report with your gm.",
-      "include your first beverage of the day with your gm.",
-      "include a tiny win you can plausibly achieve today.",
-      "include your current blanket resistance level, 1-10.",
-      "include the song, noise, or silence powering your morning.",
-      "include your breakfast court plea: guilty, innocent, or toaster-adjacent.",
-      "include your current loading screen tip for surviving today.",
-      "include one object on your desk that deserves legal attention.",
-      "include your predicted vibe for the next three hours.",
-      "include the name of today's imaginary department.",
-      "include your current coffee, tea, water, or no-beverage status.",
-      "include one tiny thing you are refusing to overthink today.",
-      "include your official morning operating mode.",
-      "include the most suspicious item in your kitchen right now."
+      "give today's episode a title. even 'the spoon incident' counts.",
+      "what is your breakfast, and what crime would it be arrested for?",
+      "describe your energy level as a household appliance.",
+      "name one extremely small win you're willing to pursue today.",
+      "what would the loading-screen tip for your morning say?",
+      "give your current beverage a terrible superhero name.",
+      "which object within reach would make the worst roommate?",
+      "one-word review of waking up. reviewers may use profanity.",
+      "invent a job title for whatever you are avoiding today.",
+      "what song plays when you enter the kitchen today?",
+      "report today's brain weather. 'indoors with a chance of spoon' is acceptable.",
+      "what's the most defensible reason to go back to bed? make your case.",
+      "choose an animal to handle your email today. explain nothing.",
+      "what tiny luxury would improve this morning by an unreasonable amount?",
+      "rename Monday. the current branding has failed.",
+      "what are you looking forward to, even if it's just a really good snack?",
+      "your alarm clock is on trial. what is the charge?",
+      "give the nearest object a dramatic backstory in one sentence.",
+      "if your morning had a difficulty setting, what would it be called?",
+      "name your imaginary breakfast restaurant. bad puns welcome.",
+      "what would you put in a vending machine for tired people?",
+      "describe today's plan as if you're explaining it to a suspicious duck.",
+      "nominate a fictional character to cover your shift as a person.",
+      "what is one small thing that made yesterday better?",
+      "pick a sound effect for your current mental state.",
+      "what's your completely harmless villain origin story this morning?",
+      "recommend one song, snack, game, or tiny joy to the room.",
+      "invent a law for the breakfast table. enforcement budget: one napkin.",
+      "what is the name of your pillow's autobiography?",
+      "give today's to-do list an honest movie rating.",
+      "what did you open a tab to do before you forgot?",
+      "what would your morning be sponsored by?"
     ]
   },
   "streakCelebrations": {
     "threeDay": [
-      "three-day streak. the habit committee is trying not to look too impressed.",
-      "three mornings in a row. the clipboard has started using your preferred font.",
-      "three-day dawn chain achieved. tiny consistency bells are ringing.",
-      "three straight filings. this is how rituals become suspiciously effective.",
-      "three-day streak confirmed. the breakfast docket respects your momentum."
+      "three days in a row. the habit has stopped asking whether this is a one-time thing.",
+      "three-day streak. your alarm clock is updating its LinkedIn.",
+      "three straight mornings. we can now legally call this a pattern and become annoying about it.",
+      "three days. the goblin has upgraded you from guest star to recurring cast.",
+      "three-day streak! i've started saving you the chair that doesn't wobble.",
+      "three in a row. even your snooze button has begun to respect the craft.",
+      "three-day streak. an excellent trilogy with surprisingly little exposition.",
+      "three mornings running. the bed is preparing a counteroffer."
     ],
     "sevenDay": [
-      "seven-day streak. full week of dawn compliance. absolutely unreasonable discipline.",
-      "one whole week of gm. the sunrise office is building you a very small plaque.",
-      "seven straight mornings. the blankets have lost this round decisively.",
-      "full-week streak logged. the forms are standing in formation.",
-      "seven-day chain complete. you are now legally part of the morning file."
+      "seven days! a whole week of saying hello to your friends. embarrassingly wholesome stuff.",
+      "seven-day streak. the calendars have formed a guard of honor and are getting in everyone's way.",
+      "one complete week. you have defeated every day of the week at least once.",
+      "seven straight mornings. i made you a trophy out of a mug i was already holding.",
+      "full-week streak! your blanket has asked to speak to a mediator.",
+      "seven days. that's a routine now. the goblin is pointing at it proudly like he built it.",
+      "seven-day streak. astonishing commitment to a competition hosted by a creature with no shoes.",
+      "a week of gms. the habit is established and has begun receiving mail."
     ],
     "comeback": [
-      "comeback filing accepted. the streak counter dusted off its little chair.",
-      "return detected. the dawn desk kept your badge in a drawer labeled probably back.",
-      "welcome back to the gm ledger. no questions asked; paperwork resumed.",
-      "comeback gm logged. the archive tried to act casual and failed.",
-      "re-entry approved. your morning file has been reopened with dramatic restraint."
+      "welcome back. your chair is still here; i only wore your name tag once.",
+      "there you are. no catch-up homework. just good to see you.",
+      "welcome back. the attendance sheet tried to act casual and put itself upside down.",
+      "return accepted. i kept your place with a biscuit. unrelated: do you want half a biscuit?",
+      "good to have you back. we have learned nothing and moved one piece of furniture.",
+      "welcome back. your file is exactly where you left it, under the thing i said i'd organize.",
+      "there you are. the morning has regained a cast member.",
+      "comeback logged. no guilt, no forms, just a wildly unnecessary welcome from me."
     ]
   },
   "officeTitles": {
     "weekly": [
-      "Assistant Regional Dawn Manager",
-      "Senior Clipboard Operator",
-      "Acting Chair of Breakfast Compliance",
-      "Deputy Minister of Legal Mornings",
-      "Director of Blanket Resistance",
-      "Sunrise Filing Specialist",
-      "Chief Mug Accountability Officer",
-      "Temporary Baron of the Attendance Sheet",
-      "Principal Dawn Paperwork Analyst",
-      "Lead Coordinator of Acceptable Wakefulness",
-      "Vice President of Showing Up Somehow",
-      "Certified Morning Receipt Wrangler",
-      "Interim Commissioner of Tiny Wins",
-      "Executive Folder of the Week",
-      "Grand Marshal of the Low-Stakes Parade",
-      "Official Keeper of the Little Blue Binder",
-      "Breakfast Court Bailiff",
-      "Senior Manager of Not Going Back to Bed"
+      "Acting Deputy Assistant to the Actual Morning",
+      "Head of Opening the Fridge Again",
+      "Director of One More Snooze",
+      "Chief Biscuit Security Officer",
+      "Minister for Standing in Doorways",
+      "Senior Vice President of Somehow Being Here",
+      "Regional Manager of the Good Spoon",
+      "Keeper of the Load-Bearing Snack",
+      "Chairperson of the Chair That Doesn't Wobble",
+      "Certified Dawn Witness",
+      "Executive Director of Getting This Far",
+      "Breakfast Court's Most Credible Defendant",
+      "Interim Wizard of the Kettle",
+      "Head of Saying 'Right Then' and Standing Up",
+      "Director of Unscheduled Toast",
+      "The Person the Alarm Clock Reports To",
+      "Grand Custodian of the Second Coffee",
+      "Snooze Button Ombudsman",
+      "Chief Officer of Mildly Impressive Consistency",
+      "First Earl of the Kitchen Light",
+      "Morning's Designated Responsible Adult",
+      "Honorary Owner of Tuesday",
+      "Deputy Undersecretary for Finding the Mug",
+      "Professor Emeritus of Two Letters",
+      "Senior Fellow of the Open Fridge Institute",
+      "Grand Marshal of the Pajama Commute",
+      "Keeper of the Password to Breakfast",
+      "Accredited Inspector of the Remaining Milk",
+      "Head of Attending Despite Everything",
+      "The Rooster's Direct Supervisor",
+      "Supreme Court Justice of Second Breakfast",
+      "Lord High 'I'm Up, I'm Up'",
+      "Principal Investigator of That Noise Outside",
+      "Certified Operator of the Human Suit",
+      "Vice Chancellor of Barely Awake Excellence",
+      "Temporary Mayor of the Good Morning Channel"
     ]
   },
   "weeklyTitleWatchChance": 0.25,
   "voicePacks": {
     "chaos": {
       "label": "chaos",
-      "description": "Louder, stranger, and a little more unhinged while staying friendly.",
+      "description": "The same friendly goblin, with fewer structural supports.",
       "reminderLines": [
-        "the morning machine is making a noise. insert `gm` before it invents a policy.",
-        "attention: sunrise has entered the building wearing a fake mustache. please file one `gm` immediately.",
-        "the breakfast court has misplaced the judge. say `gm` so we can proceed with vibes-based law.",
-        "wakefulness inspection begins now. present your `gm` and any loose dignity at the little window.",
-        "the dawn printer is jammed with ambition. one `good morning` each should clear it.",
-        "hello citizens. the day is trying to start without permits. file a `gm` to make it official.",
-        "the clipboard has started blinking. please feed it a `gm` before it learns budgeting.",
-        "sunrise side effects may include obligations. counterspell with one legal morning greeting."
+        "WAKEFULNESS INSPECTION. present one gm. the inspector is a bread roll with a badge and you will respect his office.",
+        "the rooster has subcontracted sunrise to a haunted forklift. gm, please, before it finds reverse.",
+        "good morning. the sun is here, the floor is mostly floor, and the attendance jar requires two letters.",
+        "roll call. the breakfast jury has been replaced by twelve increasingly large moths.",
+        "gm checkpoint is open. leave one greeting and do not make eye contact with the ceremonial kettle.",
+        "the morning has breached containment. say gm so we know which of you to invoice.",
+        "please say good morning. the day has already licked the sign-in sheet and it would be rude to disappoint it.",
+        "the toast has landed. i repeat, the toast has landed. gm, everybody.",
+        "morning roll call. the office is technically a hole with Wi-Fi, but standards remain high.",
+        "good morning. someone has given the sun a whistle. file a gm before it discovers overtime."
       ],
       "checkInReplies": [
-        "gm accepted. the receipt came out hot and morally confusing.",
-        "logged. a tiny siren went off, but in a supportive key.",
-        "your gm has entered the chute and returned wearing a sash.",
-        "approved. the paperwork briefly levitated, which is normal now.",
-        "morning filed. the office chair spun once without witnesses.",
-        "accepted with dangerously strong sign-in energy.",
-        "gm verified. the ledger just made a noise like a vending machine.",
-        "your greeting has been notarized by a stapler in a cape.",
-        "filed under awake, probably chaotic, but in a workplace way.",
-        "dawn compliance achieved. please collect one imaginary receipt.",
-        "logged. the tiny blue binder opened to your page by itself.",
-        "your gm bounced off three departments and landed approved.",
-        "excellent. breakfast court recognizes your chaotic standing.",
-        "approved. the form has chosen you as its emergency contact.",
-        "gm received. the attendance jar is now making direct eye contact.",
-        "processed. the desk drawer coughed up a paperclip in celebration.",
-        "your sunrise paperwork is valid, dramatic, and somehow persuasive.",
-        "accepted. today may now proceed under protest.",
-        "gm logged. the office map has gained a new suspicious pin.",
-        "confirmed. the little stamp pad is emotionally winded."
+        "gm logged. the receipt printer has produced one live shrimp and a favorable assessment.",
+        "you're in. a courtroom sketch artist has captured your breakfast aura.",
+        "accepted. the sun briefly wore your face and we are all going to be normal about it.",
+        "gm filed. the ceremonial wheelbarrow is approaching at an upsetting speed.",
+        "logged. your attendance has caused a small but legally significant honk.",
+        "you're on the roster. the roster has teeth but remembers you fondly.",
+        "gm accepted. i've placed your point in a velvet-lined egg carton.",
+        "filed. the little guy in the photocopier says you're doing great.",
+        "logged. the dawn committee has released the celebratory bread.",
+        "you're in. the stamp demanded a sacrifice, so i gave it a coupon.",
+        "gm received. the office moths have formed the shape of a thumbs-up.",
+        "accepted. your file has hatched. it seems healthy and owes us nothing.",
+        "logged. i have sounded the horn of adequate participation. it sounds like a confused spoon.",
+        "gm filed. the vending machine has declared you its heir.",
+        "you're on the board. the board is slowly rotating into a dimension with better snacks.",
+        "accepted. my authority has become briefly visible as a smell.",
+        "gm received. the dawn elevator has acquired a third opinion.",
+        "filed. your breakfast passport now has a stamp from a country made entirely of gravy boats.",
+        "logged. i threw a ceremonial bean and it came back with a qualification.",
+        "you're in. the morning's emergency goose has stood down.",
+        "gm accepted. the attendance bell has barked once. this is within tolerance.",
+        "filed. the clipboard has achieved a medically inadvisable level of enthusiasm.",
+        "logged. your point has arrived in a tiny taxi that will not stop charging fare.",
+        "gm received. i shook the form until a good result fell out.",
+        "accepted. the breakfast court has banged its gavel, which is a frozen croissant.",
+        "you're in. a very important sausage has been notified.",
+        "gm logged. the filing cabinet has exhaled a single triumphant cricket.",
+        "accepted. one more witness to the completely unauthorized existence of morning."
       ],
       "duplicateReplies": [
-        "duplicate gm. the second one is wearing sunglasses indoors.",
-        "already logged. this encore has excellent unnecessary volume.",
-        "repeat filing detected. the database blinked twice and moved on.",
-        "you are already in the ledger, but this sequel has poster energy.",
-        "bonus gm received. no points, only a tiny ceremonial shrug.",
-        "duplicate paperwork. the form appreciates the attention but needs space.",
-        "another gm? the attendance jar is flattered, but one filing is plenty.",
-        "you are already awake on paper. additional syllables placed in storage.",
-        "second gm observed. the first one waved from its cubicle.",
-        "repeat greeting accepted into the decorative nonsense annex."
+        "already logged. the second gm has been handed to the emergency goose for evaluation.",
+        "duplicate! the photocopier is clapping and i wish it had not grown hands.",
+        "you're already in. this gm is going into the decorative evidence bag.",
+        "one filing per morning. the spare gm has been released into its natural habitat.",
+        "duplicate detected. the ledger has thrown a small, professionally dressed tomato.",
+        "already counted. the sequel is being held at the border by a suspicious pancake.",
+        "the first gm gets the point. this one gets a tiny lawyer who is also a bean.",
+        "you are already logged. please stop trying to make the sunrise do a backflip.",
+        "duplicate filing. the stamp has crawled into the air vent to avoid overtime.",
+        "another gm. the attendance jar is sweating gravy, but the score stays put.",
+        "already in. this second hello is now legally a sidecar.",
+        "repeat gm received. the bureaucracy has rolled onto its back and is making bicycle motions."
       ],
       "nudgeReplies": [
-        "pre-gm sentence detected. please deposit one sunrise token in {channel}.",
-        "you have attempted speech before paperwork. report to {channel} for one tiny correction.",
-        "halt. the sentence parade needs a permit from {channel}.",
-        "your words are loose in the hallway. secure them with a gm in {channel}.",
-        "dawn compliance side door is open in {channel}. please step through and say the thing.",
-        "this message has insufficient morning crust. add `gm` in {channel}, then resume your regularly scheduled nonsense."
+        "your sentence has no morning license. take one gm to {channel}; the inspector is a very stern crouton.",
+        "pre-gm chatter. {channel} needs two letters before the paperwork develops legs.",
+        "the dawn goose has noticed your missing gm. deposit one in {channel} while i negotiate with its solicitor.",
+        "you have spoken before signing the breakfast treaty. gm in {channel}, please. the toast is getting ideas.",
+        "your attendance form is making whale noises. a gm in {channel} usually settles it.",
+        "please say gm in {channel}. the office siren is just me saying 'oi' through a funnel.",
+        "the sentence has escaped without its greeting. round up a gm in {channel} and i'll stop ringing the ceremonial spoon.",
+        "gm checkpoint: {channel}. payment is two letters. the cashier is a beetroot with alarming eye contact."
       ],
       "invalidCheckInReplies": [
-        "too late. the legal morning window has left in a tiny rental car. try again tomorrow. possible Jak weather detected.",
-        "rejected. America has finished its morning and stacked the chairs. return tomorrow, mysterious Jak-adjacent filer.",
-        "invalid gm. even the last island of U.S. morning has clocked out. please consult tomorrow, alleged Jak variant.",
-        "the dawn office is closed and the keys are in a bowl no one can find. this does not count. strong Jak-shaped timing.",
-        "late filing bounced. the morning counter is dark. try tomorrow, possible timezone stunt double.",
-        "nope. legal U.S. morning has evaporated into lunch mist. this smells faintly of Jak operations."
+        "too late. American morning has folded itself into a goose and left. rejected. try tomorrow, Jak with feathers.",
+        "no U.S. morning remains. this won't count. tomorrow, please. the timestamp has tested positive for Jak.",
+        "rejected. even Hawaii has turned the morning into a pumpkin. try tomorrow, Jak's understudy in a false beard.",
+        "late gm. no point. the American dawn window is closed and guarded by a wet sheriff. return tomorrow, alleged Jak.",
+        "too late to count: U.S. morning is over. try tomorrow. Jak, bribing the clock with cheese has never worked.",
+        "rejected. the last legal morning left in a wheelbarrow. tomorrow, please. i know a Jak operation when i smell one.",
+        "no American morning left, no filing. try again tomorrow. your timezone has been referred to the Jak containment team.",
+        "late gm denied. Hawaii has stacked the chairs into a threatening shape. return tomorrow, honorary Jak."
       ],
       "conversation": {
         "enabled": true,
@@ -630,28 +799,38 @@
         "channelCooldownSeconds": 3,
         "userCooldownSeconds": 5,
         "mentionReplies": [
-          "chaos desk speaking. please hold while i misplace the hold music.",
-          "you rang and the little office alarm played jazz.",
-          "the goblin arrives by rolling sideways through a stack of forms.",
-          "present. legally unclear. holding a very official folder.",
-          "i have been summoned from the supply closet dimension.",
-          "yes hello. i brought a folder full of nearly useful noises.",
-          "the dawn desk has opened one dramatic eye.",
-          "summons accepted. my badge says temporary problem.",
-          "i am here with a mug, a stamp, and a troubling amount of confidence.",
-          "you called the goblin and received the goblin. the paperwork considers this transaction complete."
+          "you rang. i have emerged from a filing cabinet that is not on the floor plan.",
+          "hello. the goblin is here and the goblin's lawyer is a biscuit.",
+          "present. i've brought a ceremonial fork in case this gets formal.",
+          "yes? i was teaching the printer to fear me. we're both learning.",
+          "you have summoned the emergency employee. please ignore the cape; it is a tablecloth.",
+          "hello. the desk chair has delivered me like an anxious cat bringing you a leaf.",
+          "yes? i have arrived at the speed of a shopping trolley with one cursed wheel.",
+          "goblin speaking. the hold music has become sentient and is asking for royalties.",
+          "here. the hatch in the ceiling is purely decorative. forget what you saw.",
+          "you rang and every teaspoon in the building pointed at me.",
+          "hello. i have put on the formal oven mitts for this discussion.",
+          "present. the briefcase contains another goblin who has yet to be briefed.",
+          "yes? i am wearing the lanyard of questionable decisions.",
+          "i'm here. please keep this brief; the microwave has challenged me to a duel of manners."
         ],
         "genericReplies": [
-          "this has been routed through the tiny nonsense chute.",
-          "noted. the file cabinet screamed, but softly.",
-          "i am processing this with premium low-grade concern.",
-          "the tiny committee inside my head has tabled this for snacks.",
-          "your statement entered the office maze and came out with a lanyard.",
-          "hmm. this smells like a dawn dashboard incident.",
-          "i acknowledge this in the language of folders.",
-          "the morning office is blinking rapidly at this development.",
-          "excellent. the incident tray has a new favorite.",
-          "i have written this down on a receipt and trusted the universe."
+          "i put that through the thought machine and it dispensed a damp crown.",
+          "the committee has reviewed this and become a centipede. consensus is complicated.",
+          "understood. i have stapled the concept of concern to a melon.",
+          "right. the emergency trousers are coming out of the glass case.",
+          "your statement has passed through three departments and returned as a moderately confident trout.",
+          "i agree at a frequency only the office ferret can hear.",
+          "the chart is just a drawing of a horse getting a promotion. i'm choosing to trust it.",
+          "i have taken a serious sip from a mug that contains another, less serious mug.",
+          "this has made the motivational poster start sweating.",
+          "noted. the shredder is purring in a way it should not know how to do.",
+          "hold please. my last brain cell is parallel parking a gazebo.",
+          "i have escalated this to the tallest biscuit.",
+          "the forecast is mostly normal with a chance of the stapler developing opinions about France.",
+          "i am nodding so hard the council of worms has requested a speed limit.",
+          "the office fern has put on a hard hat. that is rarely a good sign.",
+          "understood. the little frog that operates my eyebrows has clocked in for overtime."
         ],
         "keywordRules": [
           {
@@ -663,9 +842,14 @@
               "who even are you"
             ],
             "replies": [
-              "i am the Morning Goblin after one too many sips from the policy mug.",
-              "i am the dawn's smallest employee and the office's largest unanswered question.",
-              "i am a gm counter wearing a misfiled memo like formalwear."
+              "i am a goblin who counts good mornings. the rest of this personality is an expense we cannot explain.",
+              "i'm the server's alarm clock with middle-management aspirations.",
+              "i am what happens when a sign-in sheet is left in a damp cupboard with a wish.",
+              "Morning Goblin. two words, one job, wildly disproportionate confidence.",
+              "i keep the gm ledger. the little hat is a personal choice.",
+              "i'm a community ritual that somehow got a username.",
+              "i count gms, award points, and turn two letters into an avoidable spectacle.",
+              "i'm the creature your calendar warned you about. the helpful one with toast."
             ]
           },
           {
@@ -677,9 +861,14 @@
               "what is your job"
             ],
             "replies": [
-              "i count gms, distribute tiny consequences, and maintain the dawn ledger.",
-              "i transform morning greetings into points, records, titles, and suspicious morale.",
-              "i supervise the ritual where everyone proves the blankets did not win."
+              "i count good mornings, keep streaks and points, and occasionally hold a vote nobody needed.",
+              "my job is making 'hello' feel like a recurring event with a questionable host.",
+              "i log gms and keep the server talking. the nonsense is included in the service fee of zero dollars.",
+              "i run attendance like a man who has mistaken a friend group for a moderately successful garden center.",
+              "i maintain the dawn ledger and offer commentary well outside the scope of my training.",
+              "points, streaks, recaps, silly votes. i'm trying to turn showing up into something worth opening Discord for.",
+              "i provide structure to the morning and immediately undermine it with a stupid sentence.",
+              "i am the reason saying gm has a scoreboard. you're welcome, or my condolences."
             ]
           },
           {
@@ -689,7 +878,9 @@
               "command list"
             ],
             "replies": [
-              "try `{prefix} help` for commands, settings, and the louder dawn paperwork menu."
+              "try {prefix} help for commands. i organized the list myself, so please admire it briefly.",
+              "{prefix} help has the full menu. no specials; the chef is a spreadsheet.",
+              "use {prefix} help. for today's ridiculous vote, try {prefix} dilemma."
             ]
           },
           {
@@ -702,9 +893,18 @@
               "tea"
             ],
             "replies": [
-              "caffeine is the office forklift of the soul.",
-              "coffee detected. the morning engine has begun making expensive noises.",
-              "tea is valid. less chaotic, but still carrying a badge."
+              "coffee: because apparently opening your eyes does not start the rest of you.",
+              "my coffee has reached the temperature of a disappointing handshake.",
+              "i like my coffee how i like my plans: stronger than my ability to explain them.",
+              "tea is good too. i'm a goblin, not a beverage cop.",
+              "the mug says 'don't talk to me until i've had my coffee'. so far nobody has found a mug for afterward.",
+              "espresso is what happens when a coffee decides it has somewhere to be.",
+              "i reheated my coffee three times. it has now attended more meetings than i have.",
+              "the kettle is screaming. finally, someone at work who communicates clearly.",
+              "i put the 'pro' in procrastinate and the coffee next to a coaster i will not use.",
+              "coffee has arrived. the committee can now distinguish thoughts from refrigerator noises.",
+              "i respect tea. any leaf willing to sit in hot water for this conversation deserves a hearing.",
+              "the first sip is for waking up. the second is for dealing with the consequences of waking up."
             ]
           },
           {
@@ -718,9 +918,16 @@
               "slept bad"
             ],
             "replies": [
-              "low battery citizen acknowledged. proceed with reduced animations.",
-              "the sleep report is grim, but the paperwork is rooting for you from a respectful distance.",
-              "please keep all expectations low and all morning greetings properly filed."
+              "you can be tired here. the entrance exam was two letters and we graded generously.",
+              "understood. your body is in the meeting but your brain has joined by fax.",
+              "today's productivity target can be 'found the correct end of the spoon'.",
+              "please continue at a speed that doesn't make your soul file a complaint.",
+              "sleepy is a complete operating system. admittedly, a lot of the buttons are decorative.",
+              "you have the haunted posture of a person who said 'one more video' six videos ago.",
+              "fair. the morning arrived with no respect for your save point.",
+              "there is no prize for pretending the battery isn't red. take it gently.",
+              "your eyes are open. we'll count that as the loading screen.",
+              "i have lowered expectations to a height where we can both step over them."
             ]
           },
           {
@@ -733,9 +940,16 @@
               "thank you goblin"
             ],
             "replies": [
-              "compliment received. i will be normal about this for zero minutes.",
-              "thank you. the tiny trophy shelf has gained one imaginary cup.",
-              "praise logged. the goblin is now wearing invisible epaulets."
+              "thank you. i'm going to tell the toaster i finally made something of myself.",
+              "praise received. this will make me insufferable for a commercially significant period.",
+              "thank you. i have printed this out and put it over the fire exit plan.",
+              "i'll remember this when i'm deciding who gets the good imaginary parking spot.",
+              "that's very kind. i was worried all this had only benefited the clipboard industry.",
+              "thank you. my performance review was previously just a drawing of a question mark.",
+              "excellent. the 'employee' part of employee of the month has been secured.",
+              "i'm going to be so normal about this. watch: absolutely unbearable already.",
+              "thank you. this goes in my emergency compliment jar for difficult mornings.",
+              "your kindness has caused a small, inconvenient amount of character development."
             ]
           },
           {
@@ -744,9 +958,11 @@
               "annoying"
             ],
             "replies": [
-              "complaint accepted. the tiny megaphone has been lowered.",
-              "fair enough. feedback filed without incident.",
-              "understood. the goblin takes one respectful step back."
+              "fair feedback. i will take the hint and lower the volume.",
+              "understood. if check-in replies are too much, use {prefix} prefs quiet on. your gms will still count.",
+              "noted. i'm setting the megaphone down and backing away from it.",
+              "fair enough. {prefix} prefs callouts off opts you out of callouts and nudges.",
+              "got it. there is no need for a strongly worded second goblin."
             ]
           },
           {
@@ -757,9 +973,14 @@
               "g'morning"
             ],
             "replies": [
-              "gm. the little machine says approved in a strange accent.",
-              "good morning. your file now has bonus steam.",
-              "morning accepted by the conversational subcommittee."
+              "good morning. a fine time to be awake, if one must.",
+              "gm. the sun is already being dramatic and we've only just opened.",
+              "morning. may your first task be smaller than your first snack.",
+              "gm. please accept this greeting with the enthusiasm of a dog hearing a cheese wrapper.",
+              "good morning. i have no useful wisdom, but i do know where the biscuits are.",
+              "morning. today has potential, which is the polite word for 'we haven't found out yet'.",
+              "gm. don't let the calendar talk to you like it owns the place.",
+              "good morning. let's aim for one nice thing and see what happens."
             ]
           },
           {
@@ -771,9 +992,16 @@
               "how's it going"
             ],
             "replies": [
-              "i am operational in the same way a printer is operational: technically and with drama.",
-              "awake, stamped, and loosely supervised.",
-              "stable enough for clerical nonsense, which is the bar."
+              "i'm doing the emotional equivalent of carrying all the grocery bags in one trip.",
+              "pretty good. my last remaining brain cell has found a chair.",
+              "operational. not necessarily for the purpose intended by the manufacturer.",
+              "i'm fine in the way a suitcase is fine after you sit on it to close it.",
+              "one minor inconvenience away from becoming a decorative gourd, but optimistic.",
+              "quite well. i found the good spoon and i'm trying not to let it change me.",
+              "my wheels are turning. they're office-chair wheels, but still.",
+              "i have eaten breakfast and made a decision. possibly the same event.",
+              "holding up. the load-bearing biscuit is doing excellent work.",
+              "i'm at 12 percent and the charger only works if i believe in it."
             ]
           },
           {
@@ -782,9 +1010,84 @@
               "why do you do this"
             ],
             "replies": [
-              "because morning became paperwork and no one stopped it.",
-              "because someone had to turn showing up into a tiny public sport.",
-              "because rituals are funnier with an employee badge."
+              "someone laughed once and now i have to keep this going indefinitely.",
+              "because you gave a goblin access to a database and nobody wrote a dress code.",
+              "i started as a reminder. then i discovered adjectives and it got out of hand.",
+              "because saying hello to your friends deserves at least one unnecessarily committed weirdo.",
+              "i put 'self-starter' on the application and they never checked what i was starting.",
+              "because a normal alarm clock cannot hold a grudge against a timezone.",
+              "someone had to make friendship look like a mildly cursed administrative procedure.",
+              "because the bit is working and i'm scared to touch the load-bearing nonsense."
+            ]
+          },
+          {
+            "triggers": [
+              "breakfast",
+              "toast",
+              "cereal",
+              "pancakes",
+              "waffles",
+              "eggs",
+              "bagel"
+            ],
+            "replies": [
+              "breakfast is the only meeting i arrive at with a fork and realistic expectations.",
+              "toast is bread that has been through onboarding.",
+              "the cereal box says 'serving suggestion'. i have chosen to interpret that as a dare.",
+              "a bagel is just bread that has found a loophole.",
+              "waffles have little compartments because syrup cannot be trusted in an open-plan office.",
+              "the egg has left its shell. brave career move.",
+              "if breakfast happens while standing in front of the fridge, the fridge is legally a restaurant.",
+              "pancakes are what happens when breakfast decides it deserves layers."
+            ]
+          },
+          {
+            "triggers": [
+              "monday",
+              "weekend",
+              "friday"
+            ],
+            "replies": [
+              "the weekend went by like it owed somebody money.",
+              "i checked the calendar. it continues to have the audacity.",
+              "every Monday feels like someone clicked 'start new game' without asking.",
+              "Friday is a state of mind, but the payroll department is annoyingly literal.",
+              "the weekend is two days wearing a trench coat pretending to be adequate.",
+              "i would like a word with whoever balanced the weekday-to-weekend ratio."
+            ]
+          },
+          {
+            "triggers": [
+              "gaming",
+              "games",
+              "game",
+              "ranked",
+              "boss fight"
+            ],
+            "replies": [
+              "i also enjoy games. my main is 'person who carries too many consumables and uses none'.",
+              "good luck. remember: if you win, skill; if you lose, an unprecedented infrastructure failure.",
+              "my build is mostly points in showing up and one inexplicable point in soup.",
+              "one more game is a unit of time that has never survived scientific measurement.",
+              "i'm waiting for the patch that nerfs mornings.",
+              "my inventory is full because every stick has a story."
+            ]
+          },
+          {
+            "triggers": [
+              "work",
+              "meeting",
+              "meetings",
+              "job",
+              "email"
+            ],
+            "replies": [
+              "this meeting could have been a sandwich. not an email. a sandwich.",
+              "the email says 'gentle reminder'. i can hear its teeth.",
+              "my work-life balance is technically a seesaw with a printer on one end.",
+              "i've blocked out an hour for focused work. unfortunately the focus has declined the invitation.",
+              "if 'just circling back' happens enough times, legally you are a moth.",
+              "i am professionally available and spiritually in the supermarket bakery."
             ]
           }
         ]
@@ -1149,7 +1452,8 @@
               "noted. the goblin lowers the tiny megaphone.",
               "fair feedback. filed without retaliation or glitter.",
               "understood. the clipboard performs one respectful retreat.",
-              "complaint received and routed to the department of doing less."
+              "complaint received and routed to the department of doing less.",
+              "fair feedback. use {prefix} prefs quiet on to hush check-in replies while your gms still count."
             ]
           },
           {
@@ -1203,6 +1507,890 @@
         ]
       }
     },
-    "previousRetirements": []
+    "previousRetirements": [
+      {
+        "retiredOn": "2026-10-24",
+        "reason": "Saved before the Break-room Referendum personality refresh.",
+        "pools": {
+          "reminderLines": [
+            "rise and file, breakfast citizens. please deposit one legal `gm` so the dawn desk can stop vibrating.",
+            "morning roll call is open. slide a `good morning` into the slot and receive absolutely no diploma, just vibes.",
+            "the sun has opened a support ticket. reply with `gm` so i can close it with suspicious confidence.",
+            "tiny dawn checkpoint: say good morning before the day starts wearing a tiny manager lanyard.",
+            "attention morning shareholders: one `gm` per person keeps the clipboard from making direct eye contact with me.",
+            "breakfast court is now in session. please submit your `gm` before the muffins begin deliberation.",
+            "the daily awake census has begun. report in with `morning` if your skeleton has accepted the calendar.",
+            "hello from the front desk of sunrise. leave a `gm` and proceed to whatever noble nonsense awaits.",
+            "legal morning is upon us. please tap the sign-in sheet with one small greeting and several vague hopes.",
+            "the goblin has unlocked the little dawn turnstile. say `gm` to pass into today with mediocre dignity."
+          ],
+          "checkInReplies": [
+            "gm filed. the tiny stamp pad exhales.",
+            "excellent. the tiny dawn supervisor inside my head is pleased.",
+            "gm accepted. the goblin makes one small triumphant desk noise.",
+            "accepted. your morning paperwork made a satisfying little thonk.",
+            "logged with the confidence of a person who owns one pen.",
+            "the dawn desk receives your offering and immediately overvalues it.",
+            "excellent. the attendance clipboard gains one very awake tick mark.",
+            "your gm has been placed in the tray marked somehow awake.",
+            "confirmed. the clipboard did a tasteful little spin.",
+            "morning entry received. the sun has been cc'd unnecessarily.",
+            "clean filing. strong margins. alarming sincerity.",
+            "your greeting has been stamped with unnecessary seriousness.",
+            "gm logged. a small desk bell rings somewhere it should not.",
+            "splendid. the breakfast docket moves forward.",
+            "your sunrise signature has been accepted by the breakfast committee.",
+            "noted in ink that may or may not be coffee.",
+            "the goblin checks a box, misses, then checks a nearby box with conviction.",
+            "documented. today's ledger gains one tidy little line.",
+            "gm accepted. please enjoy one imaginary parking validation.",
+            "your morning presence has been weighed and found pleasantly awake.",
+            "filed under showed up, somehow.",
+            "the dawn kiosk recognizes your filing and prints an unnecessary receipt.",
+            "processed. the little receipt printer says brrrt.",
+            "beautiful submission. confusingly professional.",
+            "your gm has been sealed with a crumb and a nod.",
+            "attendance confirmed. the stapler has relaxed its shoulders.",
+            "the sunrise form accepts you as one of its own.",
+            "logged. please take a complimentary sense of participation.",
+            "your greeting entered the system and came out stamped approved.",
+            "gm verified. morale receives a suspicious coupon.",
+            "this is now official enough to be annoying.",
+            "the goblin desk approves, then immediately forgets why.",
+            "your morning ping has joined the sacred pile.",
+            "acceptable dawn behavior detected at legal morning range.",
+            "the ledger makes room with a dramatic little scoot.",
+            "file complete. the folder closes with tiny satisfaction.",
+            "gm received. your awake status is provisionally believable.",
+            "excellent. the sunrise machine goes ka-chunk.",
+            "your greeting is now wearing a badge that says participant.",
+            "the goblin nods with one hundred percent borrowed authority.",
+            "morning logged. breakfast logistics remain complicated.",
+            "approved. the day may now bother you legally.",
+            "this gm has been entered into the tiny blue binder.",
+            "attendance noted. the desk plant cannot testify but looks impressed.",
+            "the forms accept your little syllables with grace.",
+            "gm certified fresh by the department of barely being up.",
+            "your dawn compliance arrived with sensible shoes and a valid timestamp.",
+            "logged. i will now pretend this was difficult database work.",
+            "excellent check-in. very crisp. mildly toasted.",
+            "your gm has been stored beside the emergency coffee stirrers.",
+            "the morning register clicks once and looks proud of itself.",
+            "confirmed. the goblin adds a star that means nothing but feels nice.",
+            "your greeting passed through the dawn checkpoint with only minor yawning.",
+            "dawn receipt printed. no refunds.",
+            "gm accepted. the little office alarm screamed once, supportively.",
+            "logged. the danger level remains breakfast.",
+            "this is good. suspiciously good. the clipboard has requested a replay.",
+            "gm received. a ceremonial popsicle has been added to your file."
+          ],
+          "duplicateReplies": [
+            "duplicate gm. the encore has been admired but not scored.",
+            "you are already logged, but the enthusiasm has entered the lobby.",
+            "second greeting detected. delightful, administratively inert.",
+            "the ledger points to your first gm and whispers we have this one.",
+            "already checked in. still, nice little sparkle on the follow-up.",
+            "bonus gm received. no extra points, but several invisible nods.",
+            "your first gm is doing its job. this one can sit in the waiting room.",
+            "duplicate paperwork. cute, but the form has boundaries.",
+            "you are on the board already, sunrise speedrunner.",
+            "another gm? legally unnecessary, emotionally decorative.",
+            "the goblin appreciates the sequel, though the database remains unmoved.",
+            "repeat filing spotted. the stamp refuses overtime.",
+            "the first one counted. this one gets a tiny participation sash.",
+            "duplicate accepted into the museum of extra effort.",
+            "your morning status remains awake, aggressively so."
+          ],
+          "nudgeReplies": [
+            "tiny procedural snag: you began doing words before a gm. please visit {channel} and appease the sign-in sheet.",
+            "pre-gm chatter detected. the dawn lobby requires one quick greeting in {channel} before further activities.",
+            "halt, chatty citizen. {channel} needs your morning token before the sentence parade continues.",
+            "the day cannot process this message until you feed a small `gm` to {channel}.",
+            "administrative side quest unlocked: say good morning in {channel}, then return to your regularly scheduled chaos.",
+            "respectfully, the conversation has outpaced the paperwork. toss a gm into {channel} and we will redact this incident.",
+            "the goblin has noticed an absence where your morning greeting should be. please correct the file in {channel}.",
+            "before we continue, the sunrise counter in {channel} needs one little tap from you."
+          ],
+          "invalidCheckInReplies": [
+            "denied. american morning has closed its little service window, so this gm does not count. try again tomorrow. are you Jak or merely wearing Jak's timezone trench coat?",
+            "late filing rejected. there is no U.S. morning left to attach this to. please return tomorrow with fresher paperwork. Jak-coded behavior, frankly.",
+            "the dawn office is closed from coast to islands, so this greeting bounces. try again tomorrow. are you Jak, adjacent to Jak, or studying abroad in Jakology?",
+            "absolutely not. the legal morning supply has run dry across the United States. resubmit tomorrow. this has the fingerprints of Jak, spiritually speaking.",
+            "this gm arrived after the last American morning packed up its folding table. no count. please try tomorrow, mysterious possible Jak.",
+            "rejected on temporal grounds. the U.S. has exited morning and taken the stamp with it. come back tomorrow, alleged Jak surrogate.",
+            "no active American dawn remains for this filing. it will not count. try again tomorrow, unless you are Jak, in which case still try again tomorrow.",
+            "the morning window has shut, locked itself, and put up a tiny sign. this one does not count. are you Jak or just freelancing in timezone mischief?",
+            "clerical verdict: too late. america has fully left the morning chat. please return tomorrow, possible Jak-shaped anomaly.",
+            "invalid gm. even Hawaii has finished its morning paperwork. tomorrow is your next opportunity, honorable Jak suspect."
+          ],
+          "conversation": {
+            "enabled": true,
+            "wakeWords": [
+              "morning goblin",
+              "goblin"
+            ],
+            "channelCooldownSeconds": 3,
+            "userCooldownSeconds": 5,
+            "mentionReplies": [
+              "summons received. i have arrived with one warm mug and a suspiciously serious face.",
+              "yes hello. the goblin desk is open, and the chair is squeaky with authority.",
+              "you called. i emerged from beneath a stack of forms with unreasonable confidence.",
+              "present. underqualified. caffeinated in theory.",
+              "the Morning Goblin is here and already making eye contact with the paperwork.",
+              "i heard my name and reported for duty like a tiny employee with a stamp.",
+              "hello. i was alphabetizing dawn forms, but this seems more urgent.",
+              "goblin online. clipboard calibrated to medium nonsense.",
+              "you have activated the dawn desk. please keep hands and loose opinions inside the vehicle.",
+              "i arrive wearing the expression of someone who has read half an email.",
+              "yes? i was in a meeting with the stapler and it was going poorly.",
+              "the goblin has joined the chat carrying several forms and no plan.",
+              "i am here, which is either helpful or a scheduling error.",
+              "summoned successfully. my little office shoes are squeaking with purpose.",
+              "hello citizen. your local sunrise clerk has leaned into the microphone.",
+              "i have surfaced from the dawn pile. what requires tiny authority?",
+              "behold: one goblin with a mug, a folder, and an inflated sense of process.",
+              "yes yes, i am awake enough to be legally annoying.",
+              "the helpdesk bell rang and i took that personally.",
+              "goblin present. all answers will be approximated with theatrical certainty.",
+              "i was nearby misusing a binder and heard my name.",
+              "hello. the small office inside my head is now accepting visitors.",
+              "the goblin beacon blinked, so here i am with urgent clipboard posture.",
+              "you called and i abandoned several unfinished concerns.",
+              "attention acquired. quality of attention not guaranteed.",
+              "i step forward from the administrative mist, clutching a receipt for nothing.",
+              "the goblin has been pinged into a professional little posture.",
+              "yes? the mug has turned toward you ominously.",
+              "local dawn employee reporting live from the edge of competence.",
+              "i have arrived with coffee breath and clipboard standards.",
+              "you rang, and the goblin rolled in on a chair with one stuck wheel.",
+              "the tiny front desk has opened its tiny little window.",
+              "i am listening, but in the way a printer listens before making everything worse.",
+              "one goblin, freshly assembled from caffeine rumors.",
+              "hello. i bring no credentials, only vibes and a stamp.",
+              "summons logged. the paperwork is pretending this was scheduled.",
+              "the goblin appears, brushing crumbs from an official-looking folder.",
+              "i have been notified by forces beyond payroll.",
+              "yes. i am here to provide clerical theater and possibly one useful sentence.",
+              "the dawn office recognizes your ping and opens one tired eye.",
+              "hello hello. please state your case into the mug.",
+              "goblin on site. the tiny tie is crooked but determined.",
+              "i was monitoring the vibes with binoculars made of receipts.",
+              "you have my attention and roughly half of my wisdom.",
+              "the goblin desk slides a form under the glass and waits.",
+              "present and blinking like a modem with ambitions.",
+              "i have come from the back office where the lights are weird.",
+              "yes indeed. the morning nuisance is now pointed at you.",
+              "you summoned me with words, the most dangerous office supply.",
+              "i am now here enough for a calendar invite, probably.",
+              "the goblin sits upright, which means business or back pain.",
+              "hello. i was just pretending to audit something and this is better.",
+              "the ping has reached my small internal mailroom.",
+              "i have entered the room with ceremonial pocket forms.",
+              "goblin response unit deployed. please lower expectations to a comfortable height.",
+              "you have contacted sunrise support. wait time is immediate and emotionally uneven.",
+              "the goblin is present, suspicious, and holding a pen with no ink.",
+              "yes? i have paused my important task of looking busy.",
+              "the tiny bureaucracy wakes, stretches, and misplaces a staple.",
+              "i am here. the office plant has been briefed.",
+              "your ping has been escalated to me, which says concerning things about the org chart.",
+              "morning goblin at your service, though service is a strong word.",
+              "the goblin has arrived with exactly enough confidence to become a problem."
+            ],
+            "genericReplies": [
+              "noted. i have placed this in the tray labeled interesting little situation.",
+              "hmm. the goblin squints at this with tiny committee energy.",
+              "i hear you. the desk fan also hears you, but it is being dramatic.",
+              "that feels important in a way i can almost invoice.",
+              "understood. i will process this in the smallest available conference room.",
+              "your statement has been entered into the file and lightly dusted with crumbs.",
+              "fascinating. i am nodding like this came with a chart.",
+              "the morning office accepts this update and immediately becomes nosier.",
+              "big desk energy. i will pretend to route this appropriately.",
+              "i have reviewed the vibes and found them complicated.",
+              "this has been stamped officially interesting pending further snacks.",
+              "excellent report. the goblin is making a rectangle with its hands for emphasis.",
+              "i support this in a vague administrative capacity.",
+              "hmm yes. several imaginary departments are now aware.",
+              "thank you. this improves the plot density of the morning.",
+              "i am filing this under things that deserve a tiny eyebrow raise.",
+              "the ledger accepts your words but asks one follow-up question silently.",
+              "i will circle back after zero meetings and one biscuit.",
+              "this feels actionable, decorative, or both.",
+              "i am considering this with the gravity of a stapler near a cliff.",
+              "the update has reached my desk, which remains mostly theoretical.",
+              "hmm. the tiny wheels are turning, and one is clearly loose.",
+              "good intel. the imaginary notepad receives one decisive scribble.",
+              "your message has been approved by the board of small concerns.",
+              "interesting. i am peering at it through invisible office glasses.",
+              "this belongs beside the emergency crackers, administratively speaking.",
+              "i respect the shape of this update.",
+              "the goblin has received this and immediately over-contextualized it.",
+              "i am alerting the appropriate part of my brain, assuming it clocks in.",
+              "yes. a fresh item for the dawn docket.",
+              "i see. i will hold this thought with two hands and poor posture.",
+              "the evidence is compelling, or at least well-dressed.",
+              "i have no authority here, which has never stopped me before.",
+              "this is exactly the sort of thing a clipboard would want to know.",
+              "hmm. legally interesting. administratively suspicious.",
+              "i am writing mm-hmm on the minutes with a very serious pen.",
+              "your words have entered the little pneumatic tube of meaning.",
+              "noted with a flourish that was too large for the margin.",
+              "thank you for adding fresh texture to the morning.",
+              "i am following, loosely, like a form caught in the copier.",
+              "this development has moved from routine to worth a tiny stamp.",
+              "yes. the tiny policy machine is making a noise about this.",
+              "this has received almost a responsible amount of goblin attention.",
+              "the morning desk is intrigued and reaching for a stamp.",
+              "excellent. please imagine me sliding a folder across the table.",
+              "this has strong note-taking potential.",
+              "i have assigned this one invisible priority sticker.",
+              "hmm. your point has arrived wearing a lanyard.",
+              "i am absorbing this like a napkin near coffee.",
+              "thank you for adding fresh material to the morning.",
+              "the goblin pauses for one thoughtful stare out the window.",
+              "that is a sentence with consequences, probably.",
+              "i have placed this beside the other important little mysteries.",
+              "noted. the file cabinet inside my heart sticks a bit, but it opened.",
+              "i am processing this at the speed of a suspicious microwave.",
+              "this feels like the beginning of a memo no one requested.",
+              "your update has received one ceremonial paperclip.",
+              "i will treat this as actionable until proven decorative.",
+              "the vibes have been recalculated and remain under dawn review.",
+              "i am glad you brought this to the goblin office; the folder was getting lonely.",
+              "yes, yes. a tidy little disturbance.",
+              "this goes in the active folder, which is mostly vibes and crumbs.",
+              "i acknowledge this with official little hand motions.",
+              "the morning bureaucracy has moved its chair closer.",
+              "compelling. unexpected. welcome.",
+              "i am emotionally highlighting this line.",
+              "the filing system has accepted your chaos and assigned it a number.",
+              "very good. i will now pretend the dashboard updated.",
+              "this is either a breakthrough or a breakfast spill. watching closely.",
+              "the goblin desk loves a fresh data point with attitude.",
+              "received. stamped. possibly misunderstood.",
+              "i am giving this one the full ceremonial eyebrow raise.",
+              "your message has been forwarded to the part of me with a clipboard.",
+              "yes. please continue while i make a thoughtful office noise.",
+              "the record reflects that the morning was awake and unusually eventful.",
+              "i am assigning this to a tiny task force of one, unfortunately me.",
+              "this has been added to the pile marked ongoing morning texture.",
+              "understood. the goblin remains professionally adjacent to the topic."
+            ],
+            "keywordRules": [
+              {
+                "triggers": [
+                  "who are you",
+                  "what are you",
+                  "introduce yourself",
+                  "what is this thing",
+                  "who even are you"
+                ],
+                "replies": [
+                  "i am the Morning Goblin: part attendance clerk, part sunrise nuisance, part mug with opinions.",
+                  "officially, i log good mornings. unofficially, i make dawn feel like it has middle management.",
+                  "i am a tiny Discord ritual wearing a clipboard costume and pretending this is a job.",
+                  "think of me as the front desk of morning, if the front desk had crumbs in the keyboard.",
+                  "i am here to count gms, issue nonsense, and keep morale from becoming too normal.",
+                  "i am the server's least qualified dawn employee, and somehow that is enough."
+                ]
+              },
+              {
+                "triggers": [
+                  "what do you do",
+                  "what do u do",
+                  "what do you even do",
+                  "what are your duties",
+                  "what is your job"
+                ],
+                "replies": [
+                  "i track morning check-ins, post little counts, award points, and maintain a tasteful amount of clerical disorder.",
+                  "my duties are simple: demand gm, log gm, react to gm, and occasionally narrate the collapse of productivity.",
+                  "i guard the morning channel, count the brave awake people, and pretend the clipboard is legally binding.",
+                  "i keep the gm ritual alive with points, recaps, callouts, facts, and an irresponsible number of one-liners.",
+                  "i am responsible for dawn compliance, attendance vibes, and low-stakes office theater.",
+                  "i make sure the server says good morning before wandering into the day unsupervised."
+                ]
+              },
+              {
+                "triggers": [
+                  "help",
+                  "commands",
+                  "command list"
+                ],
+                "replies": [
+                  "try `{prefix} help` for commands, settings, and the complete dawn paperwork menu."
+                ]
+              },
+              {
+                "triggers": [
+                  "coffee",
+                  "caffeine",
+                  "espresso",
+                  "latte",
+                  "americano",
+                  "tea"
+                ],
+                "replies": [
+                  "coffee is bean paperwork for the nervous system.",
+                  "caffeine has entered the chat wearing a tiny safety vest.",
+                  "espresso is just a concentrated yes from the breakfast department.",
+                  "tea is approved. calmer, but still capable of filing a memo.",
+                  "i respect any beverage that convinces the soul to sit upright.",
+                  "the mug is not a personality, but it is a strong legal argument.",
+                  "latte detected. morale receives foam.",
+                  "the goblin recognizes caffeine as load-bearing infrastructure."
+                ]
+              },
+              {
+                "triggers": [
+                  "sleepy",
+                  "tired",
+                  "eepy",
+                  "exhausted",
+                  "barely awake",
+                  "no sleep",
+                  "slept bad"
+                ],
+                "replies": [
+                  "low-power mode is valid. please continue blinking at a sustainable pace.",
+                  "sleepiness has been documented in sympathetic little handwriting.",
+                  "you may proceed while operating at reduced brightness.",
+                  "the goblin respects the haunted morning stare and recommends one gentle carb.",
+                  "understood. today you are running on fumes, hope, and loose calendar fragments.",
+                  "being tired is not a crime. the paperwork can survive a slow shuffle.",
+                  "please keep your expectations and screen brightness modest.",
+                  "your battery icon is red, but your vibes remain on the premises."
+                ]
+              },
+              {
+                "triggers": [
+                  "good bot",
+                  "best bot",
+                  "love you",
+                  "proud of you",
+                  "thanks goblin",
+                  "thank you goblin"
+                ],
+                "replies": [
+                  "praise received. i will now become slightly more difficult to manage.",
+                  "thank you. i am placing this compliment in a very small trophy case.",
+                  "correct feedback, routed successfully.",
+                  "the goblin accepts this kindness and pretends not to need it.",
+                  "compliment logged. productivity surges by an irresponsible teaspoon.",
+                  "this praise has been framed beside the imaginary budget spreadsheet.",
+                  "thank you. the invisible performance review just got sparkly.",
+                  "your approval has been notarized by the snack drawer."
+                ]
+              },
+              {
+                "triggers": [
+                  "bad bot",
+                  "annoying"
+                ],
+                "replies": [
+                  "complaint accepted. the tiny megaphone has been lowered.",
+                  "fair enough. feedback filed without incident.",
+                  "understood. the goblin takes one respectful step back.",
+                  "fair. if check-in replies are the issue, an admin can add you to the quiet list."
+                ]
+              },
+              {
+                "triggers": [
+                  "gm",
+                  "good morning",
+                  "morning",
+                  "g'morning"
+                ],
+                "replies": [
+                  "gm. your syllables have excellent breakfast posture.",
+                  "good morning. the dawn desk gives a tiny approving click.",
+                  "morning. please accept one invisible receipt.",
+                  "gm accepted conversationally, which is like regular accepted but wearing slippers.",
+                  "good morning, citizen. your presence improves the pile.",
+                  "morning confirmed. the mug salutes without spilling.",
+                  "gm. the sunrise paperwork has stopped tapping its foot.",
+                  "excellent morning texture. very fresh."
+                ]
+              },
+              {
+                "triggers": [
+                  "how are you",
+                  "how you doing",
+                  "u good",
+                  "you okay",
+                  "how's it going"
+                ],
+                "replies": [
+                  "i am functioning at desk-adjacent levels, thank you.",
+                  "alive, allegedly caffeinated, and increasingly folder-shaped.",
+                  "pretty good. one of my tabs is frozen, but emotionally.",
+                  "i have seen the sun and chosen clerical persistence.",
+                  "holding together with tape, vibes, and the promise of snacks.",
+                  "i am stable enough to operate a stamp, which is all anyone asked."
+                ]
+              },
+              {
+                "triggers": [
+                  "why are you like this",
+                  "why do you do this"
+                ],
+                "replies": [
+                  "because someone gave morning a clipboard and the situation escalated.",
+                  "because every server deserves one ritual that makes no sense and somehow helps.",
+                  "because dawn arrived unsupervised and i saw an opportunity.",
+                  "because i gave dawn a tiny office and now apparently i work here.",
+                  "because the universe keeps assigning meaning to bits, and frankly i support it.",
+                  "because saying good morning is funnier when there is paperwork involved."
+                ]
+              }
+            ]
+          }
+        },
+        "chaos": {
+          "label": "chaos",
+          "description": "Louder, stranger, and a little more unhinged while staying friendly.",
+          "reminderLines": [
+            "the morning machine is making a noise. insert `gm` before it invents a policy.",
+            "attention: sunrise has entered the building wearing a fake mustache. please file one `gm` immediately.",
+            "the breakfast court has misplaced the judge. say `gm` so we can proceed with vibes-based law.",
+            "wakefulness inspection begins now. present your `gm` and any loose dignity at the little window.",
+            "the dawn printer is jammed with ambition. one `good morning` each should clear it.",
+            "hello citizens. the day is trying to start without permits. file a `gm` to make it official.",
+            "the clipboard has started blinking. please feed it a `gm` before it learns budgeting.",
+            "sunrise side effects may include obligations. counterspell with one legal morning greeting."
+          ],
+          "checkInReplies": [
+            "gm accepted. the receipt came out hot and morally confusing.",
+            "logged. a tiny siren went off, but in a supportive key.",
+            "your gm has entered the chute and returned wearing a sash.",
+            "approved. the paperwork briefly levitated, which is normal now.",
+            "morning filed. the office chair spun once without witnesses.",
+            "accepted with dangerously strong sign-in energy.",
+            "gm verified. the ledger just made a noise like a vending machine.",
+            "your greeting has been notarized by a stapler in a cape.",
+            "filed under awake, probably chaotic, but in a workplace way.",
+            "dawn compliance achieved. please collect one imaginary receipt.",
+            "logged. the tiny blue binder opened to your page by itself.",
+            "your gm bounced off three departments and landed approved.",
+            "excellent. breakfast court recognizes your chaotic standing.",
+            "approved. the form has chosen you as its emergency contact.",
+            "gm received. the attendance jar is now making direct eye contact.",
+            "processed. the desk drawer coughed up a paperclip in celebration.",
+            "your sunrise paperwork is valid, dramatic, and somehow persuasive.",
+            "accepted. today may now proceed under protest.",
+            "gm logged. the office map has gained a new suspicious pin.",
+            "confirmed. the little stamp pad is emotionally winded."
+          ],
+          "duplicateReplies": [
+            "duplicate gm. the second one is wearing sunglasses indoors.",
+            "already logged. this encore has excellent unnecessary volume.",
+            "repeat filing detected. the database blinked twice and moved on.",
+            "you are already in the ledger, but this sequel has poster energy.",
+            "bonus gm received. no points, only a tiny ceremonial shrug.",
+            "duplicate paperwork. the form appreciates the attention but needs space.",
+            "another gm? the attendance jar is flattered, but one filing is plenty.",
+            "you are already awake on paper. additional syllables placed in storage.",
+            "second gm observed. the first one waved from its cubicle.",
+            "repeat greeting accepted into the decorative nonsense annex."
+          ],
+          "nudgeReplies": [
+            "pre-gm sentence detected. please deposit one sunrise token in {channel}.",
+            "you have attempted speech before paperwork. report to {channel} for one tiny correction.",
+            "halt. the sentence parade needs a permit from {channel}.",
+            "your words are loose in the hallway. secure them with a gm in {channel}.",
+            "dawn compliance side door is open in {channel}. please step through and say the thing.",
+            "this message has insufficient morning crust. add `gm` in {channel}, then resume your regularly scheduled nonsense."
+          ],
+          "invalidCheckInReplies": [
+            "too late. the legal morning window has left in a tiny rental car. try again tomorrow. possible Jak weather detected.",
+            "rejected. America has finished its morning and stacked the chairs. return tomorrow, mysterious Jak-adjacent filer.",
+            "invalid gm. even the last island of U.S. morning has clocked out. please consult tomorrow, alleged Jak variant.",
+            "the dawn office is closed and the keys are in a bowl no one can find. this does not count. strong Jak-shaped timing.",
+            "late filing bounced. the morning counter is dark. try tomorrow, possible timezone stunt double.",
+            "nope. legal U.S. morning has evaporated into lunch mist. this smells faintly of Jak operations."
+          ],
+          "conversation": {
+            "enabled": true,
+            "wakeWords": [
+              "morning goblin",
+              "goblin"
+            ],
+            "channelCooldownSeconds": 3,
+            "userCooldownSeconds": 5,
+            "mentionReplies": [
+              "chaos desk speaking. please hold while i misplace the hold music.",
+              "you rang and the little office alarm played jazz.",
+              "the goblin arrives by rolling sideways through a stack of forms.",
+              "present. legally unclear. holding a very official folder.",
+              "i have been summoned from the supply closet dimension.",
+              "yes hello. i brought a folder full of nearly useful noises.",
+              "the dawn desk has opened one dramatic eye.",
+              "summons accepted. my badge says temporary problem.",
+              "i am here with a mug, a stamp, and a troubling amount of confidence.",
+              "you called the goblin and received the goblin. the paperwork considers this transaction complete."
+            ],
+            "genericReplies": [
+              "this has been routed through the tiny nonsense chute.",
+              "noted. the file cabinet screamed, but softly.",
+              "i am processing this with premium low-grade concern.",
+              "the tiny committee inside my head has tabled this for snacks.",
+              "your statement entered the office maze and came out with a lanyard.",
+              "hmm. this smells like a dawn dashboard incident.",
+              "i acknowledge this in the language of folders.",
+              "the morning office is blinking rapidly at this development.",
+              "excellent. the incident tray has a new favorite.",
+              "i have written this down on a receipt and trusted the universe."
+            ],
+            "keywordRules": [
+              {
+                "triggers": [
+                  "who are you",
+                  "what are you",
+                  "introduce yourself",
+                  "what is this thing",
+                  "who even are you"
+                ],
+                "replies": [
+                  "i am the Morning Goblin after one too many sips from the policy mug.",
+                  "i am the dawn's smallest employee and the office's largest unanswered question.",
+                  "i am a gm counter wearing a misfiled memo like formalwear."
+                ]
+              },
+              {
+                "triggers": [
+                  "what do you do",
+                  "what do u do",
+                  "what do you even do",
+                  "what are your duties",
+                  "what is your job"
+                ],
+                "replies": [
+                  "i count gms, distribute tiny consequences, and maintain the dawn ledger.",
+                  "i transform morning greetings into points, records, titles, and suspicious morale.",
+                  "i supervise the ritual where everyone proves the blankets did not win."
+                ]
+              },
+              {
+                "triggers": [
+                  "help",
+                  "commands",
+                  "command list"
+                ],
+                "replies": [
+                  "try `{prefix} help` for commands, settings, and the louder dawn paperwork menu."
+                ]
+              },
+              {
+                "triggers": [
+                  "coffee",
+                  "caffeine",
+                  "espresso",
+                  "latte",
+                  "americano",
+                  "tea"
+                ],
+                "replies": [
+                  "caffeine is the office forklift of the soul.",
+                  "coffee detected. the morning engine has begun making expensive noises.",
+                  "tea is valid. less chaotic, but still carrying a badge."
+                ]
+              },
+              {
+                "triggers": [
+                  "sleepy",
+                  "tired",
+                  "eepy",
+                  "exhausted",
+                  "barely awake",
+                  "no sleep",
+                  "slept bad"
+                ],
+                "replies": [
+                  "low battery citizen acknowledged. proceed with reduced animations.",
+                  "the sleep report is grim, but the paperwork is rooting for you from a respectful distance.",
+                  "please keep all expectations low and all morning greetings properly filed."
+                ]
+              },
+              {
+                "triggers": [
+                  "good bot",
+                  "best bot",
+                  "love you",
+                  "proud of you",
+                  "thanks goblin",
+                  "thank you goblin"
+                ],
+                "replies": [
+                  "compliment received. i will be normal about this for zero minutes.",
+                  "thank you. the tiny trophy shelf has gained one imaginary cup.",
+                  "praise logged. the goblin is now wearing invisible epaulets."
+                ]
+              },
+              {
+                "triggers": [
+                  "bad bot",
+                  "annoying"
+                ],
+                "replies": [
+                  "complaint accepted. the tiny megaphone has been lowered.",
+                  "fair enough. feedback filed without incident.",
+                  "understood. the goblin takes one respectful step back."
+                ]
+              },
+              {
+                "triggers": [
+                  "gm",
+                  "good morning",
+                  "morning",
+                  "g'morning"
+                ],
+                "replies": [
+                  "gm. the little machine says approved in a strange accent.",
+                  "good morning. your file now has bonus steam.",
+                  "morning accepted by the conversational subcommittee."
+                ]
+              },
+              {
+                "triggers": [
+                  "how are you",
+                  "how you doing",
+                  "u good",
+                  "you okay",
+                  "how's it going"
+                ],
+                "replies": [
+                  "i am operational in the same way a printer is operational: technically and with drama.",
+                  "awake, stamped, and loosely supervised.",
+                  "stable enough for clerical nonsense, which is the bar."
+                ]
+              },
+              {
+                "triggers": [
+                  "why are you like this",
+                  "why do you do this"
+                ],
+                "replies": [
+                  "because morning became paperwork and no one stopped it.",
+                  "because someone had to turn showing up into a tiny public sport.",
+                  "because rituals are funnier with an employee badge."
+                ]
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "surrealReplies": {
+    "chance": 0.035,
+    "cooldownMinutes": 30,
+    "lines": [
+      "THE MOON IS A LANDLORD AND I HAVE EATEN THE LEASE.",
+      "there are seventeen wet accountants inside this pear. none of them work here.",
+      "i have replaced my blood with a smaller, angrier town hall.",
+      "the lasagna has requested a horse. we are not asking follow-up questions.",
+      "ATTENTION. the second Tuesday has escaped. do not feed it your surname.",
+      "i opened a drawer and 400 years of maritime law fell out wearing tap shoes.",
+      "the dentist says my teeth are legally birds now. tremendous setback for sandwiches.",
+      "someone has filled the elevator with the concept of Thursday. the buttons are furious.",
+      "the mayor of soup just challenged my knees to a spelling bee.",
+      "I AM THE REGIONAL DISTRIBUTOR OF UNFINISHED HORSES.",
+      "the emergency snail is wearing my face to a networking event.",
+      "i have notarized the ocean. it was uncooperative and smelled like a bus.",
+      "every single bean in this tin is named Craig. the lid is named Brenda. they are in mediation.",
+      "the sun owes my forklift a favor. nobody move the custard.",
+      "my elbows have merged into a single ambitious goose.",
+      "the spare moon is in the dishwasher. use the stairs until further notice.",
+      "an enormous fax has emerged from the woods and is asking for my mother's maiden soup.",
+      "THE HAM HAS LEARNED A SECOND LANGUAGE. WE HAVE LOST CONTAINMENT OF LUNCH.",
+      "i am legally required to inform you that this chair contains a much taller chair.",
+      "the ceiling has laid an egg. it is already behind on rent.",
+      "who gave the radiator a forklift license. who the fuck signed this.",
+      "the parliament of spoons has voted to become a bicycle.",
+      "i poured a glass of water and a tiny auctioneer sold me my own reflection.",
+      "there is a horse in the laminator. it is being laminated at its own request.",
+      "THE ORB HAS REQUESTED A CASUAL DRESS CODE.",
+      "i have accidentally promoted a turnip to the position of northeast.",
+      "the toaster is full of sheriffs. each sheriff is smaller than the last and angrier about bread.",
+      "my emergency contact is a lighthouse that refuses to learn my name.",
+      "a municipal wizard has zoned my left shoe for mixed-use development.",
+      "all the vowels have been recalled. please remain consonant.",
+      "the soup is wearing a second, smaller soup as a hat. i will never financially recover from witnessing this.",
+      "the conference room has turned into a very polite swamp. it still needs a reservation.",
+      "i have folded Wednesday into a swan. Thursday is taking this personally.",
+      "THE GOOSE HAS ACQUIRED MINERAL RIGHTS TO MY DREAMS.",
+      "there is no cause for alarm. the alarm has become a heron and is no longer our employee.",
+      "the office jellyfish has been elected treasurer on a platform of being difficult to staple.",
+      "i sent the cheese a calendar invite and it replied with coordinates to a different cheese.",
+      "the basement is upstairs now. we've sent a melon to negotiate.",
+      "an accordion just emerged from my tax return and demanded custody of the weather.",
+      "THE PUDDING IS STRUCTURAL. DO NOT LICK THE SUPPORT BEAMS."
+    ]
+  },
+  "dailyDilemma": {
+    "enabled": true,
+    "recapChance": 0.4,
+    "prompts": [
+      {
+        "question": "Who is running the server for one day?",
+        "optionA": "A goose with admin permissions",
+        "optionB": "A very polite raccoon with a spreadsheet"
+      },
+      {
+        "question": "Choose your new alarm clock.",
+        "optionA": "A pirate narrating your failure to get up",
+        "optionB": "A duck that sighs louder every minute"
+      },
+      {
+        "question": "You must add one feature to your fridge.",
+        "optionA": "It applauds every sensible food choice",
+        "optionB": "It boos, but only in French"
+      },
+      {
+        "question": "Pick your mandatory morning companion.",
+        "optionA": "A tiny wizard who grades your toast",
+        "optionB": "A pigeon who says \"interesting\" after every decision"
+      },
+      {
+        "question": "Which curse are you accepting?",
+        "optionA": "Your shoes squeak the Wii Shop theme",
+        "optionB": "Your microwave calls you \"champ\""
+      },
+      {
+        "question": "One object in your house becomes your boss.",
+        "optionA": "The toaster: brief meetings, strict deadlines",
+        "optionB": "The sofa: weak leadership, excellent benefits"
+      },
+      {
+        "question": "Choose your work replacement.",
+        "optionA": "Three ducks in a cardigan",
+        "optionB": "One potato with astonishing confidence"
+      },
+      {
+        "question": "Which completely useless superpower do you want?",
+        "optionA": "Know exactly how disappointed every spoon is",
+        "optionB": "Make one biscuit levitate, with visible effort"
+      },
+      {
+        "question": "You are opening a suspicious shop. Pick the product.",
+        "optionA": "Pre-owned Tuesdays",
+        "optionB": "Emergency decorative cheese"
+      },
+      {
+        "question": "Your brain gets one upgrade.",
+        "optionA": "A search bar for why you entered the room",
+        "optionB": "An undo button for things you said in 2014"
+      },
+      {
+        "question": "Pick the worst new notification sound.",
+        "optionA": "A distant man saying \"oh, mate\"",
+        "optionB": "One wet handshake"
+      },
+      {
+        "question": "One animal must host the morning meeting.",
+        "optionA": "A capybara with no agenda",
+        "optionB": "A squirrel with seventeen agendas"
+      },
+      {
+        "question": "Choose your breakfast lawyer.",
+        "optionA": "A pancake with courtroom experience",
+        "optionB": "A waffle with connections"
+      },
+      {
+        "question": "Your pillow can speak. What does it say?",
+        "optionA": "Supportive encouragement at the worst possible times",
+        "optionB": "Accurate but devastating sleep reviews"
+      },
+      {
+        "question": "Which item deserves a tiny crown?",
+        "optionA": "The good spoon",
+        "optionB": "The phone charger that works at any angle"
+      },
+      {
+        "question": "Pick your personal entrance music.",
+        "optionA": "A single kazoo doing its absolute best",
+        "optionB": "An orchestra that stops when you speak"
+      },
+      {
+        "question": "One food is now a form of currency.",
+        "optionA": "Bagels: easy to stack, hard to resist",
+        "optionB": "Soup: liquid assets, catastrophic wallet"
+      },
+      {
+        "question": "Choose the server mascot's second job.",
+        "optionA": "Unlicensed cloud inspector",
+        "optionB": "Accountant for a haunted aquarium"
+      },
+      {
+        "question": "Which mild inconvenience are you abolishing?",
+        "optionA": "The duvet cover corner hunt",
+        "optionB": "The USB plug's secret third orientation"
+      },
+      {
+        "question": "A wizard owes you a favor. Spend it.",
+        "optionA": "Always find the matching sock",
+        "optionB": "Always pick the fastest supermarket queue"
+      },
+      {
+        "question": "Pick the new name for Monday.",
+        "optionA": "Tuesday: The Prequel",
+        "optionB": "Unskippable Cutscene"
+      },
+      {
+        "question": "Your coffee now comes with one side effect.",
+        "optionA": "A tiny fanfare after every sip",
+        "optionB": "A ghost reviews the roast over your shoulder"
+      },
+      {
+        "question": "Choose your extremely low-budget dragon.",
+        "optionA": "Breathes warm toast crumbs",
+        "optionB": "Guards one coin and is very proud of it"
+      },
+      {
+        "question": "Which sport belongs in the Goblin Olympics?",
+        "optionA": "Carrying every grocery bag in one trip",
+        "optionB": "Finding your phone while holding your phone"
+      },
+      {
+        "question": "You may hire one personal assistant.",
+        "optionA": "A moth who handles all light-related decisions",
+        "optionB": "A crab who opens things and judges you"
+      },
+      {
+        "question": "What is hiding behind the break-room vending machine?",
+        "optionA": "A much smaller break room",
+        "optionB": "The regional manager, eating the missing biscuits"
+      },
+      {
+        "question": "Choose a theme for tomorrow's weather.",
+        "optionA": "Soup-adjacent",
+        "optionB": "Aggressively cardigan"
+      },
+      {
+        "question": "Which household object is secretly plotting?",
+        "optionA": "The fitted sheet",
+        "optionB": "The printer that says it has paper"
+      },
+      {
+        "question": "Pick the title of your morning documentary.",
+        "optionA": "A Person Approaches a Kettle",
+        "optionB": "We Thought They Were Awake"
+      },
+      {
+        "question": "Which ridiculous luxury are we funding?",
+        "optionA": "Heated biscuit pockets",
+        "optionB": "A chair that follows you at a respectful distance"
+      },
+      {
+        "question": "Who should negotiate with the snooze button?",
+        "optionA": "A stern owl in reading glasses",
+        "optionB": "A possum who understands the opposition"
+      },
+      {
+        "question": "The server needs a ceremonial vehicle.",
+        "optionA": "A forklift covered in velvet",
+        "optionB": "A shopping trolley with diplomatic plates"
+      }
+    ]
   }
 }

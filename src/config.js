@@ -35,6 +35,8 @@ const FALLBACK_CONFIG = {
   rareShinyReplies: [
     "shiny gm detected. extremely rare paperwork coloration. {points} bonus points have fallen out of the drawer.",
   ],
+  surrealReplies: { chance: 0, cooldownMinutes: 30, lines: [] },
+  dailyDilemma: { enabled: false, recapChance: 0.4, prompts: [] },
   microQuests: {
     enabled: true,
     prompts: [
@@ -332,6 +334,18 @@ function cleanMorningConfig(parsed) {
       0,
     ),
     rareShinyReplies: cleanStringArray(source.rareShinyReplies, FALLBACK_CONFIG.rareShinyReplies),
+    surrealReplies: {
+      chance: source.surrealReplies?.chance ?? FALLBACK_CONFIG.surrealReplies.chance,
+      cooldownMinutes: source.surrealReplies?.cooldownMinutes ?? FALLBACK_CONFIG.surrealReplies.cooldownMinutes,
+      lines: cleanStringArray(source.surrealReplies?.lines, FALLBACK_CONFIG.surrealReplies.lines),
+    },
+    dailyDilemma: {
+      enabled: source.dailyDilemma?.enabled ?? FALLBACK_CONFIG.dailyDilemma.enabled,
+      recapChance: source.dailyDilemma?.recapChance ?? FALLBACK_CONFIG.dailyDilemma.recapChance,
+      prompts: (source.dailyDilemma?.prompts ?? []).map(({ question, optionA, optionB }) => ({
+        question: question.trim(), optionA: optionA.trim(), optionB: optionB.trim(),
+      })),
+    },
     microQuests: cleanMicroQuests(source.microQuests, FALLBACK_CONFIG.microQuests),
     streakCelebrations: cleanStreakCelebrations(
       source.streakCelebrations,
@@ -376,24 +390,36 @@ export async function loadMorningConfig({ configPath = CONFIG_PATH, allowFallbac
 function validateConfigShape(source, location = "config") {
   const pools = ["acceptedStarts", "acceptedPatterns", "reminderLines", "checkInReplies", "duplicateReplies",
     "invalidCheckInReplies", "nudgeReplies", "morningFacts", "rareShinyReplies", "wakeWords", "mentionReplies",
-    "genericReplies", "prompts", "threeDay", "sevenDay", "comeback", "weekly", "triggers", "replies"];
+    "genericReplies", "threeDay", "sevenDay", "comeback", "weekly", "triggers", "replies", "lines"];
+  if (!location.endsWith(".dailyDilemma")) pools.push("prompts");
   for (const key of pools) {
     if (key in source && (!Array.isArray(source[key]) || source[key].some((item) => typeof item !== "string" || !item.trim()))) {
       throw new Error(`${location}.${key} must be an array of nonempty strings.`);
     }
   }
   for (const pattern of source.acceptedPatterns ?? []) new RegExp(pattern, "i");
-  for (const key of ["rareShinyReplyChance", "weeklyTitleWatchChance"]) {
+  for (const key of ["rareShinyReplyChance", "weeklyTitleWatchChance", "chance", "recapChance"]) {
     if (key in source && (!Number.isFinite(source[key]) || source[key] < 0 || source[key] > 1)) throw new Error(`${location}.${key} must be between 0 and 1.`);
   }
-  for (const key of ["rareShinyPointReward", "channelCooldownSeconds", "userCooldownSeconds"]) {
+  for (const key of ["rareShinyPointReward", "channelCooldownSeconds", "userCooldownSeconds", "cooldownMinutes"]) {
     if (key in source && (!Number.isFinite(source[key]) || source[key] < 0)) throw new Error(`${location}.${key} must be a nonnegative number.`);
   }
   if ("enabled" in source && typeof source.enabled !== "boolean") throw new Error(`${location}.enabled must be true or false.`);
-  for (const key of ["conversation", "microQuests", "streakCelebrations", "officeTitles"]) {
+  for (const key of ["conversation", "microQuests", "streakCelebrations", "officeTitles", "surrealReplies", "dailyDilemma"]) {
     if (key in source) {
       if (!source[key] || typeof source[key] !== "object" || Array.isArray(source[key])) throw new Error(`${location}.${key} must be an object.`);
       validateConfigShape(source[key], `${location}.${key}`);
+    }
+  }
+  if (location.endsWith(".dailyDilemma") && "prompts" in source) {
+    if (!Array.isArray(source.prompts)) throw new Error(`${location}.prompts must be an array.`);
+    for (const [index, prompt] of source.prompts.entries()) {
+      for (const key of ["question", "optionA", "optionB"]) {
+        if (typeof prompt?.[key] !== "string" || !prompt[key].trim() || prompt[key].length > 200) {
+          throw new Error(`${location}.prompts[${index}].${key} must be 1–200 characters.`);
+        }
+      }
+      if (prompt.optionA.trim() === prompt.optionB.trim()) throw new Error(`${location}.prompts[${index}] needs two different choices.`);
     }
   }
   if ("keywordRules" in source) {

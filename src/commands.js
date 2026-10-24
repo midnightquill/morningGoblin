@@ -22,6 +22,7 @@ export function createCommandHandler({ getMorningConfig,
   postStreamStatus,
   handleVoiceCommand,
   handleQuestCommand,
+  handleDilemmaCommand,
   formatSuppressedReplyList,
   parseTargetUserId,
   getGuildVoiceConfig,
@@ -60,6 +61,7 @@ export function createCommandHandler({ getMorningConfig,
           `- \`${COMMAND_PREFIX} phrases\` — accepted morning openings`,
           `- \`${COMMAND_PREFIX} voice\` — current voice pack and available choices`,
           `- \`${COMMAND_PREFIX} quest\` — today's optional micro-quest`,
+          `- \`${COMMAND_PREFIX} dilemma\` — today's ridiculous reaction vote`,
           "- mention me, reply to me, or say `morning goblin` to chat",
         ];
 
@@ -262,6 +264,10 @@ export function createCommandHandler({ getMorningConfig,
           content: `<@${targetUserId}> was not on the no-reply check-in list in the first place.`,
           allowedMentions: { repliedUser: false, parse: ["users"] },
         });
+        return;
+      }
+      case "dilemma": {
+        await handleDilemmaCommand(message);
         return;
       }
       case "fact":

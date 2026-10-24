@@ -3,13 +3,14 @@ export async function fetchRecentMessagesSince(channel, cutoffTimestamp, { maxMe
   let before = initialBefore;
   let reachedCutoff = false;
   while (collected.length < maxMessages) {
-    const page = await channel.messages.fetch({ limit: Math.min(100, maxMessages - collected.length), ...(before ? { before } : {}) });
+    const limit = Math.min(100, maxMessages - collected.length);
+    const page = await channel.messages.fetch({ limit, ...(before ? { before } : {}) });
     const messages = [...page.values()].sort((a, b) => b.createdTimestamp - a.createdTimestamp);
     if (!messages.length) { reachedCutoff = true; break; }
     collected.push(...messages);
     const oldest = messages.at(-1);
     before = oldest.id;
-    if (oldest.createdTimestamp < cutoffTimestamp || page.size < 100) { reachedCutoff = true; break; }
+    if (oldest.createdTimestamp < cutoffTimestamp || page.size < limit) { reachedCutoff = true; break; }
   }
   return { messages: collected.filter((message) => message.createdTimestamp >= cutoffTimestamp),
     truncated: !reachedCutoff, before };

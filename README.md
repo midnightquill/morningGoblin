@@ -11,6 +11,8 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 - Reacts to good-morning posts with random morning-ish emoji like sun, coffee, breakfast, and other tiny dawn nonsense
 - Gives silly replies for check-ins, duplicate check-ins, nudges, and random offender callouts
 - Supports switchable voice packs with `fresh`, `classic`, and `chaos` seasons
+- Occasionally loses the plot with a rare surreal reply, with a 30-minute server cooldown
+- Offers a daily ridiculous A/B reaction vote through `!gm dilemma` and occasional noon recaps
 - Adds optional daily micro-quests to reminders and first check-in replies
 - Occasionally appends rare shiny check-in replies that award bonus points
 - Tracks per-user check-in streaks and celebrates 3-day, 7-day, and comeback moments
@@ -48,7 +50,7 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
 1. Install dependencies:
 
    ```bash
-   npm install
+   npm ci
    ```
 
 2. Copy `.env.example` to `.env`.
@@ -71,7 +73,7 @@ A very unserious Discord bot that enforces the sacred act of saying good morning
    npm start
    ```
 
-Windows PowerShell note: if `npm` is blocked by execution-policy weirdness, use `npm.cmd install` and `npm.cmd start` instead.
+Windows PowerShell note: if `npm` is blocked by execution-policy weirdness, use `npm.cmd ci` and `npm.cmd start` instead. `npm ci` installs the versions recorded in `package-lock.json`.
 
 ## Environment Variables
 
@@ -148,6 +150,8 @@ Use `!gm points` to see the live board and the most recent champions.
   Shows the current voice pack and available packs.
 - `!gm quest`
   Shows today's optional micro-quest prompt.
+- `!gm dilemma`
+  Opens today's Break-room Referendum with two reaction choices, or links to the existing ballot. Voting is just for fun and does not award points.
 - `!gm help`
   Shows public commands plus any admin or owner commands available to the caller.
 
@@ -307,11 +311,21 @@ Main message pools:
 - `streakCelebrations`
 - `officeTitles.weekly`
 - `weeklyTitleWatchChance`
+- `surrealReplies`
+- `dailyDilemma`
 - `voicePacks`
 
 Temporarily retired lines can be kept under `retiredMessagePools`. The bot does not load them into the default active pools, but it can expose them as the `classic` voice pack when that archive is present.
 
 Voice packs let a server switch the bot's reply style without editing JSON live. `fresh` uses the top-level active pools, `classic` uses the retired archive, and configured packs like `chaos` can override any subset of the main message pools.
+
+The October 2026 refresh adds hundreds of lines across check-ins, conversations, quests, titles, reminders, announcements, and presence statuses. The recognizable `classic` season stays available; the previous fresh and chaos material is archived under `retiredMessagePools.previousRetirements`.
+
+`surrealReplies` is shared across voice packs: the default 3.5% chance applies to first-check-in replies and ordinary directed conversation, with at least 30 minutes between successful surreal replies per server. Specific topic/help replies, quiet preferences, and the normal send guards still take priority. These lines have no special point reward; shiny rewards remain a separate feature. Set `chance` to `0` to disable them.
+
+`dailyDilemma` has 32 absurd two-choice prompts. `!gm dilemma` selects one ballot per server and local calendar day, adds 🅰️/🅱️ reactions, and links subsequent requests to the original message. On 40% of eligible days, the noon recap can introduce the ballot inside its existing message if there is space and no ballot has already been posted. There is no extra scheduled post. Set `recapChance` to `0` for command-only ballots, or `enabled` to `false` to disable the feature. The choices stay fixed through restarts; reaction totals are visible on Discord and are not a formal single-vote election.
+
+Built-in presence, outage, recap, and random-callout banks live in `src/system-lines.js`; edits there require a restart. See `docs/FRESHNESS_2026-10-24.md` for the refresh inventory and validation.
 
 If a `nudgeReplies` line contains `{channel}`, the bot replaces that with the configured morning-channel mention.
 
@@ -365,6 +379,8 @@ The bot stores lightweight local state in `data/state.json`, including:
 - daily check-in data
 - selected voice pack
 - micro-quest toggle and today's selected prompt
+- today's dilemma, its original message/channel, and its once-per-day recap decision
+- the timestamp of the last successfully sent surreal reply
 - per-user check-in streaks
 - saved owner-set presence
 - a durable per-date/user check-in ledger and completed-day counts
@@ -375,6 +391,8 @@ Writes use a flushed temporary file followed by replacement. `data/state.backup.
 Duplicate GMs preserve the first filing and timestamp. Turning scheduled posts off preserves today's check-ins. Permanent best/worst day records are finalized at rollover; noon totals are provisional.
 
 ## Running It Reliably
+
+For the guided move off the Windows PC, see [Northflank setup](docs/NORTHFLANK_SETUP.md). The Docker image starts in setup mode, with Discord disconnected, so saved attendance can be transferred before the final switch.
 
 If you run the bot from a terminal window on your own computer, it only works while that process is alive. If your machine sleeps, reboots, or the terminal closes, the bot goes offline.
 

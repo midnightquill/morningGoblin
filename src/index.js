@@ -34,6 +34,10 @@ import { scanCheckIns } from "./catch-up.js";
 import { BotHealth } from "./health.js";
 import { createCommandHandler } from "./commands.js";
 import { getUserPreferences, updatePreference, isCalloutSuppressed, suppressCheckInReply } from "./preferences.js";
+import { pickSurrealReply } from "./flavor.js";
+import { postDailyDilemma, prepareRecapDilemma, formatDilemma, recordDilemmaMessage } from "./dilemmas.js";
+
+import { AUTO_PRESENCE_OPTIONS, OFFLINE_AWAY_LINES, OFFLINE_RETURN_LINES, NOON_RECAP_LINES, NOON_RECAP_NO_TOTAL_LINES, NOON_RECAP_ZERO_LINES, RANDOM_OFFENDER_LINES } from "./system-lines.js";
 
 const FALLBACK_TIMEZONE = "America/Phoenix";
 
@@ -89,7 +93,10 @@ const CATCHUP_MIN_HOURS = 1;
 const CATCHUP_MAX_HOURS = 168;
 const DISCORD_MESSAGE_MAX_LENGTH = 2000;
 
-const LOCK_PATH = path.resolve(process.cwd(), "data", "bot.lock");
+// Container PIDs are local to each container; do not persist their lock on a volume.
+const LOCK_PATH = process.env.BOT_LOCK_PATH?.trim()
+  ? path.resolve(process.env.BOT_LOCK_PATH.trim())
+  : path.resolve(process.cwd(), "data", "bot.lock");
 
 const DEFAULT_LAST_STREAM_DATE_KEY = "2025-04-26";
 
@@ -100,117 +107,6 @@ const DEFAULT_PRESENCE = {
 const DEFAULT_VOICE_PACK_KEY = "fresh";
 const AUTO_PRESENCE_MIN_DELAY_MS = 6 * 60 * 60 * 1000;
 const AUTO_PRESENCE_MAX_DELAY_MS = 12 * 60 * 60 * 1000;
-const AUTO_PRESENCE_OPTIONS = [
-  { type: "watching", name: "watching for illegal pre-gm chatter" },
-  { type: "watching", name: "the snooze button plot its next move" },
-  { type: "watching", name: "the sunrise lose another argument" },
-  { type: "watching", name: "for missing gm paperwork" },
-  { type: "watching", name: "distant time zones for legal morning" },
-  { type: "watching", name: "international dawn behavior" },
-  { type: "watching", name: "Mong Plorp origin documentaries" },
-  { type: "listening", name: "listening to the sign-in sheet rustle" },
-  { type: "watching", name: "tiny sunrise incident reports pile up" },
-  { type: "competing", name: "snooze-button defense" },
-  { type: "watching", name: "watching suspicious sunrise activity" },
-  { type: "watching", name: "watching the clock with distrust" },
-  { type: "watching", name: "watching the dawn paperwork pile up" },
-  { type: "watching", name: "watching for illegal brunch behavior" },
-  { type: "watching", name: "watching for contraband snoozing" },
-  { type: "watching", name: "watching the east coast wake up first" },
-  { type: "watching", name: "watching for fake gms from Jak" },
-  { type: "watching", name: "watching for Mong Plorps" },
-  { type: "watching", name: "watching the vibes with concern" },
-  { type: "watching", name: "watching tiny goblin bureaucracy" },
-  { type: "watching", name: "watching clipboard-related incidents" },
-  { type: "watching", name: "watching for coffee-based miracles" },
-  { type: "watching", name: "watching for forged morning papers" },
-  { type: "watching", name: "watching for hallway-level nonsense" },
-  { type: "watching", name: "watching the bagel situation" },
-  { type: "watching", name: "watching the sunrise compliance board" },
-  { type: "watching", name: "watching everyone with little goblin eyes" },
-  { type: "watching", name: "watching for unlicensed yawning" },
-  { type: "watching", name: "watching for rogue afternoon greetings" },
-  { type: "playing", name: "playing clipboard simulator" },
-  { type: "playing", name: "playing dawn patrol" },
-  { type: "playing", name: "playing gm% any%" },
-  { type: "playing", name: "playing sunrise compliance" },
-  { type: "playing", name: "playing catch fake mornings" },
-  { type: "playing", name: "playing snooze button defense" },
-  { type: "playing", name: "playing goblin office tycoon" },
-  { type: "playing", name: "playing deadline chicken with the sun" },
-  { type: "playing", name: "playing spreadsheet goblin deluxe" },
-  { type: "playing", name: "playing blame the timezone" },
-  { type: "playing", name: "playing staring contest with daylight" },
-  { type: "listening", name: "listening to morning excuses" },
-  { type: "listening", name: "listening to distant coffee brewing" },
-  { type: "listening", name: "listening to tiny administrative screams" },
-  { type: "listening", name: "the first yawn of the day" },
-  { type: "listening", name: "listening to the sound of legal morning" },
-  { type: "listening", name: "goblin praise" },
-  { type: "listening", name: "suspicious silence" },
-  { type: "listening", name: "listening to the breakfast economy" },
-  { type: "listening", name: "listening to a very loud sunrise" },
-  { type: "listening", name: "fake productivity" },
-  { type: "listening", name: "Dutch complaints" },
-  { type: "competing", name: "competing in sunrise compliance" },
-  { type: "competing", name: "the anti-sleep division" },
-  { type: "competing", name: "the sunrise lobby games" },
-  { type: "competing", name: "competing in office goblin finals" },
-  { type: "competing", name: "employee-of-the-dawn trials" },
-  { type: "competing", name: "illegal-noon prevention" },
-  { type: "competing", name: "competing in paperwork endurance" },
-  { type: "competing", name: "regional sunrise dominance" },
-  { type: "competing", name: "the breakfast board games" },
-  { type: "competing", name: "competing in advanced gm studies" },
-];
-const OFFLINE_AWAY_LINES = [
-  "administrative notice: the Morning Goblin is going offline for a bit. remain calm, remain weird, and try not to commit any sunrise crimes while i am gone.",
-  "the Morning Goblin will be temporarily unavailable due to important goblin logistics. do not panic. do not form a committee. i will be back.",
-  "brief goblin outage: i am clocking out for a while. please continue your nonsense in an orderly fashion until i return.",
-  "the goblin is stepping away to recharge, regroup, and argue with the router in a professional tone. i will return when circumstances become less rude.",
-  "small scheduling update: i am about to vanish for a bit. this is a temporary goblin situation, not a collapse of civilization.",
-];
-const OFFLINE_RETURN_LINES = [
-  "the Morning Goblin has returned. order has been restored, the clipboard is back, and i am once again available for administrative dawn nonsense.",
-  "i have re-emerged from the void. the goblin is back online and already judging the paperwork.",
-  "the outage is over. the goblin has returned, lightly caffeinated and professionally suspicious.",
-  "good news for weird little citizens everywhere: the Morning Goblin is back online and immediately resuming oversight.",
-  "the goblin has returned from its mysterious absence. please clap in a restrained and bureaucratically appropriate manner.",
-];
-const NOON_RECAP_LINES = [
-  "noon recap: {count}/{total} checked in.",
-  "noon recap: {count}/{total}. decent paperwork output.",
-  "noon recap: {count}/{total}. the goblin has counted the forms.",
-  "noon recap: {count}/{total}. continue your lawful little mornings.",
-  "noon recap: {count}/{total}. forms reviewed. dawn status pending.",
-];
-const NOON_RECAP_NO_TOTAL_LINES = [
-  "noon recap: {count} checked in.",
-  "noon recap: {count} confirmed gm filings.",
-  "noon recap: {count} legal morning citizens on the board.",
-];
-const NOON_RECAP_ZERO_LINES = [
-  "noon recap: 0. catastrophic.",
-  "noon recap: 0 check-ins. bleak little scenes.",
-  "noon recap: zero. the paperwork weeps softly.",
-];
-const RANDOM_OFFENDER_LINES = [
-  "today's randomly selected didn't-say-gm offender is {user}. how dare you.",
-  "clipboard lottery results: {user} has been chosen as today's alleged gm evader.",
-  "administrative spotlight lands on {user}, today's randomly selected non-gm citizen.",
-  "breaking goblin news: {user} has been randomly selected for suspicious lack-of-gm behavior.",
-  "the dawn compliance wheel has spoken. today's playful offender is {user}. explain yourself eventually.",
-  "by deeply unserious lottery, {user} is today's featured didn't-say-gm goblin criminal.",
-  "today's random gm delinquent is {user}. this is going on the tiny clipboard.",
-  "goblin raffle update: {user} has won the title of today's no-gm rascal.",
-  "official morning misconduct draw: {user}. the clipboard is staring directly at you.",
-  "today's randomly chosen sunrise scofflaw is {user}. the clipboard has questions.",
-  "the department of dawn nonsense has selected {user} as today's missing-gm character of interest.",
-  "tiny public notice: {user} has been randomly selected for possible anti-gm activity.",
-  "today's little paperwork goblin finger points at {user}. very suspicious non-gm posture.",
-  "the goblin drumroll has concluded: {user} is today's randomly selected gm offender.",
-  "random accountability goblin says {user} is today's didn't-say-gm wildcard.",
-];
 const MORNING_REACTION_EMOJIS = [
   "\u2600\uFE0F",
   "\uD83C\uDF1E",
@@ -278,6 +174,8 @@ const conversationState = {
 
 };
 const messageGuard = new ChannelMessageGuard(() => client.user?.id ?? null);
+// Multiple conversation checks can inspect one reply. Weak keys avoid retaining messages.
+const replyChecks = new WeakMap();
 
 let morningConfig;
 
@@ -317,6 +215,7 @@ const handleCommand = createCommandHandler({ getMorningConfig: () => morningConf
   postStreamStatus,
   handleVoiceCommand,
   handleQuestCommand,
+  handleDilemmaCommand,
   formatSuppressedReplyList,
   parseTargetUserId,
   getGuildVoiceConfig,
@@ -656,14 +555,6 @@ function formatTemplate(template, replacements) {
   );
 }
 
-function validateGuildVoicePack(guildState) {
-  if (!morningConfig?.voicePacks?.[guildState.voicePackKey]) {
-    guildState.voicePackKey = DEFAULT_VOICE_PACK_KEY;
-  }
-
-  return guildState.voicePackKey;
-}
-
 function getMicroQuestsEnabled(guildState) {
   return typeof guildState.microQuestsEnabled === "boolean"
     ? guildState.microQuestsEnabled
@@ -840,6 +731,9 @@ function buildStreamGapMessage(daysSinceLastStream, lastStreamDateKey) {
     return pickFromPoolBag("stream:status:today", [
       `stream activity confirmed today (${lastStreamDateKey}). the drought paperwork has been shredded.`,
       `the last stream was today (${lastStreamDateKey}). the goblin has stopped counting for now.`,
+      `streamed today (${lastStreamDateKey}). the missing streamer posters are now commemorative.`,
+      `today (${lastStreamDateKey}) had a stream. the waiting room has been upgraded to a room.`,
+      `a stream happened today (${lastStreamDateKey}). somebody tell the search party to bring back my snacks.`,
     ]);
   }
 
@@ -850,6 +744,11 @@ function buildStreamGapMessage(daysSinceLastStream, lastStreamDateKey) {
     `${daysSinceLastStream} ${dayWord} since stream activity. last confirmed incident: ${lastStreamDateKey}.`,
     `current stream drought: ${daysSinceLastStream} ${dayWord}. the last known stream was ${lastStreamDateKey}.`,
     `the goblin records show ${daysSinceLastStream} ${dayWord} since the last stream (${lastStreamDateKey}). grim but well-documented.`,
+    `${daysSinceLastStream} ${dayWord} since the last stream (${lastStreamDateKey}). the waiting room fern has started a podcast.`,
+    `last stream: ${lastStreamDateKey}. ${daysSinceLastStream} ${dayWord} ago. i have begun interviewing replacement pixels.`,
+    `${daysSinceLastStream} ${dayWord} without a stream. last seen ${lastStreamDateKey}. the loading screen is developing a backstory.`,
+    `stream drought: ${daysSinceLastStream} ${dayWord}, since ${lastStreamDateKey}. the notification bell is now a decorative heirloom.`,
+    `the last stream was ${lastStreamDateKey}, ${daysSinceLastStream} ${dayWord} ago. chat is teaching itself photosynthesis.`,
   ];
 
   return pickFromPoolBag("stream:status", templates);
@@ -1315,25 +1214,21 @@ function markConversationReply(message) {
 }
 
 async function isReplyToBot(message) {
-
   if (!message.reference?.messageId) {
-
     return false;
-
   }
 
-  try {
-
-    const referenced = await message.fetchReference();
-
-    return referenced.author.id === client.user.id;
-
-  } catch {
-
-    return false;
-
+  if (!replyChecks.has(message)) {
+    replyChecks.set(message, (async () => {
+      try {
+        const referenced = await message.fetchReference();
+        return referenced.author.id === client.user.id;
+      } catch {
+        return false;
+      }
+    })());
   }
-
+  return replyChecks.get(message);
 }
 
 async function getConversationReply(message) {
@@ -1346,26 +1241,16 @@ async function getConversationReply(message) {
 
   const directlyMentioned = message.mentions.users.has(client.user.id);
 
-  if (directlyMentioned) {
-    const keywordReply = getMatchingKeywordReply(message, guildState);
-    return keywordReply ?? getMentionReply(message, guildState);
-  }
-
-  if (isConversationCoolingDown(message, guildState)) {
+  if (!directlyMentioned && isConversationCoolingDown(message, guildState)) {
     return null;
   }
-
-  if (await isReplyToBot(message)) {
-    const keywordReply = getMatchingKeywordReply(message, guildState);
-    return keywordReply ?? getGenericReply(message, guildState);
+  if (!directlyMentioned && !isWakeWordMessage(message.content, guildState) && !await isReplyToBot(message)) {
+    return null;
   }
-
-  if (isWakeWordMessage(message.content, guildState)) {
-    const keywordReply = getMatchingKeywordReply(message, guildState);
-    return keywordReply ?? getGenericReply(message, guildState);
-  }
-
-  return null;
+  const keywordReply = getMatchingKeywordReply(message, guildState);
+  if (keywordReply) return { content: keywordReply, surreal: false };
+  const surreal = pickSurrealReply(morningConfig.surrealReplies, guildState, pickFromPoolBag);
+  return { content: surreal ?? (directlyMentioned ? getMentionReply(message, guildState) : getGenericReply(message, guildState)), surreal: Boolean(surreal) };
 }
 
 async function maybeHandleConversation(message) {
@@ -1402,10 +1287,11 @@ async function maybeHandleConversation(message) {
 
   }
 
-  const sent = await safeSend(message.channel, reply);
+  const sent = await safeSend(message.channel, reply.content);
 
   if (sent) {
     markConversationReply(message);
+    if (reply.surreal) guildState.lastSurrealReplyAt = Date.now();
   }
 
   return Boolean(sent);
@@ -1722,16 +1608,20 @@ async function postNoonRecap(guild) {
   const previousBest = guildState.records?.best;
   const isNewBest = checkInCount > 0 && (!previousBest || checkInCount > previousBest.count);
   const celebration = isNewBest ? buildNewBestCelebration(dailyState) : null;
-  const recapSent = celebration
-    ? await sendBotPayload(channel, {
-        content: joinMessageSections(recapMessage, followupBlock("🎉 New GM record", celebration.content)),
-        allowedMentions: { parse: [], users: celebration.userIds },
-      })
-    : await safeSend(channel, recapMessage);
+  let content = joinMessageSections(recapMessage, celebration ? followupBlock("🎉 New GM record", celebration.content) : null);
+  const dilemma = prepareRecapDilemma(dailyState, morningConfig.dailyDilemma, pickFromPoolBag);
+  const withDilemma = dilemma ? joinMessageSections(content, formatDilemma(dilemma)) : content;
+  const includeDilemma = Boolean(dilemma) && withDilemma.length <= DISCORD_MESSAGE_MAX_LENGTH;
+  if (includeDilemma) content = withDilemma;
+  await store.save();
+  const recapSent = await sendBotPayload(channel, {
+    content, allowedMentions: { parse: [], users: celebration?.userIds ?? [] },
+  });
 
   if (!recapSent) {
     return false;
   }
+  if (includeDilemma) await recordDilemmaMessage(dilemma, recapSent, channel.id, () => store.save());
 
   // Permanent best/worst records are finalized on day rollover.
 
@@ -1825,6 +1715,9 @@ function buildNewBestCelebration(dailyState) {
     `historic sunrise behavior detected. ${count} people checked in. medals to ${contributorRoster.text}`,
     `the books have been rewritten: ${count} check-ins. celebratory paperwork for ${contributorRoster.text}`,
     `brand-new morning record. ${count} legal dawn participants. screaming professionally for ${contributorRoster.text}`,
+    `new gm record: ${count}. we have exceeded the recommended occupancy of morning. responsible parties: ${contributorRoster.text}`,
+    `${count} check-ins. a new all-time record. the snooze button has requested witness protection. congratulations, ${contributorRoster.text}`,
+    `record attendance: ${count}. i brought one ceremonial muffin and this is now a logistics emergency. thank you, ${contributorRoster.text}`,
   ];
 
   return {
@@ -1878,6 +1771,8 @@ function buildChampionAnnouncement(entry, winnerLimit = 20) {
         `weekly good morning ${championWord} for the ${label}: ${winners} with ${pointsText}.${titleText} the goblin salutes your sustained sunrise paperwork.`,
         `the weekly dawn title for the ${label} goes to ${winners} with ${pointsText}.${titleText} an incredible seven-day display of administrative discipline.`,
         `weekly gm throne claimed for the ${label}: ${winners}, posting ${pointsText}.${titleText} the blankets have filed an appeal.`,
+        `weekly gm ${championWord} for the ${label}: ${winners} with ${pointsText}.${titleText} your prize is knowing the alarm clock lost.`,
+        `the ${label} has its dawn ${championWord}: ${winners}, with ${pointsText}.${titleText} please collect your imaginary sash from the real disappointment desk.`,
       ];
       break;
 
@@ -1886,6 +1781,8 @@ function buildChampionAnnouncement(entry, winnerLimit = 20) {
         `monthly good morning ${championWord} for ${label}: ${winners} with ${pointsText}. the goblin is filing this under elite long-term sunrise behavior.`,
         `${label} belongs to ${winners}, our monthly dawn ${championWord}, with ${pointsText}. absurdly consistent morning paperwork.`,
         `monthly sunrise crown awarded for ${label}: ${winners} with ${pointsText}. the forms themselves are applauding.`,
+        `${label} monthly gm ${championWord}: ${winners}, with ${pointsText}. your dedication has made the calendar uncomfortable.`,
+        `monthly dawn honors for ${label}: ${winners} with ${pointsText}. the trophy is a mug that says "i kept doing it."`,
       ];
       break;
 
@@ -1894,6 +1791,8 @@ function buildChampionAnnouncement(entry, winnerLimit = 20) {
         `yearly good morning ${championWord} for ${label}: ${winners} with ${pointsText}. this is hall-of-fame rooster activity.`,
         `the ${label} annual dawn title goes to ${winners} with ${pointsText}. the goblin lowers its tiny ceremonial banner in respect.`,
         `supreme morning ${championWord} for ${label}: ${winners}, posting ${pointsText} and becoming a legend in the sunrise records.`,
+        `${label} yearly gm ${championWord}: ${winners}, with ${pointsText}. the sun is asking if you're hiring.`,
+        `annual dawn honors for ${label}: ${winners} with ${pointsText}. you turned saying two letters into a body of work.`,
       ];
       break;
 
@@ -2262,16 +2161,29 @@ async function maybeCelebrateCheckIn(message, guildState, alreadyCheckedIn, tota
   }
 
   const voiceConfig = getGuildVoiceConfig(guildState);
+  const surreal = alreadyCheckedIn ? null : pickSurrealReply(morningConfig.surrealReplies, guildState, pickFromPoolBag);
   const reply = alreadyCheckedIn
     ? pickFromPoolBag(getVoicePoolBagKey(guildState, "checkin:duplicateReplies"), voiceConfig.duplicateReplies)
     : [
-        `${pickFromPoolBag(getVoicePoolBagKey(guildState, "checkin:checkInReplies"), voiceConfig.checkInReplies)} (${totalCheckIns} logged today.)`,
+        `${surreal ?? pickFromPoolBag(getVoicePoolBagKey(guildState, "checkin:checkInReplies"), voiceConfig.checkInReplies)} (${totalCheckIns} logged today.)`,
         ...bonusLines,
       ].join("\n\n");
 
-  await safeReply(message, {
+  const sent = await safeReply(message, {
     content: reply,
     allowedMentions: { repliedUser: false, parse: [] },
+  });
+  if (sent && surreal) guildState.lastSurrealReplyAt = Date.now();
+}
+
+async function handleDilemmaCommand(message) {
+  const guildState = ensureGuildState(message.guild.id);
+  const dailyState = ensureDailyState(guildState, getZonedParts(new Date(), getGuildTimezone(guildState)).dateKey);
+  return postDailyDilemma({
+    dailyState, config: morningConfig.dailyDilemma, pick: pickFromPoolBag,
+    guildId: message.guild.id, channelId: message.channelId,
+    send: (content) => safeReply(message, { content, allowedMentions: { parse: [], repliedUser: false } }),
+    save: () => store.save(),
   });
 }
 
@@ -3460,4 +3372,4 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 });
 
 // Import-safe entry point for offline integration tests and maintenance tools.
-export { client, store, health, messageGuard, reloadMorningConfig, handleGuildMessage, schedulerTick, handleCheckIn, ensureGuildState };
+export { client, store, health, messageGuard, reloadMorningConfig, handleGuildMessage, schedulerTick, postNoonRecap, handleCheckIn, ensureGuildState };

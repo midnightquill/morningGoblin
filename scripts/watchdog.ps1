@@ -93,10 +93,17 @@ try {
     if (Test-Path -LiteralPath $logPath) { Move-Item -LiteralPath $logPath -Destination "$logPath.1" -Force }
   }
   $nodePath = (Get-Command node.exe -ErrorAction Stop).Source
-  Start-Process -FilePath $nodePath -ArgumentList @("`"$entryPoint`"") -WorkingDirectory $projectRoot -WindowStyle Hidden -RedirectStandardOutput $stdoutLogPath -RedirectStandardError $stderrLogPath | Out-Null
-  Start-Sleep -Seconds 3
-  $runningProcess = Get-LockedBotProcess
-  if ($null -eq $runningProcess) { throw "Bot did not remain running. Check bot.stderr.log." }
+  $startedProcess = Start-Process -FilePath $nodePath -ArgumentList @("`"$entryPoint`"") -WorkingDirectory $projectRoot -WindowStyle Hidden -RedirectStandardOutput $stdoutLogPath -RedirectStandardError $stderrLogPath -PassThru
+  # Node can take longer than three seconds to load after a cold start. Wait for
+  # this child to claim the lock instead of logging a false recovery failure.
+  $startupDeadline = [DateTimeOffset]::UtcNow.AddSeconds(30)
+  do {
+    if ($startedProcess.HasExited) { throw "Bot exited during startup. Check bot.stderr.log." }
+    $runningProcess = Get-LockedBotProcess
+    if ($null -ne $runningProcess -and $runningProcess.Id -eq $startedProcess.Id) { break }
+    Start-Sleep -Milliseconds 250
+  } while ([DateTimeOffset]::UtcNow -lt $startupDeadline)
+  if ($null -eq $runningProcess -or $runningProcess.Id -ne $startedProcess.Id) { throw "Bot did not acquire its lock within 30 seconds. Check bot.stderr.log." }
   Write-WatchdogLog "Started Morning Goblin (PID $($runningProcess.Id)); readiness will be verified on the next check."
   Write-Output "Morning Goblin started (PID $($runningProcess.Id))."
 } catch {

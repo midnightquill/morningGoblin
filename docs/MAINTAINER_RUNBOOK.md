@@ -1,6 +1,6 @@
 # Maintainer Runbook
 
-Last updated: 2026-09-05
+Last updated: 2026-10-24
 
 ## First Places To Look
 
@@ -32,11 +32,13 @@ npm.cmd run watchdog
 
 The scheduled task checks every five minutes. It validates the command behind the lock PID plus a fresh heartbeat, Discord readiness, and scheduler progress. Recovery uses backoff. Check `!gm health`, `data/heartbeat.json`, `data/watchdog.log`, and `data/bot.stderr.log` when recovery fails. Run the installer again after updating from the old three-hour schedule.
 
+Startup waits up to 30 seconds for the newly launched process to acquire `bot.lock`. A slow cold start should not be mistaken for an exited bot. Finding that lock confirms startup only; the next health check still verifies Discord readiness and scheduler progress.
+
 ### Install dependencies
 
 ```powershell
 cd "C:\Dev\morningGoblin"
-npm.cmd install
+npm.cmd ci
 ```
 
 ### Check and test the code
@@ -45,6 +47,7 @@ npm.cmd install
 cd "C:\Dev\morningGoblin"
 npm.cmd run check
 npm.cmd test
+npm.cmd audit --omit=dev
 ```
 
 ### Reload config without restarting
@@ -54,6 +57,16 @@ In Discord:
 ```text
 !gm reload
 ```
+
+### Tune the October 2026 personality refresh
+
+In `config/morning-config.json`, `surrealReplies.chance` defaults to `0.035` and `cooldownMinutes` to `30`. Set the chance to zero to disable rare nonsense. The cooldown is saved per guild and only spent when Discord accepts the reply.
+
+`dailyDilemma.enabled` enables `!gm dilemma`; `recapChance` defaults to `0.4`. Set the latter to zero for command-only voting. Each prompt needs a question and two different choices, with each field at most 200 characters. Run the normal config reload after edits. A ballot already selected today remains stable, even through reloads/restarts; new choices apply to subsequent days. Discord's Add Reactions permission lets the bot seed the A/B choices. Users can still read the choices if seeding fails.
+
+`src/system-lines.js` contains presence, outage, recap, and callout text and requires a restart after edits. Keep `{count}`, `{total}`, and `{user}` placeholders intact. The previous fresh/chaos banks are retained as an archive, while `classic` keeps its original season.
+
+The referendum uses the existing outbound-message guard and guild queue. Never clear its saved message reference on a live bot just to force another ballot; repeated command requests intentionally link back to the original. Voting has no effect on attendance or scores.
 
 ### Push to GitHub
 
