@@ -1,8 +1,20 @@
 # Codex Cloud development for Morning Goblin
 
-Status: repository preparation complete; the account's cloud environment still needs to be created, tested, and published in the app.
+Status: published and verified in a fresh cloud task on 2026-10-24, based on the user's setup and verification reports.
 
 Northflank runs the live Discord bot. Codex Cloud provides a separate development workspace that can edit and test the repository while the desktop PC is off. Only a published code update to GitHub `main` triggers the normal Northflank deployment.
+
+## Completed verification
+
+Guided setup installed dependencies, passed syntax checks and all 58 tests, and saved the environment's `install_script` and `start_skill`. The user then reported these results from a fresh task started from the published environment:
+
+- Node.js `v24.19.0` available.
+- `npm run check` passed.
+- `npm test` passed and reported 10 test files.
+- An additional test run with `--test-isolation=none` reported 58 passed, 0 failed, and 0 skipped.
+- Repository files unchanged and working tree clean; no bot startup, commits, or pushes.
+
+This verifies the published development setup restores successfully. Phone access has not yet been exercised in this setup session; the usage steps below describe how to select it.
 
 ## Create the reusable environment
 
