@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { client, store, messageGuard, reloadMorningConfig, handleGuildMessage, schedulerTick, postNoonRecap } from "../src/index.js";
+import { client, store, messageGuard, reloadMorningConfig, handleGuildMessage, schedulerTick, postNoonRecap, announceUpdateNotices, announcePendingReturnMessages } from "../src/index.js";
 import { getZonedParts, getPreviousDateKey } from "../src/dates.js";
 import { loadMorningConfig } from "../src/config.js";
 
@@ -42,6 +42,14 @@ test("offline bot workflows: check-ins, commands, send gating and rollover", asy
   const baseline = { current: 1, best: 1, lastDateKey: getPreviousDateKey(getPreviousDateKey(today)) };
   state.streaks.users.user = baseline;
   state.checkInLedger.streakBaseline.user = { ...baseline };
+  // The real points command sends one card, with a text fallback when embeds are denied.
+  await dispatch("!gm points");
+  assert.equal(sent.at(-1).embeds[0].fields.length, 4);
+  channel.permissionsFor = () => ({ has: () => false });
+  await dispatch("!gm points");
+  assert.equal(sent.at(-1).embeds, undefined);
+  assert.match(sent.at(-1).content, /### 🏆 All time/);
+  delete channel.permissionsFor;
   const gm = message("gm", Date.parse(`${today}T15:00:00Z`));
   messageGuard.observeMessage(gm);
   await handleGuildMessage(gm);
@@ -138,6 +146,40 @@ test("offline bot workflows: check-ins, commands, send gating and rollover", asy
   const before = fetches;
   await schedulerTick();
   assert.equal(fetches, before);
+
+  // A shutdown notice survives reload and waits for a human before returning.
+  const notices = [];
+  const general = { ...channel, id: "general", name: "general",
+    send: async (payload) => { notices.push(payload); return { id: String(++id) }; } };
+  guild.channels.cache.set(general.id, general);
+  guild.channels.fetch = async (channelId) => channelId ? guild.channels.cache.get(channelId) : guild.channels.cache;
+  const pointsBeforeRestart = structuredClone(state.points);
+  await announceUpdateNotices();
+  assert.equal(notices.length, 1);
+  assert.match(notices[0].content, /Quick goblin update/);
+  assert.deepEqual(state.offlineNotice, { pendingReturn: true, channelId: general.id, reason: "update" });
+  state.offlineNotice = JSON.parse(JSON.stringify(state.offlineNotice));
+  messageGuard.invalidate(general.id);
+  general.messages = { fetch: async () => new Map([["notice", { id: String(id), author: { id: "bot" } }]]) };
+  await announcePendingReturnMessages();
+  assert.equal(notices.length, 1);
+  assert.equal(state.offlineNotice.pendingReturn, true);
+  messageGuard.observeMessage({ id: String(++id), channelId: general.id, author: { id: "human" } });
+  await announcePendingReturnMessages();
+  assert.equal(notices.length, 2);
+  assert.match(notices[1].content, /Goblin update complete/);
+  assert.equal(state.offlineNotice.pendingReturn, false);
+  assert.equal(state.offlineNotice.reason, undefined);
+  await announcePendingReturnMessages();
+  assert.equal(notices.length, 2);
+  assert.deepEqual(state.points, pointsBeforeRestart);
+
+  // A pending return can share a points reply instead of posting a second message.
+  state.offlineNotice = { pendingReturn: true, channelId: channel.id, reason: "update" };
+  await dispatch("!gm points");
+  assert.match(sent.at(-1).content, /Goblin update complete/);
+  assert.ok(sent.at(-1).embeds);
+  assert.equal(state.offlineNotice.pendingReturn, false);
   client.guilds.cache.clear();
   await client.destroy();
 });

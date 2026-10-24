@@ -36,6 +36,8 @@ import { createCommandHandler } from "./commands.js";
 import { getUserPreferences, updatePreference, isCalloutSuppressed, suppressCheckInReply } from "./preferences.js";
 import { pickSurrealReply } from "./flavor.js";
 import { postDailyDilemma, prepareRecapDilemma, formatDilemma, recordDilemmaMessage } from "./dilemmas.js";
+import { createPointsPayload } from "./points-display.js";
+import { announceUpdateNotice, UPDATE_RETURN_MESSAGE } from "./update-notices.js";
 
 import { AUTO_PRESENCE_OPTIONS, OFFLINE_AWAY_LINES, OFFLINE_RETURN_LINES, NOON_RECAP_LINES, NOON_RECAP_NO_TOTAL_LINES, NOON_RECAP_ZERO_LINES, RANDOM_OFFENDER_LINES } from "./system-lines.js";
 
@@ -50,6 +52,10 @@ const DEFAULT_TIMEZONE = resolveDefaultTimeZone(process.env.DEFAULT_TIMEZONE?.tr
 const RANK_CHECK_CHANNEL_ID = process.env.RANK_CHECK_CHANNEL_ID?.trim() || "";
 
 const RANK_CHECK_CHANNEL_NAME = process.env.RANK_CHECK_CHANNEL_NAME?.trim() || "rank-check\uD83C\uDFC6";
+
+const ENABLE_UPDATE_NOTICES = readBoolean("ENABLE_UPDATE_NOTICES", true);
+const UPDATE_NOTICE_CHANNEL_ID = process.env.UPDATE_NOTICE_CHANNEL_ID?.trim() || "";
+const UPDATE_NOTICE_CHANNEL_NAME = (process.env.UPDATE_NOTICE_CHANNEL_NAME?.trim() || "general").replace(/^#/, "");
 
 const ENABLE_MORNING_REMINDER = readBoolean("ENABLE_MORNING_REMINDER", false);
 
@@ -1371,6 +1377,18 @@ function getPendingReturnStateForChannel(channel) {
     : null;
 }
 
+function getReturnNoticeText(guildState) {
+  return guildState.offlineNotice?.reason === "update"
+    ? UPDATE_RETURN_MESSAGE
+    : pickFromPoolBag("offline:returnLines", OFFLINE_RETURN_LINES);
+}
+
+function clearPendingReturn(guildState) {
+  guildState.offlineNotice.pendingReturn = false;
+  guildState.offlineNotice.channelId = null;
+  delete guildState.offlineNotice.reason;
+}
+
 async function deliverBotPayload(channel, payload, sendPayload, options = {}) {
   const { prependPendingReturn = true } = options;
   let pendingReturnState = null;
@@ -1383,8 +1401,9 @@ async function deliverBotPayload(channel, payload, sendPayload, options = {}) {
     let preparedPayload = { ...payload, ...(typeof payload.content === "string" ? { content: fitMessage(payload.content) } : {}) };
 
     if (pendingReturnState && typeof payload.content === "string") {
-      const returnLine = pickFromPoolBag("offline:returnLines", OFFLINE_RETURN_LINES);
-      const combinedContent = joinMessageSections(followupBlock("☀️ Back on duty", returnLine), preparedPayload.content);
+      const returnLine = getReturnNoticeText(pendingReturnState);
+      const heading = pendingReturnState.offlineNotice.reason === "update" ? "🛠️ Back after a tune-up" : "☀️ Back on duty";
+      const combinedContent = joinMessageSections(followupBlock(heading, returnLine), preparedPayload.content);
 
       if (combinedContent.length <= DISCORD_MESSAGE_MAX_LENGTH) {
         preparedPayload = { ...payload, content: combinedContent };
@@ -1396,8 +1415,7 @@ async function deliverBotPayload(channel, payload, sendPayload, options = {}) {
   });
 
   if (sent && didPrependPendingReturn && pendingReturnState?.offlineNotice?.pendingReturn) {
-    pendingReturnState.offlineNotice.pendingReturn = false;
-    pendingReturnState.offlineNotice.channelId = null;
+    clearPendingReturn(pendingReturnState);
     await store.save();
   }
 
@@ -1440,9 +1458,12 @@ async function getOfflineNoticeChannel(guild, guildState) {
         return preferredChannel;
       }
     } catch {
-      // Fall back to the configured morning channel.
+      // Owner-requested outages may fall back to the morning channel below.
     }
   }
+
+  // Automatic update notices belong in general, even if that channel disappears.
+  if (guildState.offlineNotice?.reason === "update") return null;
 
   const fallbackChannel = await getMorningChannel(guild);
 
@@ -1471,7 +1492,7 @@ async function announcePendingReturnMessage(guild) {
     const sent = await sendBotPayload(
       targetChannel,
       {
-        content: pickFromPoolBag("offline:returnLines", OFFLINE_RETURN_LINES),
+        content: getReturnNoticeText(guildState),
         allowedMentions: { parse: [] },
       },
       { prependPendingReturn: false },
@@ -1485,16 +1506,27 @@ async function announcePendingReturnMessage(guild) {
     return false;
   }
 
-  guildState.offlineNotice.pendingReturn = false;
-  guildState.offlineNotice.channelId = null;
+  clearPendingReturn(guildState);
   await store.save();
   return true;
 }
 
 async function announcePendingReturnMessages() {
-  for (const guild of client.guilds.cache.values()) {
-    await announcePendingReturnMessage(guild);
-  }
+  await Promise.all([...client.guilds.cache.values()].map((guild) =>
+    guildWork.run(guild.id, () => announcePendingReturnMessage(guild))));
+}
+
+async function announceUpdateNotices() {
+  if (!ENABLE_UPDATE_NOTICES || !client.isReady()) return;
+  await Promise.all([...client.guilds.cache.values()].map((guild) =>
+    guildWork.run(guild.id, () => announceUpdateNotice({
+      guild,
+      guildState: ensureGuildState(guild.id),
+      channelId: UPDATE_NOTICE_CHANNEL_ID,
+      channelName: UPDATE_NOTICE_CHANNEL_NAME,
+      send: sendBotPayload,
+      save: () => store.save(),
+    })).catch((error) => health.error(`Update notice failed for guild ${guild.id}`, error))));
 }
 
 async function postReminder(guild) {
@@ -1913,25 +1945,6 @@ function createUserDisplayLabelResolver(guild) {
   };
 }
 
-async function formatScoreboard(guild, scores, limit = 5, resolveLabel = null) {
-
-  const entries = getSortedScoreEntries(scores).slice(0, limit);
-
-  if (entries.length === 0) {
-
-    return "nobody yet";
-
-  }
-
-  const getLabel = resolveLabel ?? createUserDisplayLabelResolver(guild);
-  const formatted = await Promise.all(
-    entries.map(async ([userId, score]) => `${await getLabel(userId)} (${score})`),
-  );
-
-  return formatted.join(", ");
-
-}
-
 function normalizeChannelName(name) {
   return (name ?? "").normalize("NFKC").replace(/\uFE0F/g, "").toLowerCase();
 }
@@ -2042,20 +2055,6 @@ async function postUserStats(message) {
   });
 }
 
-async function formatChampionSummary(guild, entry, resolveLabel = null) {
-
-  if (!entry || !Array.isArray(entry.winnerUserIds) || entry.winnerUserIds.length === 0) {
-    return null;
-  }
-
-  const winnerRoster = await formatUserRoster(guild, entry.winnerUserIds, 5, resolveLabel);
-
-  const titleText = entry.officeTitle ? `, ${entry.officeTitle}` : "";
-
-  return `${winnerRoster} with ${formatPointsWord(entry.points)}${titleText} (${formatPeriodLabel(entry.periodType, entry.periodKey)})`;
-
-}
-
 async function postPoints(message) {
 
   const guildState = ensureGuildState(message.guild.id);
@@ -2064,40 +2063,16 @@ async function postPoints(message) {
   ensureDailyState(guildState, todayKey);
 
   const pointsState = ensurePointsState(guildState, todayKey);
-  const resolveLabel = createUserDisplayLabelResolver(message.guild);
-  const [weekBoard, monthBoard, yearBoard, lifetimeBoard, ...championSummaries] =
-    await Promise.all([
-      formatScoreboard(message.guild, pointsState.periods.week.scores, 3, resolveLabel),
-      formatScoreboard(message.guild, pointsState.periods.month.scores, 3, resolveLabel),
-      formatScoreboard(message.guild, pointsState.periods.year.scores, 3, resolveLabel),
-      formatScoreboard(message.guild, pointsState.lifetime, 5, resolveLabel),
-      ...PERIOD_TYPES.map((periodType) =>
-        formatChampionSummary(
-          message.guild,
-          pointsState.history[periodType]?.[0],
-          resolveLabel,
-        ),
-      ),
-    ]);
-  const lines = [
-    "gm points board:",
-    `this week (${formatPeriodLabel("week", pointsState.periods.week.key)}): ${weekBoard}`,
-    `this month (${formatPeriodLabel("month", pointsState.periods.month.key)}): ${monthBoard}`,
-    `this year (${formatPeriodLabel("year", pointsState.periods.year.key)}): ${yearBoard}`,
-    `lifetime: ${lifetimeBoard}`,
-  ];
-
-  for (const [index, summary] of championSummaries.entries()) {
-    if (summary) {
-      const labels = ["weekly", "monthly", "yearly"];
-      lines.push(`previous ${labels[index]} champion: ${summary}`);
-    }
-  }
-
-  await safeReply(message, {
-    content: lines.join("\n"),
-    allowedMentions: { repliedUser: false, parse: [] },
-  });
+  const useEmbeds = typeof message.channel.permissionsFor !== "function" ||
+    Boolean(message.channel.permissionsFor(client.user)?.has(PermissionsBitField.Flags.EmbedLinks));
+  await safeReply(message, await createPointsPayload({
+    points: pointsState,
+    resolveLabel: createUserDisplayLabelResolver(message.guild),
+    sortEntries: getSortedScoreEntries,
+    formatPeriodLabel,
+    timeZone,
+    useEmbeds,
+  }));
 
 }
 
@@ -2761,6 +2736,7 @@ async function handleOwnerSpeech(message, commandName, body) {
 
     guildState.offlineNotice.pendingReturn = true;
     guildState.offlineNotice.channelId = targetChannel.id;
+    delete guildState.offlineNotice.reason;
     await store.save();
     return;
 
@@ -3349,6 +3325,8 @@ async function cleanupAndExit(code = 0) {
     await guildWork.drain();
     await schedulerTickPromise?.catch(() => {});
     await store.save();
+    await announceUpdateNotices();
+    await store.save();
     await client.destroy();
     await health.pending?.catch(() => {});
     await health.write(client, store, { shuttingDown: true });
@@ -3372,4 +3350,4 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 });
 
 // Import-safe entry point for offline integration tests and maintenance tools.
-export { client, store, health, messageGuard, reloadMorningConfig, handleGuildMessage, schedulerTick, postNoonRecap, handleCheckIn, ensureGuildState };
+export { client, store, health, messageGuard, reloadMorningConfig, handleGuildMessage, schedulerTick, postNoonRecap, handleCheckIn, ensureGuildState, announceUpdateNotices, announcePendingReturnMessages };

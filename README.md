@@ -40,6 +40,7 @@ For development from a phone while the PC is off, see [Codex Cloud setup](docs/C
 - Auto-rotates through a big pool of funny Discord statuses every 6-12 hours when no manual owner override is set
 - Lets the bot owner change the bot's Discord presence from Discord itself
 - Lets the bot owner announce a temporary goblin outage and queue one comeback once the channel is eligible for another bot message
+- Announces graceful updates/restarts in `#general`, then queues a return notice after reconnecting
 - Refuses to start a second copy of the bot if one is already running
 
 ## Requirements
@@ -89,6 +90,9 @@ From [.env.example](.env.example):
 - `DEFAULT_TIMEZONE`: defaults to `America/Phoenix`
 - `RANK_CHECK_CHANNEL_NAME`: defaults to `rank-check🏆`
 - `RANK_CHECK_CHANNEL_ID`: optional channel ID override for the stats channel
+- `ENABLE_UPDATE_NOTICES`: defaults to `true`; announce graceful updates/restarts
+- `UPDATE_NOTICE_CHANNEL_NAME`: defaults to `general`; exact channel name for update notices
+- `UPDATE_NOTICE_CHANNEL_ID`: optional explicit update channel ID, taking precedence over the name
 - `ENABLE_MORNING_REMINDER`: defaults to `false`
 - `MORNING_REMINDER_HOUR`: defaults to `8`
 - `MORNING_REMINDER_MINUTE`: defaults to `0`
@@ -127,7 +131,15 @@ Weeks run Monday through Sunday. The bot declares weekly champions only at the e
 
 Weekly champions also receive a randomly selected office title, which is saved with the champion history and shown by `!gm points`.
 
-Use `!gm points` to see the live board and the most recent champions.
+Use `!gm points` to see a green leaderboard card with separate weekly, monthly, yearly, and all-time sections. Each player gets a ranked row with their name and points; ties share a rank. The card shows the top three players per period, the top five all time, and recent champions with their weekly office titles. Channels without **Embed Links** permission receive a formatted text version in one message.
+
+## Automatic update notices
+
+Pushing code to GitHub `main` triggers Northflank's build and deployment. A local commit alone does not restart the bot. Once this feature is deployed, a graceful shutdown (`SIGTERM` or `SIGINT`) attempts a short goblin tune-up notice in `#general` before disconnecting. The existing persistent state carries one return notice into the next startup.
+
+The no-consecutive-messages rule still applies: a departure is skipped if the goblin spoke last, and a return waits for another sender or shares the next normal bot reply. Existing owner-requested outage notices remain intact. Missing/inaccessible or duplicate `general` channels are skipped; set `UPDATE_NOTICE_CHANNEL_ID` to select one explicitly. These notices never ping everyone or change scores.
+
+No new credentials or deployment hooks are required. Set `ENABLE_UPDATE_NOTICES=false` to disable automatic departure notices. Forced kills, crashes, and a failed build cannot send a shutdown notice; the old bot must already be running this feature for its next restart to announce an update.
 
 ## Commands
 

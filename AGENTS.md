@@ -5,7 +5,7 @@ Read `docs/PROJECT_MEMORY.md` for product decisions, `README.md` for commands, a
 ## Install and validate
 
 - Use Node.js 24 LTS and npm. The lockfile is checked in; install with `npm ci`.
-- Run `npm run check` and `npm test` for behavior changes. The current baseline is 58 passing tests.
+- Run `npm run check` and `npm test` for behavior changes. The current baseline is 68 passing tests. If the cloud runner reports only test-file totals, also run `npm test -- --test-isolation=none` to verify the individual test count.
 - Tests use fake Discord channels and temporary/in-memory state. Importing `src/index.js` does not log in. No production token, `.env`, saved attendance, or live Discord access is required for development checks.
 - `npm start` connects the real Discord bot when supplied with a token. Use the offline checks during normal development; do not start a second production bot in a development environment.
 - On Windows, use `npm.cmd` if PowerShell blocks the npm script. In restricted Windows environments, tests may need `TEMP` and `TMP` pointed at a writable folder under `node_modules/.cache/`.

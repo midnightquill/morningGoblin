@@ -162,7 +162,7 @@ Behavior:
 - champion results due on the same boundary are combined into one post, and a missed boundary announcement is never posted late
 - ties become co-champions
 
-`!gm points` shows the live scoreboards plus the most recent saved champions.
+`!gm points` shows the live scoreboards plus the most recent saved champions in one green embed card, with separate weekly/monthly/yearly/all-time sections and one ranked row per player. Ties share a rank. Display limits remain top three per period and top five all time. Recent champions retain their periods and weekly office titles. Without Embed Links permission, a formatted text fallback keeps every section within Discord's 2,000-character limit. Display labels are escaped and mentions suppressed; scoring/history rules are unchanged.
 
 `!gm stats` is a regular user command for the `rank-check🏆` channel. It shows the caller's lifetime GM count, all-time rank, and current week/month/year points.
 
@@ -341,6 +341,7 @@ Current important fields:
 
 - `pendingReturn`
 - `channelId`
+- `reason` (optional `"update"` for an automatic graceful-restart notice; absent for owner-requested outages)
 
 `streaks.users.<userId>` includes:
 
@@ -484,6 +485,14 @@ The guided migration is complete. The authoritative bot runs on Northflank as `m
 The Docker image defaults to `BOT_MIGRATION_HOLD=true`, which waits without importing the bot or connecting to Discord. Activation requires existing state files on the volume; only `BOT_MIGRATION_HOLD=false` starts it. The container sets `BOT_LOCK_PATH=/tmp/morning-goblin.lock` because container-local PIDs must not leave a durable lock across replacements. Local Windows launches keep the original `data/bot.lock` path. Keep one cloud instance and the Single Read/Write volume setting.
 
 Both state files transferred with exact hash verification: 2 guilds and 257 ledger filings were retained. User-run cloud checks confirmed Discord readiness, scheduler progress, no runtime/storage errors, and matching scores/history/preferences/settings. Departure and return notices were sent. Backups, transfer commands, checksums, watchdog task export, and receipts remain private under `data/backups/northflank-2026-10-24/`. See `docs/NORTHFLANK_SETUP.md` for deployment, storage cost caveat, and rollback details. Documentation-only commits use `[skip ci]` to avoid redeploying the live bot.
+
+## Automatic update notices and points display (2026-10-24)
+
+Graceful shutdowns now attempt an update notice in `#general` by default, after draining accepted work and saving state and before destroying the Discord client. This follows actual process shutdown (`SIGTERM`/`SIGINT`), rather than Git commits; Northflank deploys pushes to `main`. There are no new secrets, CI jobs, dependencies, or external administration endpoints. `ENABLE_UPDATE_NOTICES` defaults on; channel name/ID overrides allow an explicit destination. Channels outside the guild, missing/ambiguous channels, and inaccessible destinations are skipped. Existing owner outages/pending returns are preserved.
+
+Successful notice sends save an optional `offlineNotice.reason: "update"` and reuse the existing guarded return path. The no-consecutive rule remains authoritative: blocked departures do not arm a comeback, and blocked returns remain pending until another sender posts, or share a normal reply. The update reason clears after delivery. A first installation, forced kill, crash, or Discord failure cannot guarantee a notice. Deployment settings, authoritative attendance, scores, and persistence recovery behavior remain unchanged.
+
+The points command uses the new `src/points-display.js`; automatic departure/channel selection is in `src/update-notices.js`. Offline coverage now includes both displays, tie ranking, Discord size limits, channel routing, failed/blocked delivery, persisted return state, and integration with ordinary replies.
 
 ## Codex Cloud development setup
 

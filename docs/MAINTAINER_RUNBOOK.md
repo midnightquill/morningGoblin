@@ -217,6 +217,16 @@ Behavior:
 - `!gm offline` posts a temporary outage notice in the configured morning channel when possible
 - on the next startup, the bot attempts one comeback message; if the channel still ends with the outage notice, the flag stays pending until a message from another sender makes the channel eligible
 
+### Automatic update/restart notices
+
+- Enabled by default with `ENABLE_UPDATE_NOTICES=true`. `UPDATE_NOTICE_CHANNEL_NAME` defaults to `general`; an optional `UPDATE_NOTICE_CHANNEL_ID` takes precedence and restricts delivery to that channel's guild.
+- Northflank deployment stops the old process with `SIGTERM` (the Docker entrypoint uses `exec`). After draining accepted work and saving scores, the bot attempts a tune-up notice while Discord is still connected, then saves a pending return before disconnecting. `SIGINT` uses the same graceful path.
+- Update notices use the guild work queue, shared send guard, and empty allowed-mention list. If the bot spoke last, no departure is sent and no new return is armed. A prior owner outage/pending return is preserved. Missing/ambiguous/inaccessible channels are skipped rather than posting in a different channel.
+- Successful departures save `offlineNotice.reason: "update"` with the channel ID. Startup and message handling reuse the existing return path, retaining the update wording. A blocked return stays pending; a normal reply can include it in the same message. Successful delivery clears the reason and pending marker. Scores and attendance are untouched.
+- Grant **View Channel**, **Send Messages**, and **Read Message History** in the target channel. For the points card, **Embed Links** enables the rich version; without it, the command uses formatted text.
+- Local commits do not deploy. Pushes to `main` trigger Northflank; `[skip ci]` documentation updates need no restart notice. The first deployment installing this feature cannot make the old code announce its shutdown. Crashes/forced kills cannot announce a graceful stop, and Discord permission/network failures remain best effort within the existing 20-second shutdown deadline.
+- Verify offline with the update-notice tests and bot integration test. They simulate successful shutdown delivery, a saved-state reload, a blocked return, and a human message releasing the return. Do not start a second live bot to test this.
+
 ### Manual log add
 
 Owner-only `!gm logadd` can backfill a same-day check-in from an existing message id or message link. It validates that the message is from this guild, is from today in the guild timezone, and matches the named user if one was provided.
@@ -237,7 +247,7 @@ Intended behavior:
 - owner-only `!gm resetpoints` should wipe the current guild's points state back to a fresh season starting today
 - weeks run Monday through Sunday; week/month/year champions are finalized and announced only near the end of their final local calendar day
 - coincident champion results share one message, and missed boundary announcements are not posted late
-- `!gm points` should show the live scoreboards plus recent champions
+- `!gm points` shows one green leaderboard card with separate period/all-time sections, one ranked row per person, tied ranks, and recent champions/office titles. Top three per period and top five all time remain the display limits. Without Embed Links permission, all sections use a bounded, formatted text reply. Labels are escaped and mentions disabled.
 
 ## Security Checklist
 
