@@ -131,7 +131,7 @@ Weeks run Monday through Sunday. The bot declares weekly champions only at the e
 
 Weekly champions also receive a randomly selected office title, which is saved with the champion history and shown by `!gm points`.
 
-Use `!gm points` to see a green leaderboard card with separate weekly, monthly, yearly, and all-time sections. Each player gets a ranked row with their name and points; ties share a rank. The card shows the top three players per period, the top five all time, and recent champions with their weekly office titles. Channels without **Embed Links** permission receive a formatted text version in one message.
+Use `!gm points` to see a green leaderboard card with weekly, monthly, yearly, and all-time sections separated by blank lines. Each player gets a ranked row with their name and points; ties share a rank. The card shows the top three players per period, the top five all time, and recent champions with their weekly office titles. Channels without **Embed Links** permission receive a formatted text version in one message.
 
 ## Automatic update notices
 

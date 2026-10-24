@@ -249,7 +249,7 @@ Intended behavior:
 - owner-only `!gm resetpoints` should wipe the current guild's points state back to a fresh season starting today
 - weeks run Monday through Sunday; week/month/year champions are finalized and announced only near the end of their final local calendar day
 - coincident champion results share one message, and missed boundary announcements are not posted late
-- `!gm points` shows one green leaderboard card with separate period/all-time sections, one ranked row per person, tied ranks, and recent champions/office titles. Top three per period and top five all time remain the display limits. Without Embed Links permission, all sections use a bounded, formatted text reply. Labels are escaped and mentions disabled.
+- `!gm points` shows one green leaderboard card with blank lines between period/all-time sections, one ranked row per person, tied ranks, and recent champions/office titles. A zero-width space preserves the trailing blank line in each embed field. Top three per period and top five all time remain the display limits. Without Embed Links permission, all sections use a bounded, formatted text reply. Labels are escaped and mentions disabled.
 
 ## Security Checklist
 

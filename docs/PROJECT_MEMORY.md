@@ -162,7 +162,7 @@ Behavior:
 - champion results due on the same boundary are combined into one post, and a missed boundary announcement is never posted late
 - ties become co-champions
 
-`!gm points` shows the live scoreboards plus the most recent saved champions in one green embed card, with separate weekly/monthly/yearly/all-time sections and one ranked row per player. Ties share a rank. Display limits remain top three per period and top five all time. Recent champions retain their periods and weekly office titles. Without Embed Links permission, a formatted text fallback keeps every section within Discord's 2,000-character limit. Display labels are escaped and mentions suppressed; scoring/history rules are unchanged.
+`!gm points` shows the live scoreboards plus the most recent saved champions in one green embed card, with weekly/monthly/yearly/all-time sections separated by blank lines and one ranked row per player. Embed fields use a trailing newline plus zero-width space to keep Discord from collapsing the gap before the next section. Ties share a rank. Display limits remain top three per period and top five all time. Recent champions retain their periods and weekly office titles. Without Embed Links permission, a formatted text fallback keeps every section within Discord's 2,000-character limit. Display labels are escaped and mentions suppressed; scoring/history rules are unchanged.
 
 `!gm stats` is a regular user command for the `rank-check🏆` channel. It shows the caller's lifetime GM count, all-time rank, and current week/month/year points.
 

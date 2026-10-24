@@ -53,9 +53,14 @@ export async function createPointsPayload({ points, resolveLabel, sortEntries, f
   const footer = `Top 3 per period · Top 5 all time · Ties share a rank · ${timeZone}`;
   const allowedMentions = { repliedUser: false, parse: [] };
   if (useEmbeds) {
+    // A zero-width space keeps Discord from trimming each section's blank line.
+    const spacedFields = fields.map((field, index) => ({
+      ...field,
+      value: index < fields.length - 1 ? `${field.value}\n\u200b` : field.value,
+    }));
     return {
       content: "## 🏆 GM points",
-      embeds: [{ color: 0x7cb342, fields, footer: { text: footer } }],
+      embeds: [{ color: 0x7cb342, fields: spacedFields, footer: { text: footer } }],
       allowedMentions,
     };
   }

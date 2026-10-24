@@ -20,7 +20,7 @@ test("points card separates periods, sorts scores, and gives tied members the sa
   assert.match(fields[0].name, /This week.*2026-10-19/);
   assert.match(fields[1].name, /This month.*2026-10/);
   assert.match(fields[2].name, /This year.*2026/);
-  assert.equal(fields[0].value, "🥇 **alice** — **12 points**\n🥇 **jeff** — **12 points**\n🥉 **third** — **4 points**");
+  assert.equal(fields[0].value, "🥇 **alice** — **12 points**\n🥇 **jeff** — **12 points**\n🥉 **third** — **4 points**\n\u200b");
   assert.match(fields[3].value, /1,234 points/);
   assert.match(fields[4].value, /alice, jeff.*8 points/);
   assert.match(fields[4].value, /Director of Dawn Paperwork/);
