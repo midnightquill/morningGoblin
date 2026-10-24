@@ -228,6 +228,8 @@ Supported presence types:
 
 When no manual presence override is set, the bot rotates through 60+ short funny statuses every 6-12 hours.
 
+Statuses include the full activity phrase in the member list and profile: **Listening to unlicensed breakfast jazz**, **Playing Kitchen Doorway Simulator**, or **Watching the toaster consider its options**. The existing lines and rotation are unchanged. Discord may shorten long statuses to fit the available sidebar width.
+
 - `playing`
 - `watching`
 - `listening`

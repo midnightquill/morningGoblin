@@ -38,6 +38,7 @@ import { pickSurrealReply } from "./flavor.js";
 import { postDailyDilemma, prepareRecapDilemma, formatDilemma, recordDilemmaMessage } from "./dilemmas.js";
 import { createPointsPayload } from "./points-display.js";
 import { announceUpdateNotice, UPDATE_RETURN_MESSAGE } from "./update-notices.js";
+import { createBotPresence, formatPresenceText } from "./presence.js";
 
 import { AUTO_PRESENCE_OPTIONS, OFFLINE_AWAY_LINES, OFFLINE_RETURN_LINES, NOON_RECAP_LINES, NOON_RECAP_NO_TOTAL_LINES, NOON_RECAP_ZERO_LINES, RANDOM_OFFENDER_LINES } from "./system-lines.js";
 
@@ -898,31 +899,7 @@ function getRandomAutoPresenceDelayMs() {
 }
 
 function describePresence(presence) {
-
-  const displayPrefixes = {
-    playing: "playing",
-    watching: "watching",
-    listening: "listening to",
-    competing: "competing in",
-  };
-
-  return `\`${displayPrefixes[presence.type]} ${getDiscordActivityName(presence)}\``;
-
-}
-
-function getDiscordActivityName(presence) {
-  const removablePrefixes = {
-    playing: ["playing "],
-    watching: ["watching "],
-    listening: ["listening to ", "to "],
-    competing: ["competing in ", "in "],
-  };
-  const normalizedName = presence.name.toLowerCase();
-  const prefix = (removablePrefixes[presence.type] ?? []).find((candidate) =>
-    normalizedName.startsWith(candidate),
-  );
-
-  return prefix ? presence.name.slice(prefix.length) : presence.name;
+  return `\`${formatPresenceText(presence)}\``;
 }
 
 function getBotPresence() {
@@ -1007,27 +984,7 @@ async function applyBotPresence() {
 
   }
 
-  const presence = getBotPresence();
-
-  const activityType = parsePresenceType(presence.type) ?? ActivityType.Watching;
-
-  client.user.setPresence({
-
-    activities: [
-
-      {
-
-        name: getDiscordActivityName(presence),
-
-        type: activityType,
-
-      },
-
-    ],
-
-    status: "online",
-
-  });
+  client.user.setPresence(createBotPresence(getBotPresence()));
 
 }
 
@@ -3350,4 +3307,4 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
 });
 
 // Import-safe entry point for offline integration tests and maintenance tools.
-export { client, store, health, messageGuard, reloadMorningConfig, handleGuildMessage, schedulerTick, postNoonRecap, handleCheckIn, ensureGuildState, announceUpdateNotices, announcePendingReturnMessages };
+export { client, store, health, messageGuard, reloadMorningConfig, handleGuildMessage, schedulerTick, postNoonRecap, handleCheckIn, ensureGuildState, announceUpdateNotices, announcePendingReturnMessages, applyBotPresence };

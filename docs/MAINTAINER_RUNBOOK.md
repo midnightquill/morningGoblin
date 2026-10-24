@@ -197,6 +197,8 @@ Presence note:
 
 - manual `presence` changes override the automatic status rotation
 - `presence reset` puts the bot back on the built-in 6-12 hour rotation pool
+- Presence uses one custom status with the full `Playing`, `Watching`, `Listening to`, or `Competing in` phrase, so the verb appears in the member list and profile. `src/presence.js` builds the payload; `src/system-lines.js`, rotation timing, command syntax, and stored owner overrides retain their existing content/shape.
+- Existing duplicate-prefix normalization is preserved. Discord's custom-status state is limited to 128 characters; unusually long manual names are shortened for display without changing the saved name. Client sidebar width may truncate the visible line further. Offline tests exercise the actual discord.js gateway serialization without logging in.
 
 ### Quiet list
 

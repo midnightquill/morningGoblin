@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { client, store, messageGuard, reloadMorningConfig, handleGuildMessage, schedulerTick, postNoonRecap, announceUpdateNotices, announcePendingReturnMessages } from "../src/index.js";
+import { client, store, messageGuard, reloadMorningConfig, handleGuildMessage, schedulerTick, postNoonRecap, announceUpdateNotices, announcePendingReturnMessages, applyBotPresence } from "../src/index.js";
+import { ActivityType } from "discord.js";
 import { getZonedParts, getPreviousDateKey } from "../src/dates.js";
 import { loadMorningConfig } from "../src/config.js";
 
@@ -10,6 +11,16 @@ test("offline bot workflows: check-ins, commands, send gating and rollover", asy
   store.state = { guilds: {} };
   store.save = async () => {};
   client.user = { id: "bot" };
+  const presences = [];
+  client.user.setPresence = (presence) => presences.push(presence);
+  await applyBotPresence();
+  assert.equal(presences[0].activities[0].type, ActivityType.Custom);
+  assert.match(presences[0].activities[0].state, /^(Playing|Watching|Listening to|Competing in) /);
+  store.state.botPresence = { type: "listening", name: "to unlicensed breakfast jazz" };
+  await applyBotPresence();
+  assert.equal(presences[1].activities[0].state, "Listening to unlicensed breakfast jazz");
+  assert.deepEqual(store.state.botPresence, { type: "listening", name: "to unlicensed breakfast jazz" });
+  store.state.botPresence = null;
   await reloadMorningConfig();
   let fetches = 0;
   let id = 100;

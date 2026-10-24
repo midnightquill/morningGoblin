@@ -284,7 +284,8 @@ Presence behavior:
 - manual owner-set presence persists in state
 - when reset, the bot falls back to a rotating built-in pool of 60+ short funny statuses
 - the auto-rotation timer picks a new status every 6-12 hours
-- activity names are normalized before being sent so Discord does not render doubled verbs such as `Watching watching ...`
+- statuses show the full `Playing`, `Watching`, `Listening to`, or `Competing in` phrase in both the member list and profile, using a single custom-status activity; existing duplicate-prefix normalization is retained
+- the rotating line bank, 6-12 hour schedule, owner command syntax, and saved `{ type, name }` override remain unchanged; `src/presence.js` formats the outgoing custom-status state (128-character display limit), with no state migration or additional messages
 - an offline return flag is only armed when the departure notice sends; a blocked comeback remains pending until the target channel has a newer message from another sender
 - `logadd` lets the owner manually file a same-day check-in from an existing message without triggering public check-in chatter
 - `logreply` uses an existing same-day message to file the check-in and attempt the normal goblin reaction/reply on that message
