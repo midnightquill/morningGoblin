@@ -32,7 +32,7 @@ The personality direction is intentional: funny, casual, sarcastic, and a little
 - `src/dates.js`, `src/member-cache.js`, `src/message-format.js`, `src/health.js`, `src/work-queue.js`: shared runtime helpers
 - `config/morning-config.json`: phrase lists, reply pools, conversation content, facts
 - `data/state.json`: runtime state and per-guild persisted settings
-- `assets/`: bot icon assets
+- `assets/`: bot icon assets; `assets/avatars/` archives Jeff's unchanged original and Halloween 2026 profile JPEGs, supplied on 2026-10-24. Jeff confirmed the Halloween version was the live Discord avatar on that date. See the archive README for previews and restoration steps; committing these records does not change the live avatar.
 - `README.md`: user-facing setup/customization docs
 - `.env.example`: required env vars
 

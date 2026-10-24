@@ -43,6 +43,10 @@ For development from a phone while the PC is off, see [Codex Cloud setup](docs/C
 - Announces graceful updates/restarts in `#general`, then queues a return notice after reconnecting
 - Refuses to start a second copy of the bot if one is already running
 
+## Avatar archive
+
+The [avatar archive](assets/avatars/README.md) preserves the original Morning Goblin profile picture and the Halloween 2026 version, with previews and instructions for restoring either image.
+
 ## Requirements
 
 - Node.js `20.11+`
