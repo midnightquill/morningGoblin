@@ -12,7 +12,7 @@ export function prepareRecapDilemma(dailyState, config, pick, random = Math.rand
 }
 
 export function formatDilemma(dilemma) {
-  return `**🗳️ Break-room Referendum**\n${dilemma.question}\n🅰️ ${dilemma.optionA}\n🅱️ ${dilemma.optionB}\nReact 🅰️ or 🅱️. Defend your terrible choice in chat.`;
+  return `**🗳️ Break-room Referendum**\n${dilemma.question}\n🅰️ ${dilemma.optionA}\n🅱️ ${dilemma.optionB}\nReact 🅰️ or 🅱️.`;
 }
 
 export async function recordDilemmaMessage(dilemma, sent, channelId, save) {
